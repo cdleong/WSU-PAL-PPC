@@ -9,7 +9,8 @@ from pond import Pond
 
 app = Flask(__name__)
 app.secret_key = 'This is really unique and secret'
-#app.debug=True
+
+
 
 @app.route('/', methods=['GET', 'POST'])
 @app.route('/index', methods=['GET', 'POST'])
@@ -306,7 +307,15 @@ def dailyTPP():
 
 
 if __name__ == '__main__':
-    app.run()
+	
+	
+	debug=True
+	if (False==debug):
+		print("running publically!")
+		app.run(host='0.0.0.0') #uncomment to run publically		
+	else:
+		print("running in debug mode!")
+		app.run()
 
 
 
