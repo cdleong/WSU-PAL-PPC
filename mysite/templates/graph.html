@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block content %}
+    <h1>Light Percentage with Depth</h1>
+    <p>USER INPUTS</p>
+    <p>Mean Depth: {{ request.form["meanDepth"] }} m</p>
+    <p>Max Depth: {{ request.form["maxDepth"] }} m</p>
+    <p>Phosphorus: {{ request.form["phosphorus"] }} mg/m<sup>3</sup></p>
+    <img src={{ url_for('pondLight',meanDepth=request.form["meanDepth"],maxDepth=request.form["maxDepth"],phosphorus=request.form["phosphorus"]) }} alt="loading..." />
+    <form method="POST" action={{url_for('graph')}}>
+        Mean depth of pond (m): <input name="meanDepth" value = "20.0"/>
+        Maximum depth of pond (m): <input name="maxDepth" value = "20.0"/>
+        Phosphorus (mg/m<sup>3</sup>): <input name="phosphorus" value="30.0"/>
+        <input type="submit" value="graph!">
+    </form>
+{% endblock %}

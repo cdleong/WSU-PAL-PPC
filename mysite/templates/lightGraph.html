@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block content %}
+    <h1>Light Percentage with Depth/Daily Pelagic Productivity with Depth</h1>
+    <p>USER INPUTS:</p>
+    <p>Mean Depth: {{ request.form["meanDepth"] }} m</p>
+    <p>Max Depth: {{ request.form["maxDepth"] }} m</p>
+    <p>Phosphorus: {{ request.form["phosphorus"] }} mg/m<sup>3</sup></p>
+    <img src={{ url_for('pondLight',meanDepth=request.form["meanDepth"],maxDepth=request.form["maxDepth"],phosphorus=request.form["phosphorus"]) }} alt="loading..." />
+    <img src={{ url_for('dailyTPP',meanDepth=request.form["meanDepth"],maxDepth=request.form["maxDepth"],phosphorus=request.form["phosphorus"])}} alt="loading..." />
+    <form method="POST" action={{url_for('lightGraph')}} id="form" onchange="check()">
+        Mean depth of pond (m): <input type="number" id="meanDepth" name="meanDepth" min="0" max = "500" value = "{{ request.form["meanDepth"] }}" required/>
+
+        Maximum depth of pond (m): <input type="number" id="maxDepth" name="maxDepth" min="0" max = "500" value = "{{ request.form["maxDepth"] }}" required/>
+
+        Phosphorus (mg/m<sup>3</sup>): <input type="number" name="phosphorus" min="0" max = "2000" value="{{ request.form["phosphorus"] }}" required/>
+        <input type="submit" value="graph!">
+    </form>
+    <script language='javascript' type='text/javascript'>
+    function check() {
+        if (document.getElementById('maxDepth').value < document.getElementById('meanDepth').value) {
+            <!--document.getElementById('maxDepth').value=document.getElementById('meanDepth').value-->
+            document.getElementById('maxDepth').setCustomValidity('The max depth must be greater than or equal to the mean depth');
+        } else {
+            // input is valid -- reset the error message
+            document.getElementById('maxDepth').setCustomValidity('');
+       }
+    }
+    </script>
+{% endblock %}
