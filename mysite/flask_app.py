@@ -312,7 +312,7 @@ if __name__ == '__main__':
 	debug=True
 	if (False==debug):
 		print("running publically!")
-		app.run(host='0.0.0.0') #uncomment to run publically		
+		app.run(host='0.0.0.0') #only run publically if NOT in debug mode.		
 	else:
 		print("running in debug mode!")
 		app.run()
