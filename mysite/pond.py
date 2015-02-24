@@ -194,6 +194,7 @@ class Pond:
             return lightValues
     
     #8 surface light at time t (umoles*m^-2*s^-1)
+    #source of equation: McBride (1992)
     def surfaceLightAtTimeT(self, t=6.0): #if day length 12, 6 is noon.
         return self.noonLight*np.sin((np.pi*(t/self.dayLength)))
     
