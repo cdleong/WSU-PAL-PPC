@@ -132,27 +132,44 @@ class Pond:
     #Science functions
     ######################
 
-    # 1
+    #1 Lake area at depth z. Calculated from area at depth zero (the surface)
     def surfaceAreaAtDepthZ(self, z=0.0):
         if(z>self.getMaxDepth()):
             z=self.getMaxDepth()
         return self.surfaceAreaAtDepthZero*pow((1-(float(z)/self.maxDepth)),self.getShapeFactor())
-    # 2
+    
+    #2 Lake volume above depth z.
+    # uses shape factor (gamma) 
     def lakeVolumeAboveDepthZ(self, z):
         return (self.getShapeFactor()*z)/(self.getShapeFactor()+1)
-    #3
+    
+    #3  phytoplankton chlorophyll Chl
+    # Calculated using magic numbers from total phosphorus
+    # source of magic: Prairie et al. (1989)
     def phytoplanktonChl(self):
         return self.getPhytoplanktoChlorophyll()
-    #4
+    
+    #4 phytoplankton productivity, PP (mg C*m^-3*h^-1)
+    #source of magic: Guildford, et al (1994)
     def phytoplanktonProductivity(self):
         return 2.2*self.getPhytoplanktoChlorophyll() #magic
-    #5
+    
+    #5 thermocline depth (m) 
+    #calculated from surface area using magic numbers 
+    #from paper (Hanna 1990)    
     def thermoclineDepth(self):
         return 6.95*pow(self.surfaceAreaAtDepthZero,0.185) #magic
-    #6
+    
+    #6 light-attenuation coefficient (m^-1)
+    #calculated from #3, 
+    #or, in real life, just measured. 
+    #source: Light attenuation and photosynthesis of aquatic plant communities 
+    # Krause-Jensen and Sand-Jensen, 1998
     def calculateLightAttenuationCoefficient(self):
         return self.getBackgroundLightAttenuation()+0.015*self.getPhytoplanktoChlorophyll()
-    #7
+    
+    #7 light at depth z, time t (umoles*m^-2*s^-1)
+    #calculated from light attenuation factor, surface light at time 0, depth.
     def lightAtDepthZAndTimeT(self, depths=None, t=6.0): #if day length 12, 6 is noon.
         if depths is None:           
             depths = []
@@ -175,15 +192,18 @@ class Pond:
             return lightValues[0]
         else:
             return lightValues
-    #8
+    
+    #8 surface light at time t (umoles*m^-2*s^-1)
     def surfaceLightAtTimeT(self, t=6.0): #if day length 12, 6 is noon.
         return self.noonLight*np.sin((np.pi*(t/self.dayLength)))
-    #9
+    
+    #9 daily phytoplankton PP at depth Z (mg C)
+    #summed from sunrise to sunset.
     def dailyPPatDepthZ(self,deltaT=0.25,deltaZ=0.1, saturationLight=180, depths=None):
         if depths is None:           
             depths = []
             depths.append(0.0)
-        if isinstance(depths, (int,long,float)):
+        if isinstance(depths, (int,long,float)): #what is this? 
             #print depths
             depths = [depths]
             #print depths        
@@ -210,7 +230,9 @@ class Pond:
        
 
 
-    #10
+    #10 daily whole-lake phytoplankton production, TPP (mg C/m^2)
+    #basically #9, summed from depth 0 to depth epi (epilimnion), 
+    #then that quantity divided by surface area at zero.
     def dailyTPP(self, deltaT=0.25, deltaZ=0.1, saturationLight=180):
         summation = 0.0
         z=0.0 #lake surface
@@ -220,7 +242,7 @@ class Pond:
         return summation/self.surfaceAreaAtDepthZero
 
 
-    #11
+    #11 daily benthic primary production, BP, at depth z (mg C)
     def dailyBPatDepthZ(self,deltaT=0.25, deltaZ=0.1, saturationLight = 300, z=0):
         summation = 0.0
         bpMax = self.getBPMax()
@@ -233,7 +255,8 @@ class Pond:
             hyperbolicThing = mat.tanh(lightZT/saturationLight)
             summation += bpMax*hyperbolicThing*deltaArea
         return summation
-    #12
+    
+    #12 daily whole-lake periphyton production, TBP (mg C/m2 )
     def dailyTBP(self, deltaT=0.25, deltaZ=0.1, saturationLight = 300):
         summation = 0.0
         z=0.0 #lake surface
