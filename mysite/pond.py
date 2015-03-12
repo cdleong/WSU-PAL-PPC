@@ -2,7 +2,7 @@
 """
 Created on Thu Jun 05 09:38:17 2014
 
-@author: student
+@author: cdleong
 """
 
 import math as mat
