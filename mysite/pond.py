@@ -235,7 +235,6 @@ class Pond:
         
         ppValues = []
         
-        #todo: more efficient code? double-nested loops are bad.
         for depth in depths:
             summation = 0.0
             ppMax = self.phytoplanktonProductivity()
@@ -249,7 +248,6 @@ class Pond:
                 summation += ppMax*hyperbolicThing*deltaVolume
             ppValues.append(summation)
                 
-        #I put this in so you could do single values or arrays with one function. 
         if(len(ppValues)==1):           
             return ppValues[0]       
         else:
@@ -274,7 +272,7 @@ class Pond:
 
     def dailyBPatDepthZ(self,deltaT=0.25, deltaZ=0.1, saturationLight = 300, z=0):
         """
-        #11 daily benthic (aka periphyton) primary production, BP, at depth z (mg C)
+        #11 daily benthic primary production, BP, at depth z (mg C)
         """        
         summation = 0.0
         bpMax = self.getBPMax()
