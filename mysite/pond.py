@@ -15,7 +15,8 @@ import matplotlib.pyplot as plt
 class Pond:
     """A pond.
 
-    TODO: More docstrings"""
+    TODO: More docstrings
+    """
 
     ###################################
     #KNOWS (default values arbitrary)
@@ -27,10 +28,10 @@ class Pond:
     totalPhos = 3 #TP (total phosphorus, mg/m^3)
     dayLength = 15 #hours of sunlight
     noonSurfaceLight = 1500 #µmol*m^(-2)*s^(-1 ) (aka microEinsteins?)
-    backgroundLightAtten = 0.05
+    backgroundLightAtten = 0.05 #kd is the other name for this
     surfaceAreaAtDepthZero = 10.0 #(m^2)
     noonLight = 1500.0 #surface light at solar noon
-    bpMax  = 5
+    bpMax  = 5 #max benthic production
 
 
 
@@ -304,114 +305,7 @@ class Pond:
 
 
 def main(): 
-
-    #figures, subplots, other magic graphing stuff
-    fig = plt.figure()
-    ax = fig.add_subplot(1,1,1) #http://stackoverflow.com/questions/3584805/in-matplotlib-what-does-111-means-in-fig-add-subplot111
-
-
-
-    #default values
-    meanDepth = 20.0 #meters
-    maxDepth = 20.0 #meters
-    phosphorus = 100.0 #mg/m^3
-    
-    #try to get user value of phosphorus
-    
-
-    exampleSmallPhosVal=3.0    
-    exampleLargePhosVal=500.0    
-    lightIntensityAtOnsetOfSaturation = 180.0
-    
-    
-    
-        
-    
-    
-    pond = Pond(meanDepth,maxDepth)
-
-    print "*****************************************************"
-    print pond.getMaxDepth()
-    print pond.getMeanDepth()
-    print pond.getDepthRatio()
-    print "*****************************************************"
-    print "*****************************************************"
-    print "*****************************************************"
-    
-
-    
-    #setup y-axis
-    depths = np.linspace(0, maxDepth, 500) #500 points spaced from 0.0 to max depth
-    y = depths
-    print len(y)
-    
-    #Setup x-axis
-    #plot the extreme (example) values
-    pond.setTotalPhos(exampleSmallPhosVal)
-    x1 =pond.dailyPPatDepthZ(0.25,0.1, lightIntensityAtOnsetOfSaturation, depths) #deltaT, deltaZ, light intensity at onset of saturation, depths
-    pond.setTotalPhos(exampleLargePhosVal)
-    x2 =pond.dailyPPatDepthZ(0.25,0.1, lightIntensityAtOnsetOfSaturation, depths) #deltaT, deltaZ, light intensity at onset of saturation, depths    
-    pond.setTotalPhos(phosphorus)
-    x3 =pond.dailyPPatDepthZ(0.25,0.1, lightIntensityAtOnsetOfSaturation, depths) #deltaT, deltaZ, light intensity at onset of saturation, depths    
-    
-    print len(x1)    
-    
-    #set labels for graph legend
-    #fancy number formatting from http://stackoverflow.com/questions/21226868/superscript-in-python-plots    
-    label1 = "%.1f $mg/m^3$" %exampleSmallPhosVal #fancy %f stuff learned from http://stackoverflow.com/questions/6649597/python-decimal-places-putting-floats-into-a-string
-    label2 = "%.1f $mg/m^3$" %exampleLargePhosVal 
-    label3 = "%.1f $mg/m^3$" %phosphorus
-    
-      
-    #graph lines here   
-    ax.plot(x1, y, 'k--', label= label1)
-    ax.plot(x2, y, 'k:', label= label2)
-    ax.plot(x3, y, 'r-', label= label3)
-    
-    
-    
-    
-     
-    
-    
-    
-    
-    
-    ax.set_xlabel('Daily Pelagic Primary Productivity (mg C*$m^{-3}*d^{-1}$) for different phosphorus levels')
-    ax.set_xlim([1,2000])
-    
-    plt.grid(True)
-    
-    plt.ylabel('depth (m)')
-
-    fig.gca().invert_yaxis() #make 0 be at the top, rather than the borrom
-
-    legend = plt.legend(loc='lower right', shadow=True)
-    frame  = legend.get_frame()
-    frame.set_facecolor('0.90')
-
-    # Set the fontsize
-    for label in legend.get_texts():
-        label.set_fontsize('large')
-
-    for label in legend.get_lines():
-        label.set_linewidth(1.5)  # the legend line width
-    
-    
-    ##uncomment this bit for running in a console
-    plt.show()
-    
-    ##uncomment this part for the conversion to flask
-    ##Source of sorcery: https://gist.github.com/liuyxpp/1250396
-    ##figure to canvas, canvas to buffer, buffer to png, png to response. magic!
-    #canvas = FigureCanvas(fig)
-    #output = StringIO.StringIO()
-    #canvas.print_png(output)
-    #response = make_response(output.getvalue())
-    #response.mimetype = 'image/png'
-    #return response    
-          
-          
+    print "hello world"
         
 
 
