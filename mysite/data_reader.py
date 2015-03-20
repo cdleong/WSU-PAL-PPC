@@ -77,6 +77,12 @@ def main():
     print len(rowsThatHaveUS_Spark)   # 1120 rows, or, about a third of them. Not unreasonable 
     print rowsThatHaveUS_Spark[0] #hey it worked.
     
+    #find kd
+    curr_column = 14 #I think it is this one
+    print columnnames[curr_column] #yup
+    
+  
+    
     
     
      
