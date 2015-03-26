@@ -162,6 +162,11 @@ def main():
         
     
     print "TOTAL AREA: ", total_area
+    
+    ################################
+    #Fractional area
+    ################################
+    
         
     
     
