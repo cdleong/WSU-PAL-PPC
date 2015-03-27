@@ -5,6 +5,9 @@ Created on Mar 5, 2015
 '''
 import xlrd, xlwt #reading and writing, respectively. 
 from pond_layer import Pond_Layer
+from pond import Pond
+import numpy as np
+from django.contrib.gis.geos.base import numpy
 
 
 #Useful notes: http://www.youlikeprogramming.com/2012/03/examples-reading-excel-xls-documents-using-pythons-xlrd/
@@ -163,39 +166,64 @@ def main():
     
     curr_row = 0
     curr_column = area_index
-    total_area = 0 #I expect 518220
+    pond_littoral_area = 0 #I expect 518220
     while curr_row<len(rowsForLittoralArea):        
         row = rowsForLittoralArea[curr_row]
         area_at_z = row[curr_column].value
-        total_area += area_at_z
+        pond_littoral_area += area_at_z
         curr_row+=1
 
         
     
-    print "TOTAL AREA: ", total_area
+    print "TOTAL AREA: ", pond_littoral_area
     
     ################################
-    #Fractional area
+    #Fractional area and make objects
     ################################
     print "number of rows in littoral area is", len(rowsForLittoralArea)
-    listOfPondLayers = [] #list of PondLayer objects.
     
     
     curr_row = 0
     curr_column = 0
+    lengthOfDayIndex = 27
+    print columnnames[lengthOfDayIndex]#yup
+    noonLightIndex = 18
+    print columnnames[noonLightIndex]
+    pmax_index = 13
+    print columnnames[pmax_index]
+    ikIndex = 21
+    print columnnames[ikIndex]
+    
+    
+    #MAKE A POND
+    row = rowsForLittoralArea[curr_row]
+    pond_doy_value = row[dayOfYearIndex].value #Day of year, same for every row
+    pond_kd_value = row[kd_index].value #kd value (light attenuation coefficient
+    pond_lod_value = row[lengthOfDayIndex].value
+    pond_noonLight_value = row[noonLightIndex].value
+    
+    pond = Pond() #includes a list of pond_layers
+    pond.setDayOfYear(pond_doy_value)
+    pond.setBackgroundLightAttenuation(pond_kd_value)
+    pond.setDayLength(pond_lod_value)
+    pond.setLittoralArea(pond_littoral_area)
+    pond.setNoonSurfaceLight(pond_noonLight_value)
+    
+    
+    
+    
+    
+    #make layers
     while curr_row<len(rowsForLittoralArea):        
         row = rowsForLittoralArea[curr_row]
-#         row_doy_value = row[dayOfYearIndex].value #same for every row
-        row_depth_value = row[depth_index].value
-#         print "row depth value is ", row_depth_value
-        #row_kd_value = row[kd_index].value #should be the same for every row actually
-        
+        row_depth_value = row[depth_index].value        
         row_area_value = row[area_index].value
-#         print "row area value = ", row_area_value
-        row_fractional_area = row_area_value/total_area
-#         print "row fractional area = ", row_fractional_area
-        layer = Pond_Layer(row_depth_value, row_area_value, row_fractional_area)
-        listOfPondLayers.append(layer)
+        row_fractional_area = row_area_value/pond_littoral_area
+        row_pmax_value = row[pmax_index].value
+        row_ik_value = row[ikIndex].value
+        layer = Pond_Layer(row_depth_value, row_area_value, row_fractional_area, row_pmax_value, row_ik_value)
+        print "adding layer with values", layer.get_depth(), " , ", layer.get_fractional_area(), " , ", layer.get_ik(), " , ", layer.get_pmax(), " "
+        pond.appendPondLayer(layer)
         curr_row+=1
         
     
@@ -205,12 +233,64 @@ def main():
     
     #test. fractional areas should equal 1
     test_area_total=0 #should be 1 at the end
-    for layer in listOfPondLayers:
+    for layer in pond.pondLayerList:
         f_area = layer.get_fractional_area()
-        print "f_area is ",f_area 
+#         print "f_area is ",f_area 
         test_area_total+=layer.fractional_area
         
     print "sum of fractional areas is ", test_area_total
+    
+    
+    timeInterval =0.25
+    
+    time =0.0
+    noonLight = pond.getNoonSurfaceLight()
+    lengthOfDay = pond.getDayLength()
+    kd = pond.getBackgroundLightAttenuation()
+    BPPR =0.0 #
+    while (time < pond.getDayLength()): #for each time interval
+        
+        
+        
+        light = noonLight * np.sin(np.pi*(time/lengthOfDay)) #SAS code was light = noon*sin(constant('pi')*Time/LOD1);
+        print "light at time ", time, " is ", light
+        #for each layer
+        for layer in pond.pondLayerList:
+            z = layer.get_depth()
+            f_a = layer.get_fractional_area
+            pmax = layer.get_pmax()
+            ik = layer.get_ik()
+            BPPRZT = (pmax*np.tanh(light*np.exp(-kd*z)/ik))
+            BPPR += BPPRZT
+            
+            
+        time+=timeInterval  
+        
+    BPPR = BPPR/(1/timeInterval) #e.g. 1/0.25 = 4. Accounting for 15 minute time. Calculations give us production/hour, but we calculated 4 times per hour, so adding them all up gives 4 times as much
+    print "Whole lake Benthic Primary Production per meter squared per day is ", BPPR
+    
+    
+    for layer in pond.pondLayerList:
+        f_area = layer.get_fractional_area()
+        bpprz = BPPR*f_area
+        print bpprz
+        layer.set_bpprz(bpprz)
+        
+            
+            
+        
+        
+        
+        
+        
+        
+        
+        
+        
+    
+    
+    
+    
         
         
         

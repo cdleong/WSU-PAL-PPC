@@ -95,7 +95,7 @@ def pondLight():
 
     #setup pond object
     pond = Pond(meanDepth,maxDepth)
-    pond.setBackgroundLightAtten(0.05)
+    pond.setBackgroundLightAttenuation(0.05)
 
 
 

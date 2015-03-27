@@ -21,6 +21,8 @@ class Pond:
     ###################################
     #KNOWS (default values arbitrary)
     ###################################
+    dayOfYear = 0 #day of year 0-366
+    littoralArea = 0.0
     meanDepth = 1.0 #z mean
     maxDepth = 2.0 #z max
     #depthRatio = 0.5 #DR= meanDepth/maxDepth
@@ -30,8 +32,8 @@ class Pond:
     noonSurfaceLight = 1500 #µmol*m^(-2)*s^(-1 ) (aka microEinsteins?)
     backgroundLightAtten = 0.05 #kd is the other name for this
     surfaceAreaAtDepthZero = 10.0 #(m^2)
-    noonLight = 1500.0 #surface light at solar noon
     bpMax  = 5 #max benthic production
+    pondLayerList = []
 
 
 
@@ -53,7 +55,8 @@ class Pond:
                  backgroundLightAtten = 0.2,
                  surfaceAreaAtDepthZero = 11.0,
                  noonLight=1500.0,
-                 bpMax=5.0):
+                 bpMax=5.0,
+                 pondLayerList = []):
         self.setMeanDepth(meanDepth)
         self.setMaxDepth(maxDepth)
         #self.depthRatio = float(meanDepth)/float(maxDepth)
@@ -69,6 +72,20 @@ class Pond:
     #getters/setters, etc.
     ######################
 
+    def getDayOfYear(self):
+        return self.dayOfYear
+    
+    def setDayOfYear(self, dayOfYear):
+        if (dayOfYear<366 and dayOfYear>=0):#simple check
+            self.dayOfYear=dayOfYear
+            
+    def getLittoralArea(self):
+        return self.littoralArea
+    
+    def setLittoralArea(self, littoralArea):
+        self.littoralArea = littoralArea
+            
+    
     def getMeanDepth(self):
         return self.meanDepth
 
@@ -105,11 +122,17 @@ class Pond:
     def getBackgroundLightAttenuation(self):
         return self.backgroundLightAtten
 
-    def setBackgroundLightAtten(self, backgroundLightAtten):
+    def setBackgroundLightAttenuation(self, backgroundLightAtten):
         self.backgroundLightAtten=backgroundLightAtten
 
     def getSufaceAreaAtDepthZero(self):
         return self.surfaceAreaAtDepthZero
+    
+    def getNoonSurfaceLight(self):
+        return self.noonSurfaceLight
+    
+    def setNoonSurfaceLight(self, noonSurfaceLight):
+        self.noonSurfaceLight = noonSurfaceLight
 
     def setSufaceAreaAtDepthZero(self, surfaceAreaAtDepthZero):
         self.surfaceAreaAtDepthZero=surfaceAreaAtDepthZero
@@ -123,6 +146,22 @@ class Pond:
 
     def setBPMax(self, bpMax):
         self.bpMax = bpMax
+        
+    def getPondLayer(self, index):
+        return self.pondLayerList[index]
+    
+    def popPondLayer(self, index):
+        return self.pondLayerList.pop(index)
+        
+    def appendPondLayer(self, layer):
+        self.pondLayerList.append(layer)
+        
+    def getPondLayerList(self):
+        return self.pondLayerList
+    
+    def setPondLayerList(self, pondLayerlist):
+        self.pondLayerList = pondLayerlist
+        
 
 
 
