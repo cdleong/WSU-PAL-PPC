@@ -4,11 +4,7 @@ Created on Mar 5, 2015
 @author: cdleong
 '''
 import xlrd, xlwt #reading and writing, respectively. 
-<<<<<<< HEAD
 from pond_layer import Pond_Layer
-=======
-from mysite import PondLayer
->>>>>>> 9f77e90c56f2bca7a5e9aa3a12e0e111ffc70737
 
 
 #Useful notes: http://www.youlikeprogramming.com/2012/03/examples-reading-excel-xls-documents-using-pythons-xlrd/
@@ -81,11 +77,8 @@ def main():
         #print "the value at row index ", lakeIDIndex, " is ", row[lakeIDIndex] 
         if ('US_SPARK'==row[lakeIDIndex].value):
             rowsForOneLake.append(row)
-<<<<<<< HEAD
         curr_row+=1    
-=======
-            
->>>>>>> 9f77e90c56f2bca7a5e9aa3a12e0e111ffc70737
+        
     print len(rowsForOneLake)   # 1120 rows, or, about a third of them. Not unreasonable 
     print rowsForOneLake[0] #hey it worked.
     
@@ -101,22 +94,17 @@ def main():
     
     
     rowsForOneLakeAndOneDay = []
-<<<<<<< HEAD
     while curr_row<len(rowsForOneLake):        
-=======
-    while curr_row<len(rowsForOneLake)-1:
-        curr_row+=1
->>>>>>> 9f77e90c56f2bca7a5e9aa3a12e0e111ffc70737
+        
         row = rowsForOneLake[curr_row]
         
         if (doy==row[curr_column].value):
             print "the value at row index ", curr_column, " is ", row[curr_column] 
             rowsForOneLakeAndOneDay.append(row)
-<<<<<<< HEAD
         curr_row+=1
-=======
+
     
->>>>>>> 9f77e90c56f2bca7a5e9aa3a12e0e111ffc70737
+
 
     
 
@@ -148,7 +136,6 @@ def main():
     curr_row = 0
     curr_column = depth_index
     rowsForLittoralArea = []
-<<<<<<< HEAD
     while curr_row<len(rowsForOneLakeAndOneDay):        
         row = rowsForOneLakeAndOneDay[curr_row]
          
@@ -156,7 +143,6 @@ def main():
 #             print "the value at row index ", curr_column, " is ", row[curr_column] 
             rowsForLittoralArea.append(row)    
         curr_row+=1    
-=======
     while curr_row<len(rowsForOneLakeAndOneDay)-1:
         curr_row+=1
         row = rowsForOneLakeAndOneDay[curr_row]
@@ -165,7 +151,6 @@ def main():
             print "the value at row index ", curr_column, " is ", row[curr_column] 
             rowsForLittoralArea.append(row)    
             
->>>>>>> 9f77e90c56f2bca7a5e9aa3a12e0e111ffc70737
     ###############################
     #Calculate total littoral area
     ###############################
@@ -179,21 +164,12 @@ def main():
     curr_row = 0
     curr_column = area_index
     total_area = 0 #I expect 518220
-<<<<<<< HEAD
     while curr_row<len(rowsForLittoralArea):        
         row = rowsForLittoralArea[curr_row]
         area_at_z = row[curr_column].value
         total_area += area_at_z
         curr_row+=1
-#         print "area at ", row[depth_index].value, " is ", row[area_index].value
-=======
-    while curr_row<len(rowsForLittoralArea)-1:
-        curr_row+=1
-        row = rowsForLittoralArea[curr_row]
-        area_at_z = row[curr_column].value
-        total_area += area_at_z
-        print "area at ", row[depth_index].value, " is ", row[area_index].value
->>>>>>> 9f77e90c56f2bca7a5e9aa3a12e0e111ffc70737
+
         
     
     print "TOTAL AREA: ", total_area
@@ -201,7 +177,6 @@ def main():
     ################################
     #Fractional area
     ################################
-<<<<<<< HEAD
     print "number of rows in littoral area is", len(rowsForLittoralArea)
     listOfPondLayers = [] #list of PondLayer objects.
     
@@ -240,11 +215,7 @@ def main():
         
         
         
-         
-        
-=======
->>>>>>> 9f77e90c56f2bca7a5e9aa3a12e0e111ffc70737
-    
+
         
     
     
