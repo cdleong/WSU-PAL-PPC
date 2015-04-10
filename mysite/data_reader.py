@@ -104,7 +104,7 @@ def main():
         
         
         #totalPhos value arbitrarily picked
-        totalphos_value = 4.0
+        totalphos_value = 500.0
         
 
         #create Pond_Layer object using values specific to that layer/row
@@ -161,12 +161,12 @@ def main():
     print "***********************************************************************************"
     for pond in pondList:
         pppr = pond.calculateDailyWholeLakePelagicPrimaryProduction(0.25)
-        print "lake ID: ", pond.getLakeID(), ", DOY: ", pond.getDayOfYear(), ", surface area (ha): ", pond.getSufaceAreaAtDepthZero()/10000, ", total littoral area: ", pond.calculateTotalLittoralArea(), ",\n whole lake PPPR (mg C *day^-1): ", pppr
+#         print "lake ID: ", pond.getLakeID(), ", DOY: ", pond.getDayOfYear(), ", surface area (ha): ", pond.getSufaceAreaAtDepthZero()/10000, ", total littoral area: ", pond.calculateTotalLittoralArea(), ",\n whole lake PPPR (mg C *day^-1): ", pppr
 #         bppr = pond.calculateDailyWholeLakeBenthicPrimaryProductionPerMeterSquared(0.25) #use quarter-hours
 #         bpprPerHour = bppr/pond.getDayLength()
         
 #         print "lake ID: ", pond.getLakeID(), ", DOY: ", pond.getDayOfYear(), ", number of Layers: ", len(pond.pondLayerList), ", surface area (ha): ", pond.getSufaceAreaAtDepthZero()/10000, ", total littoral area: ", pond.calculateTotalLittoralArea(), ",\n whole lake BPPR (mg C *m^-2*day^-1): ", bppr, ", BPPR (mg C * m^-2*hour^-1)", bpprPerHour
-#         print "***********************************************************************************"
+        print "***********************************************************************************"
         
 
 
