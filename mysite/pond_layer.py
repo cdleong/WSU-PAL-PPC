@@ -15,9 +15,10 @@ class Pond_Layer(object):
     area = -1.0 #m^2
 #     fractional_area = 0.0 #m^2/m^2 = unitless fraction. All the layers should add up to 1 though. Actually let us not keept this. Just calculate it. 
     depth = -1.0
-    pmax = 0.0
-    ik = 0.0
+    pmax = -1.0
+    ik = -1.0
     bpprz =-1.0
+    ppprz = -1.0
 
 
     def __init__(self, depth=-1.0, area=-1.0,  pmax =0.0, ik = 0.0, bpprz = -1.0):
@@ -29,6 +30,14 @@ class Pond_Layer(object):
         self.pmax = pmax
         self.ik=ik
         self.bpprz = bpprz
+
+    def get_ppprz(self):
+        return self.ppprz
+
+
+    def set_ppprz(self, value):
+        self.ppprz = value
+
 
     def get_area(self):
         return self.area
@@ -82,6 +91,7 @@ class Pond_Layer(object):
 
     def set_depth(self, value):
         self.depth = value
+
 
 
 
