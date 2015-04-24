@@ -8,8 +8,8 @@ import matplotlib.pyplot as plt
 from pond import Pond
 
 app = Flask(__name__)
-app.secret_key = 'This is really unique and secret'
-
+app.secret_key = 'This is really unique and secret' #secret key set during flask tutorial. Not actually used
+#app.debug=True
 
 
 @app.route('/', methods=['GET', 'POST'])
@@ -18,6 +18,7 @@ def indexView():
 
     return """
         <p>Protoype built in Flask and Python. Click here to see a graph of light in a pond! </p>
+        <p>Download example data <a href="inputs_pruned.xlsx" download>here</a></p>
         <form method="POST" action="%s" id="form" onchange="check()">
             Mean depth of pond (m): <input type="number" id="meanDepth" name="meanDepth" min="0" max = "500" step="0.1" value = "20.0" required/>
             Maximum depth of pond (m): <input type="number" id="maxDepth" name="maxDepth" min="0" max = "500" step="0.1" value = "20.0" required/>
@@ -38,6 +39,11 @@ def indexView():
         </script>
 
         """ % (url_for('lightGraph'))
+
+
+@app.route('/inputs_pruned.xlsx')
+def template():
+    return app.send_static_file('inputs_pruned.xlsx')
 
 
 

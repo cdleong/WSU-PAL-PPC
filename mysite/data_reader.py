@@ -27,50 +27,53 @@ let us test things
 '''
 def main(): 
     print "hello world"
-    book = xlrd.open_workbook("pprinputs_Colin.xlsx")
-    print "The number of worksheets is", book.nsheets
-    print "Worksheet name(s):", book.sheet_names()
-    
-    
-    #workSheet = book.sheet_by_index(0)
-    workSheet = book.sheet_by_name('pprinputs')
-
-    
-    num_rows = workSheet.nrows-1
-    
-    print "the number of rows is", num_rows
-    
-    curr_row =0
-    
-    columnnames = workSheet.row(curr_row)
-    
-    print columnnames
-    
-    #
-    
-    
-    
-    
-    #I successfully printed a row. I have discovered how to read data from excel spreadsheets.
-    #success.
-    
     
     ##############################################
     #all the data indices
     ##############################################
-    #based off pprinputs_colin.xlsx
-    dayOfYearIndex = 1 #"DOY" 
-    lakeIDIndex = 2 #"Lake_ID"
-    depth_index = 3 #"z" in meters
-    surface_area_index = 9 #"LA.m2"
-    gam_index = 10
-    pmax_index = 13 #"pmax.z"
-    kd_index = 14 #index of light attenuation coefficient kd
-    area_index = 16 #"kat_div" in meters squared. TODO: why is it not even close to LA at z=0?      
-    noonLightIndex = 18 #"midday.mean.par"      
-    ikIndex = 21 #"ik_z" light intensity at onset of saturation     
-    lengthOfDayIndex = 27 #"LOD" in hours   
- 
+    testFlag=1
+    filename =""
+    if(2==testFlag): #based off pprinputs_colin.xlsx      
+        filename = "pprinputs_Colin.xlsx"
+        dayOfYearIndex = 1 #"DOY" 
+        lakeIDIndex = 2 #"Lake_ID"
+        depth_index = 3 #"z" in meters
+        surface_area_index = 9 #"LA.m2"
+        gam_index = 10
+        pmax_index = 13 #"pmax.z"
+        kd_index = 14 #index of light attenuation coefficient kd
+        area_index = 16 #"kat_div" in meters squared. TODO: why is it not even close to LA at z=0?      
+        noonLightIndex = 18 #"midday.mean.par"      
+        ikIndex = 21 #"ik_z" light intensity at onset of saturation     
+        lengthOfDayIndex = 27 #"LOD" in hours   
+        
+    elif(1==testFlag):#based off inputs_pruned.xlsx   
+        filename = "example.xlsx"  
+        dayOfYearIndex = 0 #"DOY" 
+        lakeIDIndex = 1 #"Lake_ID"
+        depth_index = 2 #"z" in meters
+        surface_area_index = 3 #"LA.m2"
+        gam_index = 4
+        pmax_index = 5 #"pmax.z"
+        kd_index = 6 #index of light attenuation coefficient kd
+        area_index = 7 #"kat_div" in meters squared. TODO: why is it not even close to LA at z=0?      
+        noonLightIndex = 8 #"midday.mean.par"      
+        ikIndex = 9 #"ik_z" light intensity at onset of saturation     
+        lengthOfDayIndex = 10 #"LOD" in hours         
+    
+    
+    book = xlrd.open_workbook(filename)
+    print "The number of worksheets is", book.nsheets
+    print "Worksheet name(s):", book.sheet_names()
+    workSheet = book.sheet_by_name('pprinputs')
+    num_rows = workSheet.nrows-1
+    print "the number of rows is", num_rows
+    curr_row =0
+    columnnames = workSheet.row(curr_row)
+    print columnnames
+    
+
+        
 
 
 
@@ -141,14 +144,7 @@ def main():
             pondList.append(pond)
             
         else: #Pond exists. just append the PondLayer
-            print "appending layer to pond with lake ID = ", pond.getLakeID(), " , and DOY = ", pond.getDayOfYear()
-            print "length of pondLayerList is now ", len(pond.pondLayerList)
-            pond.appendPondLayerIfPhotic(layer)
-            print "length of pondLayerList is now ", len(pond.pondLayerList)
-            
-                
-        
-
+            pond.appendPondLayerIfPhotic(layer)     
         
         print "curr_row = ", curr_row, " size of pond list is: ", len(pondList)
         curr_row+=1    
@@ -160,12 +156,11 @@ def main():
     
     print "***********************************************************************************"
     for pond in pondList:
-        pppr = pond.calculateDailyWholeLakePelagicPrimaryProduction(0.25)
+#         pppr = pond.calculateDailyWholeLakePelagicPrimaryProduction(0.25)
 #         print "lake ID: ", pond.getLakeID(), ", DOY: ", pond.getDayOfYear(), ", surface area (ha): ", pond.getSufaceAreaAtDepthZero()/10000, ", total littoral area: ", pond.calculateTotalLittoralArea(), ",\n whole lake PPPR (mg C *day^-1): ", pppr
-#         bppr = pond.calculateDailyWholeLakeBenthicPrimaryProductionPerMeterSquared(0.25) #use quarter-hours
-#         bpprPerHour = bppr/pond.getDayLength()
+        bppr = pond.calculateDailyWholeLakeBenthicPrimaryProductionPerMeterSquared(0.25) #use quarter-hours
         
-#         print "lake ID: ", pond.getLakeID(), ", DOY: ", pond.getDayOfYear(), ", number of Layers: ", len(pond.pondLayerList), ", surface area (ha): ", pond.getSufaceAreaAtDepthZero()/10000, ", total littoral area: ", pond.calculateTotalLittoralArea(), ",\n whole lake BPPR (mg C *m^-2*day^-1): ", bppr, ", BPPR (mg C * m^-2*hour^-1)", bpprPerHour
+        print "lake ID: ", pond.getLakeID(), ", DOY: ", pond.getDayOfYear(), ", number of Layers: ", len(pond.pondLayerList), ", surface area (ha): ", pond.getSufaceAreaAtDepthZero()/10000, ", total littoral area: ", pond.calculateTotalLittoralArea(), ",\n whole lake BPPR (mg C *m^-2*day^-1): ", bppr
         print "***********************************************************************************"
         
 
