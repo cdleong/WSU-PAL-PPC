@@ -10,6 +10,7 @@ import pylab as pl
 import numpy as np
 import matplotlib.pyplot as plt
 from mysite.pond_layer import Pond_Layer
+
 from operator import or_
 
 
@@ -554,6 +555,9 @@ class Pond:
 
 def main(): 
     print "hello world"
+    reader = DataReader()
+    
+    
         
 
 

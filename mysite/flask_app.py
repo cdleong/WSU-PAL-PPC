@@ -1,29 +1,97 @@
-from flask import Flask, request, url_for, make_response, render_template
+from flask import Flask, abort, request, url_for, make_response, render_template, redirect, send_from_directory
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
+from werkzeug import secure_filename
 import StringIO
 import numpy as np
 import matplotlib.pyplot as plt
+import os
 
 
 from pond import Pond
+from data_reader import DataReader
+import xlrd, xlwt #reading and writing, respectively.
 
+
+
+#http://flask.pocoo.org/docs/0.10/patterns/fileuploads/
+# This is the path to the upload directory
+UPLOAD_FOLDER = '/tmp/'
+ALLOWED_EXTENSIONS = set(['txt', 'xls', 'xlsx', 'csv'])
+
+# Initialize the Flask application
 app = Flask(__name__)
-app.secret_key = 'This is really unique and secret' #secret key set during flask tutorial. Not actually used
+
+app.secret_key = 'This is really unique and secret'
+
+# These are the extension that we are accepting to be uploaded
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024 #arbitrary 16 megabyte upload limit
 #app.debug=True
 
+# @app.context_processor
+# def my_utility_processor():
+
+#     def bppr(filename):
+#         reader = DataReader(filename)
+#         # Get the name of the uploaded file
+#         f = request.files.get(filename)
+#         # Check if the file is one of the allowed types/extensions
+#         pondList = reader.readFile(f)
+#         pond = pondList[0]
+#         bppr0=pond.calculateDailyWholeLakeBenthicPrimaryProductionPerMeterSquared(0.25)
+#         return '%d' % bppr0
+
+#     return dict(bppr=bppr)
+
+
+
+
+# For a given file, return whether it's an allowed type or not
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
 
 @app.route('/', methods=['GET', 'POST'])
 @app.route('/index', methods=['GET', 'POST'])
 def indexView():
+    if request.method == 'POST':
+         # Get the name of the uploaded file
+        file = request.files['file']
+        # Check if the file is one of the allowed types/extensions
+        if file and allowed_file(file.filename):
+            # Make the filename safe, remove unsupported chars
+            filename = secure_filename(file.filename)
+            # Move the file form the temporal folder to
+            # the upload folder we setup
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            reader = DataReader(os.path.join(app.config['UPLOAD_FOLDER'], filename))
 
+            pondList = reader.read()
+            pond = pondList[0]
+            bppr0=pond.calculateDailyWholeLakeBenthicPrimaryProductionPerMeterSquared(0.25)
+
+            # Redirect the user to the uploaded_file route, which
+            # will basicaly show on the browser the uploaded file
+            # return redirect(url_for('uploaded_file',
+            #                         filename=filename))
+            return redirect(url_for("bpprtest",filename=filename,bppr=bppr0))
     return """
-        <p>Protoype built in Flask and Python. Click here to see a graph of light in a pond! </p>
-        <p>Download example data <a href="inputs_pruned.xlsx" download>here</a></p>
+        <h2>Protoype built in Flask and Python. Click here to see a graph of light in a pond! </h2>
+
         <form method="POST" action="%s" id="form" onchange="check()">
             Mean depth of pond (m): <input type="number" id="meanDepth" name="meanDepth" min="0" max = "500" step="0.1" value = "20.0" required/>
             Maximum depth of pond (m): <input type="number" id="maxDepth" name="maxDepth" min="0" max = "500" step="0.1" value = "20.0" required/>
             Phosphorus (mg/m^3): <input type="number" name="phosphorus" min="0" max = "2000" step="0.1" value = "100.0" required/>
             <input type="submit" value="graph!">
+        </form>
+
+        <p>[Removed]</p>
+
+        <h2>Prototype 2: Upload Data File</h2>
+        <p>Download example data <a href="inputs_pruned.xlsx" download="example_data.xlsx">here</a></p>
+        <form action="" method=post enctype=multipart/form-data>
+          <p><input type=file name=file>
+             <input type=submit value=Upload>
         </form>
 
         <script language='javascript' type='text/javascript'>
@@ -41,11 +109,43 @@ def indexView():
         """ % (url_for('lightGraph'))
 
 
-@app.route('/inputs_pruned.xlsx')
+
+
+# This route is expecting a parameter containing the name
+# of a file. Then it will locate that file on the upload
+# directory and show it on the browser, so if the user uploads
+# an image, that image is going to be show after the upload
+@app.route('/tmp/<filename>', methods=['GET', 'POST'])
+def uploaded_file(filename):
+    # return render_template("bpprtest.html")
+    # return """
+    # <h2>is this working</h2>
+    # <p>{{ request.args.get["filename"] }}</p>
+    # """
+    return send_from_directory(app.config['UPLOAD_FOLDER'],
+                              filename)
+
+#http://stackoverflow.com/questions/20646822/how-to-serve-static-files-in-flask
+@app.route('/inputs_pruned.xlsx', methods=['GET', 'POST'])
 def template():
     return app.send_static_file('inputs_pruned.xlsx')
 
 
+
+@app.route('/bpprtest', methods=['GET', 'POST'])
+@app.route('/bpprtest.html', methods=['GET', 'POST'])
+def bpprtest():
+    return render_template("bpprtest.html")
+
+
+
+
+
+
+
+
+
+#######################################################################
 
 
 @app.route('/lightGraph', methods=['GET', 'POST'])
@@ -101,7 +201,7 @@ def pondLight():
 
     #setup pond object
     pond = Pond(meanDepth,maxDepth)
-    pond.setBackgroundLightAttenuation(0.05)
+    pond.setBackgroundLightAtten(0.05)
 
 
 
@@ -310,18 +410,6 @@ def dailyTPP():
     response = make_response(output.getvalue())
     response.mimetype = 'image/png'
     return response
-
-
-if __name__ == '__main__':
-	
-	
-	debug=True
-	if (False==debug):
-		print("running publically!")
-		app.run(host='0.0.0.0') #only run publically if NOT in debug mode.		
-	else:
-		print("running in debug mode!")
-		app.run()
 
 
 
