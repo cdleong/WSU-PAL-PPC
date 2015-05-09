@@ -1,11 +1,16 @@
-from flask import Flask, abort, request, url_for, make_response, render_template, redirect, send_from_directory
+from flask import Flask, abort, request, url_for, make_response, render_template, redirect, send_from_directory, jsonify, Response
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from werkzeug import secure_filename
+
 import StringIO
 import numpy as np
 import matplotlib.pyplot as plt
 import os
 
+#used for the excel output.
+import StringIO
+import mimetypes
+from werkzeug.datastructures import Headers #used for exporting files?
 
 from pond import Pond
 from data_reader import DataReader
@@ -28,20 +33,27 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024 #arbitrary 16 megabyte upload limit
 #app.debug=True
 
-# @app.context_processor
-# def my_utility_processor():
 
-#     def bppr(filename):
-#         reader = DataReader(filename)
-#         # Get the name of the uploaded file
-#         f = request.files.get(filename)
-#         # Check if the file is one of the allowed types/extensions
-#         pondList = reader.readFile(f)
-#         pond = pondList[0]
-#         bppr0=pond.calculateDailyWholeLakeBenthicPrimaryProductionPerMeterSquared(0.25)
-#         return '%d' % bppr0
+#used for making it possible to get numbers from python, and put them in HTML
+#Got this from http://blog.bouni.de/blog/2013/04/24/call-functions-out-of-jinjs2-templates/
+@app.context_processor
+def my_utility_processor():
 
-#     return dict(bppr=bppr)
+    def bppr(filename):
+        reader = DataReader(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+        # Check if the file is one of the allowed types/extensions
+        pondList = reader.read()
+        pond = pondList[0]
+        bpprList =[]
+        doyList =[]
+        for pond in pondList:
+            bppr = pond.calculateDailyWholeLakeBenthicPrimaryProductionPerMeterSquared(0.25) #use quarter-hours
+            bpprList.append(bppr)
+            doy =pond.getDayOfYear()
+            doyList.append(doy)
+        return bpprList
+
+    return dict(bppr=bppr)
 
 
 
@@ -67,25 +79,35 @@ def indexView():
             reader = DataReader(os.path.join(app.config['UPLOAD_FOLDER'], filename))
 
             pondList = reader.read()
-            pond = pondList[0]
-            bppr0=pond.calculateDailyWholeLakeBenthicPrimaryProductionPerMeterSquared(0.25)
+            bpprList =[]
+            doyList =[]
+            for pond in pondList:
+                bppr = pond.calculateDailyWholeLakeBenthicPrimaryProductionPerMeterSquared(0.25) #use quarter-hours
+                bpprList.append(bppr)
+                doy =pond.getDayOfYear()
+                doyList.append(doy)
+
+
+
 
             # Redirect the user to the uploaded_file route, which
-            # will basicaly show on the browser the uploaded file
+            # will basically show on the browser the uploaded file
             # return redirect(url_for('uploaded_file',
             #                         filename=filename))
-            return redirect(url_for("bpprtest",filename=filename,bppr=bppr0))
+            return redirect(url_for("bpprtest",filename=filename))
     return """
         <h2>Protoype built in Flask and Python. Click here to see a graph of light in a pond! </h2>
 
+<!--
         <form method="POST" action="%s" id="form" onchange="check()">
             Mean depth of pond (m): <input type="number" id="meanDepth" name="meanDepth" min="0" max = "500" step="0.1" value = "20.0" required/>
             Maximum depth of pond (m): <input type="number" id="maxDepth" name="maxDepth" min="0" max = "500" step="0.1" value = "20.0" required/>
             Phosphorus (mg/m^3): <input type="number" name="phosphorus" min="0" max = "2000" step="0.1" value = "100.0" required/>
             <input type="submit" value="graph!">
         </form>
+-->
 
-        <p>[Removed]</p>
+        <p>[Removed for now]</p>
 
         <h2>Prototype 2: Upload Data File</h2>
         <p>Download example data <a href="inputs_pruned.xlsx" download="example_data.xlsx">here</a></p>
@@ -117,11 +139,6 @@ def indexView():
 # an image, that image is going to be show after the upload
 @app.route('/tmp/<filename>', methods=['GET', 'POST'])
 def uploaded_file(filename):
-    # return render_template("bpprtest.html")
-    # return """
-    # <h2>is this working</h2>
-    # <p>{{ request.args.get["filename"] }}</p>
-    # """
     return send_from_directory(app.config['UPLOAD_FOLDER'],
                               filename)
 
@@ -138,6 +155,83 @@ def bpprtest():
     return render_template("bpprtest.html")
 
 
+
+
+
+
+
+#code to make an excel file for download.
+#modified from http://snipplr.com/view/69344/create-excel-file-with-xlwt-and-insert-in-flask-response-valid-for-jqueryfiledownload/
+@app.route('/export/')
+def export_view():
+    #########################
+    # Code for creating Flask
+    # response
+    #########################
+    response = Response()
+    response.status_code = 200
+
+
+    ##################################
+    # Code for creating Excel data and
+    # inserting into Flask response
+    ##################################
+    workbook = xlwt.Workbook()
+
+    #.... code here for adding worksheets and cells
+    #Create a new workbook object
+    workbook = xlwt.Workbook()
+
+    #Add a sheet
+    worksheet = workbook.add_sheet('Statistics')
+
+    #Add some values
+    for x in range(0, 10):
+        for y in range(0,10):
+            worksheet.write(x,y,x*y)
+
+    # workbook.save('statistics.xls')
+
+
+    #This is the magic. The workbook is saved into the StringIO object,
+    #then that is passed to response for Flask to use.
+    output = StringIO.StringIO()
+    workbook.save(output)
+    response.data = output.getvalue()
+
+    ################################
+    # Code for setting correct
+    # headers for jquery.fileDownload
+    #################################
+    filename = "export.xls"
+    mimetype_tuple = mimetypes.guess_type(filename)
+
+    #HTTP headers for forcing file download
+    response_headers = Headers({
+            'Pragma': "public",  # required,
+            'Expires': '0',
+            'Cache-Control': 'must-revalidate, post-check=0, pre-check=0',
+            'Cache-Control': 'private',  # required for certain browsers,
+            'Content-Type': mimetype_tuple[0],
+            'Content-Disposition': 'attachment; filename=\"%s\";' % filename,
+            'Content-Transfer-Encoding': 'binary',
+            'Content-Length': len(response.data)
+        })
+
+    if not mimetype_tuple[1] is None:
+        response.update({
+                'Content-Encoding': mimetype_tuple[1]
+            })
+
+    response.headers = response_headers
+
+    #as per jquery.fileDownload.js requirements
+    response.set_cookie('fileDownload', 'true', path='/')
+
+    ################################
+    # Return the response
+    #################################
+    return response
 
 
 
