@@ -1,5 +1,15 @@
 {% extends "base.html" %}
 {% block content %}
-    <h1>BPPR from user data</h1>
+
+    <h1>BPPR from user data!</h1>
+    <p>filename:{{ request.args.get('filename') }}</p>
+
+    <p>BPPR values: {{ bppr(request.args.get('filename')) }}</p>
+    <a href={{( url_for("export_view",filename=request.args.get('filename'))) }}>Click here to download</a>
+
+
+
+
+
 
 {% endblock %}

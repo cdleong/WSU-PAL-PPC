@@ -22,6 +22,7 @@ import xlrd, xlwt #reading and writing, respectively.
 # This is the path to the upload directory
 UPLOAD_FOLDER = '/tmp/'
 ALLOWED_EXTENSIONS = set(['txt', 'xls', 'xlsx', 'csv'])
+TEMPLATE_FILE = 'inputs_pruned.xlsx'
 
 # Initialize the Flask application
 app = Flask(__name__)
@@ -34,24 +35,31 @@ app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024 #arbitrary 16 megabyte uploa
 #app.debug=True
 
 
+def getBPPRList(filename=TEMPLATE_FILE):
+    reader = DataReader(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+    # Check if the file is one of the allowed types/extensions
+    pondList = reader.read()
+    pond = pondList[0]
+    bpprList =[]
+    doyList =[]
+    for pond in pondList:
+        bppr = pond.calculateDailyWholeLakeBenthicPrimaryProductionPerMeterSquared(0.25) #use quarter-hours
+        bpprList.append(bppr)
+        doy =pond.getDayOfYear()
+        doyList.append(doy)
+    return bpprList
+
+
 #used for making it possible to get numbers from python, and put them in HTML
 #Got this from http://blog.bouni.de/blog/2013/04/24/call-functions-out-of-jinjs2-templates/
 @app.context_processor
 def my_utility_processor():
 
     def bppr(filename):
-        reader = DataReader(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-        # Check if the file is one of the allowed types/extensions
-        pondList = reader.read()
-        pond = pondList[0]
-        bpprList =[]
-        doyList =[]
-        for pond in pondList:
-            bppr = pond.calculateDailyWholeLakeBenthicPrimaryProductionPerMeterSquared(0.25) #use quarter-hours
-            bpprList.append(bppr)
-            doy =pond.getDayOfYear()
-            doyList.append(doy)
+        bpprList = getBPPRList(filename)
         return bpprList
+
+
 
     return dict(bppr=bppr)
 
@@ -66,7 +74,8 @@ def allowed_file(filename):
 @app.route('/', methods=['GET', 'POST'])
 @app.route('/index', methods=['GET', 'POST'])
 def indexView():
-    if request.method == 'POST':
+    #http://runnable.com/UiPcaBXaxGNYAAAL/how-to-upload-a-file-to-the-server-in-flask-for-python
+    if request.method == 'POST': #true if the button "upload" is clicked
          # Get the name of the uploaded file
         file = request.files['file']
         # Check if the file is one of the allowed types/extensions
@@ -90,10 +99,6 @@ def indexView():
 
 
 
-            # Redirect the user to the uploaded_file route, which
-            # will basically show on the browser the uploaded file
-            # return redirect(url_for('uploaded_file',
-            #                         filename=filename))
             return redirect(url_for("bpprtest",filename=filename))
     return """
         <h2>Protoype built in Flask and Python. Click here to see a graph of light in a pond! </h2>
@@ -145,10 +150,11 @@ def uploaded_file(filename):
 #http://stackoverflow.com/questions/20646822/how-to-serve-static-files-in-flask
 @app.route('/inputs_pruned.xlsx', methods=['GET', 'POST'])
 def template():
-    return app.send_static_file('inputs_pruned.xlsx')
+    return app.send_static_file(TEMPLATE_FILE)
 
 
 
+#renders the bpprtest template.
 @app.route('/bpprtest', methods=['GET', 'POST'])
 @app.route('/bpprtest.html', methods=['GET', 'POST'])
 def bpprtest():
@@ -162,7 +168,7 @@ def bpprtest():
 
 #code to make an excel file for download.
 #modified from http://snipplr.com/view/69344/create-excel-file-with-xlwt-and-insert-in-flask-response-valid-for-jqueryfiledownload/
-@app.route('/export/')
+@app.route('/export')
 def export_view():
     #########################
     # Code for creating Flask
@@ -185,10 +191,23 @@ def export_view():
     #Add a sheet
     worksheet = workbook.add_sheet('Statistics')
 
-    #Add some values
-    for x in range(0, 10):
-        for y in range(0,10):
-            worksheet.write(x,y,x*y)
+    #################
+    #add values
+    #################
+        #get inputs
+    inputFile="asdfasdf"
+    try:
+            inputFile = request.args.get('filename')
+    except:
+        #redundant. TODO: better except
+            inputFile = TEMPLATE_FILE
+    bpprList = getBPPRList(inputFile)
+    numRows = len(bpprList)
+
+    for i in range(0, numRows):
+        row = i
+        bppr=bpprList[row]
+        worksheet.write(row,0,bppr)
 
     # workbook.save('statistics.xls')
 
