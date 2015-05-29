@@ -71,6 +71,7 @@ class Pond:
         self.backgroundLightAtten = backgroundLightAtten
         self.surfaceAreaAtDepthZero = surfaceAreaAtDepthZero
         self.bpMax = bpMax #max benthic production
+        self.pondLayerList = pondLayerList
 
 
 
