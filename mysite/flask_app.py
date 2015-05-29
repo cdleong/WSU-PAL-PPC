@@ -1,4 +1,4 @@
-from flask import Flask, abort, request, url_for, make_response, render_template, redirect, send_from_directory, jsonify, Response
+from flask import Flask, request, url_for, make_response, render_template, redirect, send_from_directory, Response
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from werkzeug import secure_filename
 
@@ -7,22 +7,29 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os
 
-#used for the excel output.
-import StringIO
-import mimetypes
-from werkzeug.datastructures import Headers #used for exporting files?
+
+
 
 from pond import Pond
 from data_reader import DataReader
-import xlrd, xlwt #reading and writing, respectively.
+
+#used for the excel output.
+import xlwt #excel writing
+import mimetypes
+from werkzeug.datastructures import Headers #used for exporting files?
 
 
+##############################################################
+#IMPORTANT VARIABLES
+#
+##############################################################
 
-#http://flask.pocoo.org/docs/0.10/patterns/fileuploads/
+#How to work with file uploads http://flask.pocoo.org/docs/0.10/patterns/fileuploads/
 # This is the path to the upload directory
 UPLOAD_FOLDER = '/tmp/'
 ALLOWED_EXTENSIONS = set(['txt', 'xls', 'xlsx', 'csv'])
-TEMPLATE_FILE = 'inputs_pruned.xlsx'
+TEMPLATE_FILE = 'template.xlsx'
+TEMPLATE_FILE_ROUTE = '/'+TEMPLATE_FILE
 
 # Initialize the Flask application
 app = Flask(__name__)
@@ -103,6 +110,8 @@ def indexView():
     return """
         <h2>Protoype built in Flask and Python. Click here to see a graph of light in a pond! </h2>
 
+
+
 <!--
         <form method="POST" action="%s" id="form" onchange="check()">
             Mean depth of pond (m): <input type="number" id="meanDepth" name="meanDepth" min="0" max = "500" step="0.1" value = "20.0" required/>
@@ -115,7 +124,7 @@ def indexView():
         <p>[Removed for now]</p>
 
         <h2>Prototype 2: Upload Data File</h2>
-        <p>Download example data <a href="inputs_pruned.xlsx" download="example_data.xlsx">here</a></p>
+        <p>Download template file <a href="%s" download="example_data.xlsx">here</a></p>
         <form action="" method=post enctype=multipart/form-data>
           <p><input type=file name=file>
              <input type=submit value=Upload>
@@ -133,7 +142,7 @@ def indexView():
         }
         </script>
 
-        """ % (url_for('lightGraph'))
+        """ % (url_for('lightGraph'), TEMPLATE_FILE_ROUTE)
 
 
 
@@ -147,14 +156,18 @@ def uploaded_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'],
                               filename)
 
+################################################################################################################################
+# used to offer template file
 #http://stackoverflow.com/questions/20646822/how-to-serve-static-files-in-flask
-@app.route('/inputs_pruned.xlsx', methods=['GET', 'POST'])
+################################################################################################################################
+@app.route(TEMPLATE_FILE_ROUTE, methods=['GET', 'POST'])
 def template():
     return app.send_static_file(TEMPLATE_FILE)
 
 
-
+################################################################
 #renders the bpprtest template.
+################################################################
 @app.route('/bpprtest', methods=['GET', 'POST'])
 @app.route('/bpprtest.html', methods=['GET', 'POST'])
 def bpprtest():
@@ -165,9 +178,11 @@ def bpprtest():
 
 
 
-
+################################################################################################################################
 #code to make an excel file for download.
-#modified from http://snipplr.com/view/69344/create-excel-file-with-xlwt-and-insert-in-flask-response-valid-for-jqueryfiledownload/
+#modified from...
+#http://snipplr.com/view/69344/create-excel-file-with-xlwt-and-insert-in-flask-response-valid-for-jqueryfiledownload/
+################################################################################################################################
 @app.route('/export')
 def export_view():
     #########################
@@ -258,9 +273,9 @@ def export_view():
 
 
 
-#######################################################################
-
-
+###########################################################################
+#Used to call render the template that uh crap why are there two TODO: fix
+###########################################################################
 @app.route('/lightGraph', methods=['GET', 'POST'])
 @app.route('/lightGraph.html', methods=['GET', 'POST'])
 def lightGraph():
@@ -272,8 +287,9 @@ def lightGraph():
 def dailyTPPGraph():
     return render_template("lightGraph.html")
 
-
-
+################################################################
+#it just makes a graph. A specific graph. TODO: take this out.
+################################################################
 @app.route('/pondlight.png', methods=['GET', 'POST'])
 def pondLight():
 
@@ -395,6 +411,11 @@ def pondLight():
     response.mimetype = 'image/png'
     return response
 
+
+
+#############################
+#Makes a specific picture.
+#############################
 @app.route('/dailyTPP.png', methods=['GET', 'POST'])
 def dailyTPP():
 
