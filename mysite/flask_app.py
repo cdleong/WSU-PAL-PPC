@@ -1,6 +1,6 @@
 from flask import Flask, request, url_for, make_response, render_template, redirect, send_from_directory, Response
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
-from werkzeug import secure_filename
+from werkzeug.utils import secure_filename
 
 import StringIO
 import numpy as np
