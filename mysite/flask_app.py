@@ -50,8 +50,9 @@ def getBPPRList(filename=TEMPLATE_FILE):
     bpprList =[]
     doyList =[]
     for pond in pondList:
-        bppr = pond.calculateDailyWholeLakeBenthicPrimaryProductionPerMeterSquared(0.25) #use quarter-hours
-        bpprList.append(bppr)
+        bppr = pond.calculateDailyWholeLakeBenthicPrimaryProductionPerMeterSquared() #uses quarter-hours by default
+        bpprFloat = float("{0:.2f}".format(bppr)) #round to two decimal places
+        bpprList.append(bpprFloat)
         doy =pond.getDayOfYear()
         doyList.append(doy)
     return bpprList
@@ -61,7 +62,8 @@ def getBPPRList(filename=TEMPLATE_FILE):
 #Got this from http://blog.bouni.de/blog/2013/04/24/call-functions-out-of-jinjs2-templates/
 @app.context_processor
 def my_utility_processor():
-
+    
+    #returns a list of floats.
     def bppr(filename):
         bpprList = getBPPRList(filename)
         return bpprList

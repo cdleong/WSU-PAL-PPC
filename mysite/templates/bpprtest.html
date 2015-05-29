@@ -4,6 +4,8 @@
     <h1>BPPR from user data!</h1>
     <p>filename:{{ request.args.get('filename') }}</p>
 
+    <p>BPPR VALUES CALCULATED: </p>
+    {#http://jinja.pocoo.org/docs/dev/templates/#list-of-control-structures#}
     <ul>
     {% for bpprFloat in bppr(request.args.get('filename')) %}
         <li>{{ bpprFloat|e }}</li>
