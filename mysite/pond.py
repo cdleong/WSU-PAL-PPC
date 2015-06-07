@@ -210,13 +210,14 @@ class Pond:
 
 
 
-    ########################################
+    #####################################################################
+    #calculateDailyWholeLakeBenthicPrimaryProductionPerMeterSquared
     #April 1 2015
     #Function
     #basically equation 12, TBP
     #but works with pprinputs and datareader
     #and sets layer bppr_z values
-    ########################################
+    ######################################################################
     def calculateDailyWholeLakeBenthicPrimaryProductionPerMeterSquared(self,
                                                    time_interval=0.25   #15 minutes, or a quarter-hour
                                                    ):
@@ -259,6 +260,7 @@ class Pond:
 
 
     ########################################
+    #calculateDailyWholeLakePelagicPrimaryProduction
     #April 9 2015
     #basically equation 10, but not
     #and works with pprinputs and datareader
@@ -327,17 +329,16 @@ class Pond:
             pppr+=layer_ppr_z
 
 
-#         #TESTING DELETE THIS
-#         sortedLayerList = sorted(self.pondLayerList, key = lambda x: x.depth, reverse = False)
-#         layer = sortedLayerList[1]
-#         print "surface layer pppr = ", layer.ppprz
-#         layer = sortedLayerList[-1]
-#         print "bottom layer pppr = ", layer.ppprz
 
 
         return pppr #whole lake, all day, all depths, pelagic primary productivity. So mgC*day
 
 
+    #######################################################################################
+    #calculateDailyWholeLakePelagicPrimaryProductionPerSquareMeter
+    #Stub. TODO: IMPLEMENT THIS
+    #basically uses volume instead of area. 
+    #######################################################################################
     def calculateDailyWholeLakePelagicPrimaryProductionPerSquareMeter(self,
                                                                time_interval=0.25
                                                                ):
@@ -353,6 +354,45 @@ class Pond:
         return ppprPerMeter
 
 
+    ##########################################################################################
+    # CalculateDepthOfSpecificLightProportion
+    #
+    # Calculates the depth of, say, 1% light.
+    # Uses: light attenuation coefficient kd. 
+    # 
+    ##########################################################################################
+    def calculateDepthOfSpecificLightPercentage(self, 
+                                                desiredLightProportion=1.0):
+        '''
+        Given a proportion, say 0.01 for 1%, 
+        calculates the depth of the pond at which that much light will reach.
+        Equation on which this is based: Iz/I0=e^-kd*z
+        Given a desired proportion for Iz/I0, and solved for z, 
+        this simplifies to z= kd/ln(desired proportion) 
+        
+        @param desiredLightProportion:a float value from 0 to 1.0 
+        @return: the depth, in meters, where that proportion of light penetrates.
+        
+        '''
+        
+        depthOfSpecifiedLightProportion = 0.0 # the surface of the pond
+        backgroundLightAttenuation = self.getBackgroundLightAttenuation()
+        
+        if(desiredLightProportion>1.0): #greater than 100%? Just set to 100%. Not strictly necessary, since the default value would be the correct answer.
+            desiredLightProportion = 1.0
+        if(desiredLightProportion<0.0): #less than 0%? Just set to 0%
+            desiredLightProportion = 0.0
+
+        if(desiredLightProportion<1.0 and desiredLightProportion>0.0):         
+            naturalLogOfProportion = mat.log(desiredLightProportion)
+#             print "natural log = " + str(naturalLogOfProportion)
+            
+            depthOfSpecifiedLightProportion = naturalLogOfProportion / -backgroundLightAttenuation #TODO: check if zero.
+        
+        
+            
+            
+        return depthOfSpecifiedLightProportion
 
 
 
@@ -410,14 +450,7 @@ class Pond:
         return 2.2*self.calculatePhytoplanktoChlorophyllFromTotalPhosphorus() #magic
 
 
-#     def thermoclineDepth(self):
-#         """
-#         # Equation 5 thermocline depth (m)
-#         #calculated from surface area using magic numbers
-#         #from paper (Hanna 1990)
-#         DEPRECATED. USE depth of 1 percent light instead
-#         """
-#         return 6.95*pow(self.surfaceAreaAtDepthZero,0.185) #magic
+
 
 
     def calculateLightAttenuationCoefficient(self):

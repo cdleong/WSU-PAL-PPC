@@ -16,6 +16,7 @@ from numpy.distutils.npy_pkg_config import FormatError
 #Useful notes: http://www.youlikeprogramming.com/2012/03/examples-reading-excel-xls-documents-using-pythons-xlrd/
 
 class DataReader(object):
+    
     '''
     classdocs
     '''
@@ -380,6 +381,15 @@ def main():
         bppr = p.calculateDailyWholeLakeBenthicPrimaryProductionPerMeterSquared()
         pid = p.getLakeID()
         print "Daily Whole Lake Primary Production Per Meter Squared For lake ID " + pid + " is " + str(bppr)
+        
+        backgroundLightAttenuation = p.getBackgroundLightAttenuation()
+        zOnePercent = p.calculateDepthOfSpecificLightPercentage(0.01)
+        zFiftyPercent = p.calculateDepthOfSpecificLightPercentage(0.5)
+        
+        print "given a background light coefficient of " + str(backgroundLightAttenuation) + ", the depth of 1% light is about " + str(zOnePercent)
+        print "given a background light coefficient of " + str(backgroundLightAttenuation) + ", the depth of 50% light is about " + str(zFiftyPercent)
+        
+        
         
 
 
