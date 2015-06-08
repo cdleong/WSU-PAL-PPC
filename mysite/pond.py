@@ -20,19 +20,17 @@ class Pond:
     ###################################
     #KNOWS (default values arbitrary)
     ###################################
-    lakeID = -1 #invalid lake ID I'm assuming
-    dayOfYear = 0 #day of year 0-366
-#     littoralArea = 0.0
-    meanDepth = 1.0 #z mean
-    maxDepth = 2.0 #z max
-    #depthRatio = 0.5 #DR= meanDepth/maxDepth
-    shapeFactor = -1.0 #aka gamma or gam. gamma = DR/(1-DR)
-    totalPhos = 3 #TP (total phosphorus, mg/m^3)
-    dayLength = 15 #hours of sunlight
-    noonSurfaceLight = 1500 #micromol*m^(-2)*s^(-1 ) (aka microEinsteins?)
-    backgroundLightAtten = 0.05 #aka "kd"
-    surfaceAreaAtDepthZero = 10.0 #(m^2)
-    bpMax  = 5 #max benthic production
+    
+    #identifying variables, aka Primary Key
+    lake_ID = -1 #invalid lake ID I'm assuming
+    day_of_year = 0 #day of year 0-366
+    
+
+    #Light and photosynthesis data
+    length_of_day = 15 #hours of sunlight
+    noon_surface_light = 1500 #micromol*m^(-2)*s^(-1 ) (aka microEinsteins?)
+    light_attenuation_coefficient = 0.05 #aka "kd"
+    benthic_pmax  = 5 
     pondLayerList = []
 
 
@@ -54,23 +52,16 @@ class Pond:
                  meanDepth=-2.0,
                  maxDepth=-6.666,
                  shapeFactor = -1,
-                 totalPhos = -4.0,
                  dayLength = -12.0,
-                 backgroundLightAtten = -0.2, #aka kd
-                 surfaceAreaAtDepthZero = -11.0,
+                 light_attenuation_coefficient = -0.2, #aka kd
                  noonLight=-1500.0,
-                 bpMax=-5.0,
+                 benthic_pmax=-5.0,
                  pondLayerList = []):
         self.setLakeID(lakeID)
         self.setDayOfYear(dayOfYear)
-        self.setMeanDepth(meanDepth)
-        self.setMaxDepth(maxDepth)
-        self.setShapeFactor(shapeFactor)
-        self.totalPhos = totalPhos
-        self.dayLength = dayLength
-        self.backgroundLightAtten = backgroundLightAtten
-        self.surfaceAreaAtDepthZero = surfaceAreaAtDepthZero
-        self.bpMax = bpMax #max benthic production
+        self.length_of_day = dayLength
+        self.light_attenuation_coefficient = light_attenuation_coefficient
+        self.benthic_pmax = benthic_pmax #max benthic production
         self.pondLayerList = pondLayerList
 
 
@@ -83,18 +74,18 @@ class Pond:
     #getters/setters, etc.
     ######################
     def getLakeID(self):
-        return self.lakeID
+        return self.lake_ID
 
 
     def setLakeID(self, value):
-        self.lakeID = value
+        self.lake_ID = value
 
     def getDayOfYear(self):
-        return self.dayOfYear
+        return self.day_of_year
 
     def setDayOfYear(self, dayOfYear):
         if (dayOfYear<366 and dayOfYear>=0):#simple check
-            self.dayOfYear=dayOfYear
+            self.day_of_year=dayOfYear
 
     def calculateTotalLittoralArea(self):
         z1percent = self.getDepthOf1PercentLight()
@@ -106,79 +97,37 @@ class Pond:
 
 
 
-    def getMeanDepth(self):
-        return self.meanDepth
-
-    def setMeanDepth(self, meanDepth=2.0):
-        self.meanDepth = meanDepth
 
 
-    def getMaxDepth(self):
-        return self.maxDepth
 
-    def setMaxDepth(self, maxDepth = 6.666):
-        if (self.meanDepth>=maxDepth): #prevents divide-by-zero errors in shapeFactor calculations
-            self.meanDepth=0.999*maxDepth
-        self.maxDepth = maxDepth
+    def getLengthOfDay(self):
+        return self.length_of_day
 
-    def getShapeFactor(self):
-        return self.shapeFactor
+    def setLengthOfDay(self, length_of_day=12.0):
+        self.length_of_day = length_of_day
 
-
-    def setShapeFactor(self, value):
-        self.shapeFactor = value
-
-    def getDepthRatio(self):
-        return float(self.meanDepth)/float(self.maxDepth)
-
-    def calculateShapeFactorFromDepthRatio(self):
-        if(self.getDepthRatio()>0):
-            return (self.getDepthRatio())/(1.0-self.getDepthRatio())
-        else:
-            #something is very wrong
-            print "ERROR: DEPTH RATIO NOT GREATER THAN ZERO"
-            return -1
-
-    def getTotalPhos(self):
-        return self.totalPhos
-
-    def setTotalPhos(self, totalPhos = 4.0):
-        self.totalPhos=totalPhos
-
-    def getDayLength(self):
-        return self.dayLength
-
-    def setDayLength(self, dayLength=12.0):
-        self.dayLength = dayLength
-
-    def getBackgroundLightAttenuation(self):
+    def getLightAttenuationCoefficient(self):
         '''AKA kd'''
-        return self.backgroundLightAtten
+        return self.light_attenuation_coefficient
 
-    def setBackgroundLightAttenuation(self, backgroundLightAtten):
-        self.backgroundLightAtten=backgroundLightAtten
+    def setLightAttenuationCoefficient(self, light_attenuation_coefficient):
+        self.light_attenuation_coefficient=light_attenuation_coefficient
 
-    def getSufaceAreaAtDepthZero(self):
-        return self.surfaceAreaAtDepthZero
+
 
     def getNoonSurfaceLight(self):
-        return self.noonSurfaceLight
+        return self.noon_surface_light
 
     def setNoonSurfaceLight(self, noonSurfaceLight):
-        self.noonSurfaceLight = noonSurfaceLight
-
-    def setSufaceAreaAtDepthZero(self, surfaceAreaAtDepthZero):
-        self.surfaceAreaAtDepthZero=surfaceAreaAtDepthZero
+        self.noon_surface_light = noonSurfaceLight
 
 
-    def calculatePhytoplanktoChlorophyllFromTotalPhosphorus(self):
-        return 0.41*pow(self.totalPhos,0.87) #magic
 
     def getBPMax(self):
-        return self.bpMax
+        return self.benthic_pmax
 
     def setBPMax(self, bpMax):
-        self.bpMax = bpMax
+        self.benthic_pmax = bpMax
 
     def getPondLayer(self, index):
         return self.pondLayerList[index]
@@ -190,7 +139,7 @@ class Pond:
         self.pondLayerList.append(layer)
 
     def appendPondLayerIfPhotic(self, layer):
-        z1percent = self.getDepthOf1PercentLight()
+        z1percent = self.calculateDepthOfSpecificLightPercentage(0.01) #1%
         if (layer.get_depth()<z1percent): #0 is surface, larger is deeper, smaller is shallower. We want depths shallower than z1percent
 
             self.pondLayerList.append(layer)
@@ -205,7 +154,7 @@ class Pond:
 
     def getDepthOf1PercentLight(self):
         #depth of 1% light is 4.6/kd
-        return 4.6/self.backgroundLightAtten
+        return 4.6/self.light_attenuation_coefficient
 
 
 
@@ -224,8 +173,8 @@ class Pond:
 
 
         noonlight = self.getNoonSurfaceLight()
-        lod = self.getDayLength()
-        kd =self.getBackgroundLightAttenuation() #unitless coefficient
+        lod = self.getLengthOfDay()
+        kd =self.getLightAttenuationCoefficient() #unitless coefficient
         total_littoral_area = self.calculateTotalLittoralArea()
 
 
@@ -271,19 +220,17 @@ class Pond:
                                                         ):
 
 
-        z1percent = self.getDepthOf1PercentLight()
+        z1percent = self.calculateDepthOfSpecificLightPercentage(0.01)#1%
         noonlight = self.getNoonSurfaceLight()
-        lod = self.getDayLength()
-        kd =self.getBackgroundLightAttenuation() #unitless coefficient
+        lod = self.getLengthOfDay()
+        kd =self.getLightAttenuationCoefficient() #unitless coefficient
 
         layer = Pond_Layer
 
         #make sure the pond layer list is sorted
         #http://stackoverflow.com/questions/403421/how-to-sort-a-list-of-objects-in-python-based-on-an-attribute-of-the-objects
         sortedLayerList = sorted(self.pondLayerList, key = lambda x: x.depth, reverse = False)
-#         print "sorted layer list is"
-#         for layer in sortedLayerList:
-#             print "depth: ", layer.depth
+
 
         pppr =0
         total_volume = self.calculateLakeVolumeAboveDepthZ(sortedLayerList[-1].get_depth())
@@ -343,7 +290,7 @@ class Pond:
                                                                time_interval=0.25
                                                                ):
         A0 = self.getSufaceAreaAtDepthZero()
-        z1percent = self.getDepthOf1PercentLight()
+        z1percent = self.calculateDepthOfSpecificLightPercentage(0.01)#1%
 
         if (A0<0 or z1percent<0):
             #crash somehow I guess
@@ -376,7 +323,7 @@ class Pond:
         '''
         
         depthOfSpecifiedLightProportion = 0.0 # the surface of the pond
-        backgroundLightAttenuation = self.getBackgroundLightAttenuation()
+        backgroundLightAttenuation = self.getLightAttenuationCoefficient()
         
         if(desiredLightProportion>1.0): #greater than 100%? Just set to 100%. Not strictly necessary, since the default value would be the correct answer.
             desiredLightProportion = 1.0
@@ -425,12 +372,12 @@ class Pond:
         if(self.shapeFactor<0): #not set
             gamma = self.calculateShapeFactorFromDepthRatio()
             print "gamma not set."
-
-        volume = (gamma*z)/(gamma+1)
+        else:
+            volume = (gamma*z)/(gamma+1)
 
         return volume
 
-
+    #TODO: remove, not needed. User gives kd directly. 
     def phytoplanktonChl(self):
         """
         # Equation 3:  phytoplankton chlorophyll Chl
@@ -439,8 +386,10 @@ class Pond:
         """
         return self.calculatePhytoplanktoChlorophyllFromTotalPhosphorus()
 
-
+    ####################
     #AKA PPmax
+    #TODO: Remove. User will give this directly.
+    ###################
     def calculatePelagicProductivityMax(self):
         """
         # Equation 4: phytoplankton productivity, PP (mg C*m^-3*h^-1)
@@ -461,7 +410,7 @@ class Pond:
         #source: Light attenuation and photosynthesis of aquatic plant communities
         # Krause-Jensen and Sand-Jensen, 1998
         """
-        return self.getBackgroundLightAttenuation()+0.015*self.calculatePhytoplanktoChlorophyllFromTotalPhosphorus()
+        return self.getLightAttenuationCoefficient()+0.015*self.calculatePhytoplanktoChlorophyllFromTotalPhosphorus()
 
     def lightAtDepthZAndTimeT(self, depths=None, t=6.0): #if day length 12, 6 is noon.
         """
@@ -495,7 +444,7 @@ class Pond:
         #8 surface light at time t (umoles*m^-2*s^-1)
         #source of equation: McBride (1992)
         """
-        return self.noonLight*np.sin((np.pi*(t/self.dayLength)))
+        return self.noonLight*np.sin((np.pi*(t/self.length_of_day)))
 
 
     def dailyPPatDepthZ(self,deltaT=0.25,deltaZ=0.1, saturationLight=180, depths=None):
@@ -520,7 +469,7 @@ class Pond:
             volumeAboveZ = self.calculateLakeVolumeAboveDepthZ(depth)
             deltaVolume = volumeAboveZ-self.calculateLakeVolumeAboveDepthZ(depth-deltaZ)
             t=0 #sunrise
-            while t<self.getDayLength():
+            while t<self.getLengthOfDay():
                 t+=deltaT
                 lightZT = self.lightAtDepthZAndTimeT(depth,t)
                 hyperbolicThing = mat.tanh(lightZT/saturationLight)
@@ -559,7 +508,7 @@ class Pond:
         areaAtZ = self.surfaceAreaAtDepthZ(z)
         deltaArea = self.surfaceAreaAtDepthZ(z-deltaZ)-areaAtZ
         t=0 #sunrise
-        while t<self.getDayLength():
+        while t<self.getLengthOfDay():
             t+=deltaT
             lightZT = self.lightAtDepthZAndTimeT(z,t)
             hyperbolicThing = mat.tanh(lightZT/saturationLight)

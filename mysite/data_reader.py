@@ -25,7 +25,6 @@ class DataReader(object):
     # Class variables
     ##################################
     filename = "template.xlsx" #name of file. Default is "template.xlsx"
-    TOTALPHOS_DEFAULT = 500.0 #COMPLETELY arbitrary. TODO: refine this
     
     #Default sheet names Alternate method: Worksheet indices. 
     pond_data_sheet_index =0
@@ -47,11 +46,9 @@ class DataReader(object):
     lakeIDIndex = 1 #"Lake_ID"
     
     #indices for Pond vars in pond_data worksheet
-    surface_area_index = 2 #"LA.m2"
-    gam_index = 3
     kd_index = 4 #index of light attenuation coefficient kd
-    noonLightIndex = 5 #"midday.mean.par"
-    lengthOfDayIndex = 6 #"LOD" in hours                
+    noon_surface_light_index = 5 #"midday.mean.par"
+    length_of_day_index = 6 #"LOD" in hours                
     
     #indices for Pond_layer vars in layer_data worksheet
     depth_index = 2 #"z" in meters    
@@ -77,9 +74,9 @@ class DataReader(object):
             self.pmax_index = 13 #"pmax.z"
             self.kd_index = 14 #index of light attenuation coefficient kd
             self.area_index = 16 #"kat_div" in meters squared. TODO: why is it not even close to LA at z=0?
-            self.noonLightIndex = 18 #"midday.mean.par"
+            self.noon_surface_light_index = 18 #"midday.mean.par"
             self.ikIndex = 21 #"ik_z" light intensity at onset of saturation
-            self.lengthOfDayIndex = 27 #"LOD" in hours
+            self.length_of_day_index = 27 #"LOD" in hours
 
         elif(1==testFlag):#based off inputs_pruned.xlsx
             self.filename = "example.xlsx"
@@ -91,9 +88,9 @@ class DataReader(object):
             self.pmax_index = 5 #"pmax.z"
             self.kd_index = 6 #index of light attenuation coefficient kd
             self.area_index = 7 #"kat_div" in meters squared. TODO: why is it not even close to LA at z=0?
-            self.noonLightIndex = 8 #"midday.mean.par"
+            self.noon_surface_light_index = 8 #"midday.mean.par"
             self.ikIndex = 9 #"ik_z" light intensity at onset of saturation
-            self.lengthOfDayIndex = 10 #"LOD" in hours
+            self.length_of_day_index = 10 #"LOD" in hours
 
         else:
             #use default indices
@@ -105,14 +102,14 @@ class DataReader(object):
                         
 
 
-
+    #TODO: this should return nothing. Bad style. Or rename it.  
     def read(self):
         try:
             book = xlrd.open_workbook(self.filename)
         except:
             raise
 
-        return self.getPondList(book)
+        return self.readPondListFromFile(book)
 
 
 
@@ -125,12 +122,12 @@ class DataReader(object):
             raise
          
              
-        return self.getPondList(book)
+        return self.readPondListFromFile(book)
 
 
 
     #reads all the pond data from the excel file.
-    def getPondList(self,book):
+    def readPondListFromFile(self,book):
         
         nsheets = book.nsheets
         print "The number of worksheets is", book.nsheets
@@ -202,19 +199,17 @@ class DataReader(object):
             #     surface_area_index = 2 #"LA.m2"
             #     gam_index = 3
             #     kd_index = 4 #index of light attenuation coefficient kd
-            #     noonLightIndex = 5 #"midday.mean.par"
-            #     lengthOfDayIndex = 10 #"LOD" in hours                     
+            #     noon_surface_light_index = 5 #"midday.mean.par"
+            #     length_of_day_index = 10 #"LOD" in hours                     
             row = pond_data_workSheet.row(curr_row)        
             
             #values
             row_doy_value = row[self.dayOfYearIndex].value
-            row_lakeID_value = row[self.lakeIDIndex].value            
-            row_surface_area_value = row[self.surface_area_index].value
-            row_gam_value = row[self.gam_index].value        
+            row_lakeID_value = row[self.lakeIDIndex].value              
             row_kd_value = row[self.kd_index].value          
-            row_noonlight_value = row[self.noonLightIndex].value 
-            row_lod_value = row[self.lengthOfDayIndex].value            
-            totalphos_value = self.TOTALPHOS_DEFAULT           
+            row_noonlight_value = row[self.noon_surface_light_index].value 
+            row_lod_value = row[self.length_of_day_index].value            
+    
             
             
             #Do we need to make a pond object?
@@ -223,13 +218,10 @@ class DataReader(object):
                 print "creating pond with lake ID = ", row_lakeID_value, " , and DOY = ", row_doy_value
                 pond = Pond()
                 pond.setDayOfYear(row_doy_value)
-                pond.setLakeID(row_lakeID_value)
-                pond.setSufaceAreaAtDepthZero(row_surface_area_value)                
-                pond.setShapeFactor(row_gam_value)
-                pond.setBackgroundLightAttenuation(row_kd_value)
+                pond.setLakeID(row_lakeID_value)               
+                pond.setLightAttenuationCoefficient(row_kd_value)
                 pond.setNoonSurfaceLight(row_noonlight_value)
-                pond.setDayLength(row_lod_value)
-                pond.setTotalPhos(totalphos_value)                         
+                pond.setLengthOfDay(row_lod_value) 
                 pond.setPondLayerList([]) #initialize empty list. TODO: try testing without this line now that I added in the proper line to the init() in Pond
                 
     #             print "appending pond"
@@ -259,7 +251,7 @@ class DataReader(object):
             pond = next((i for i in pondList if (i.getLakeID()== row_lakeID_value and 
                                                  i.getDayOfYear()==row_doy_value)),None) #source: http://stackoverflow.com/questions/7125467/find-object-in-list-that-has-attribute-equal-to-some-value-that-meets-any-condi
             if pond is None: #something is terribly wrong
-                print "oh no"#TODO:
+                print "oh no"#TODO: better error
                 raise FormatError("Something went wrong. Layer with DOY "+str(row_doy_value) + " and Lake ID " + row_lakeID_value + " does not match to any Pond.")                    
             else:
                 #create Pond_Layer object using values specific to that layer/row
@@ -279,70 +271,7 @@ class DataReader(object):
          
         
         
-#         #for each row
-#         curr_row = 1 #start at 1. row 0 is column headings
-#         while curr_row<num_rows:
-#             row = workSheet.row(curr_row)
-#             if (1==curr_row):
-#                 print "row #", curr_row, " is ", row
-# 
-#             #extract relevant values from row
-#             row_doy_value = row[dayOfYearIndex].value
-#             row_lakeID_value = row[lakeIDIndex].value
-#             row_depth_value = row[depth_index].value
-#             row_surface_area_value = row[surface_area_index].value
-#             row_gam_value = row[gam_index].value
-#             row_pmax_value = row[pmax_index].value
-#             row_kd_value = row[kd_index].value
-#             row_area_value = row[area_index].value
-#             row_noonlight_value = row[noonLightIndex].value
-#             row_ik_value = row[ikIndex].value
-#             row_lod_value = row[lengthOfDayIndex].value
-# 
-# 
-#             #totalPhos value arbitrarily picked
-#             totalphos_value = 500.0
-# 
-# 
-#             #create Pond_Layer object using values specific to that layer/row
-#             layer = Pond_Layer()
-#             layer.set_depth(row_depth_value)
-#             layer.set_ik(row_ik_value)
-#             layer.set_pmax(row_pmax_value)
-#             layer.set_area(row_area_value)
-# 
-#             #Do we need to make a pond object?
-#             pond = next((i for i in pondList if (i.getLakeID()== row_lakeID_value and i.getDayOfYear()==row_doy_value)),None) #source: http://stackoverflow.com/questions/7125467/find-object-in-list-that-has-attribute-equal-to-some-value-that-meets-any-condi
-# 
-#             if pond is None: #not in list. Must create Pond object
-#                 print "creating pond with lake ID = ", row_lakeID_value, " , and DOY = ", row_doy_value
-#                 pond = Pond()
-#                 pond.setDayOfYear(row_doy_value)
-#                 pond.setLakeID(row_lakeID_value)
-#                 pond.setShapeFactor(row_gam_value)
-#                 pond.setBackgroundLightAttenuation(row_kd_value)
-#                 pond.setNoonSurfaceLight(row_noonlight_value)
-#                 pond.setDayLength(row_lod_value)
-#                 pond.setPondLayerList([]) #set to empty list I hope
-#                 #why do I need to do that
-#                 #that makes no darn sense
-#                 pond.setSufaceAreaAtDepthZero(row_surface_area_value)
-#                 pond.setTotalPhos(totalphos_value)
-# 
-# 
-# 
-#     #             print "appending layer 1"
-#                 pond.appendPondLayerIfPhotic(layer)
-# 
-#     #             print "appending pond"
-#                 pondList.append(pond)
-# 
-#             else: #Pond exists. just append the PondLayer
-#                 pond.appendPondLayerIfPhotic(layer)
-# 
-#             print "curr_row = ", curr_row, " size of pond list is: ", len(pondList)
-#             curr_row+=1
-            #end of while loop!
+
 
  
         return pondList
@@ -372,17 +301,14 @@ def main():
 
     reader = DataReader(filename)
     pondList = reader.read()
-#     pond = pondList[0]
-#     bppr0=pond.calculateDailyWholeLakeBenthicPrimaryProductionPerMeterSquared()
 
-#     bpproneline = reader.read()[0].calculateDailyWholeLakeBenthicPrimaryProductionPerMeterSquared(0.25)
 
     for p in pondList:
         bppr = p.calculateDailyWholeLakeBenthicPrimaryProductionPerMeterSquared()
         pid = p.getLakeID()
         print "Daily Whole Lake Primary Production Per Meter Squared For lake ID " + pid + " is " + str(bppr)
         
-        backgroundLightAttenuation = p.getBackgroundLightAttenuation()
+        backgroundLightAttenuation = p.getLightAttenuationCoefficient()
         zOnePercent = p.calculateDepthOfSpecificLightPercentage(0.01)
         zFiftyPercent = p.calculateDepthOfSpecificLightPercentage(0.5)
         
