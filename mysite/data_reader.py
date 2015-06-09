@@ -24,17 +24,37 @@ class DataReader(object):
     ##################################
     # Class variables
     ##################################
-    filename = "template.xlsx" #name of file. Default is "template.xlsx"
+#     filename = "template.xlsx" #name of file. Default is "template.xlsx"
+    filename = "template_example.xlsx" #name of file. Default is "template.xlsx"
     
-    #Default sheet names Alternate method: Worksheet indices. 
-    pond_data_sheet_index =0
-    layer_data_sheet_index = 1        
-    pond_data_sheet_name = "pond_data"
-    layer_data_sheet_name = "layer_data"
+
 
     #data starts at row 1. Row 0 is column headings
     DEFAULT_COLUMN_HEADINGS_ROW = 0
     DEFAULT_FIRST_DATA_ROW = 1
+    
+    
+    
+    ####################
+    #Worksheets
+    ####################
+    
+    #TODO: maybe some arrays? Or some more flexible solution anyway
+    
+    #default indices. 
+    POND_DATA_SHEET_INDEX =0
+    BENTHIC_PHOTO_DATA_SHEET_INDEX = 1
+    PHYTOPLANKTON_PHOTO_DATA_SHEET_INDEX = 2
+    SHAPE_DATA_SHEET_INDEX = 3    
+    
+    #default names       
+    POND_DATA_SHEET_NAME = "pond_data"
+    BENTHIC_PHOTO_DATA_SHEET_NAME = "benthic_photo_data"
+    PHYTOPLANKTON_PHOTO_DATA_SHEET_NAME = "phytoplankton_photo_data"
+    SHAPE_DATA_SHEET_NAME = "shape_data"    
+    
+    
+        
     
     
     #############
@@ -73,7 +93,7 @@ class DataReader(object):
             self.gam_index = 10
             self.pmax_index = 13 #"pmax.z"
             self.kd_index = 14 #index of light attenuation coefficient kd
-            self.area_index = 16 #"kat_div" in meters squared. TODO: why is it not even close to LA at z=0?
+            self.area_index = 16 #"kat_div" in meters squared. 
             self.noon_surface_light_index = 18 #"midday.mean.par"
             self.ikIndex = 21 #"ik_z" light intensity at onset of saturation
             self.length_of_day_index = 27 #"LOD" in hours
@@ -87,7 +107,7 @@ class DataReader(object):
             self.gam_index = 4
             self.pmax_index = 5 #"pmax.z"
             self.kd_index = 6 #index of light attenuation coefficient kd
-            self.area_index = 7 #"kat_div" in meters squared. TODO: why is it not even close to LA at z=0?
+            self.area_index = 7 #"kat_div" in meters squared. 
             self.noon_surface_light_index = 8 #"midday.mean.par"
             self.ikIndex = 9 #"ik_z" light intensity at onset of saturation
             self.length_of_day_index = 10 #"LOD" in hours
@@ -113,7 +133,10 @@ class DataReader(object):
 
 
 
-
+##########################################################################################################################
+#    READ FILE 
+#    Given an inputFile object, opens the workbook and calls the function to read the pondList. 
+##########################################################################################################################
     def readFile(self,inputfile):
         #http://stackoverflow.com/questions/10458388/how-do-you-read-excel-files-with-xlrd-on-appengine
         try:
@@ -125,9 +148,20 @@ class DataReader(object):
         return self.readPondListFromFile(book)
 
 
-
+##########################################################################################################################
+##########################################################################################################################
+##########################################################################################################################
+#    READ POND LIST FROM FILE
+#    The primary meat of data_reader. 
+#
+##########################################################################################################################
+##########################################################################################################################
+##########################################################################################################################
     #reads all the pond data from the excel file.
     def readPondListFromFile(self,book):
+        '''
+        TODO: doc
+        '''
         
         nsheets = book.nsheets
         print "The number of worksheets is", book.nsheets
@@ -143,15 +177,15 @@ class DataReader(object):
         if(nsheets<2):
             raise IOError("file format incorrect. Number of sheets less than two.")
         
-        if(self.pond_data_sheet_name in sheet_names and self.layer_data_sheet_name in sheet_names):
+        if(self.POND_DATA_SHEET_NAME in sheet_names and self.BENTHIC_PHOTO_DATA_SHEET_NAME in sheet_names):
             print "pond_data sheet detected"
-            pond_data_workSheet = book.sheet_by_name(self.pond_data_sheet_name)
+            pond_data_workSheet = book.sheet_by_name(self.POND_DATA_SHEET_NAME)
             print "layer_data sheet detected"
-            layer_data_workSheet = book.sheet_by_name(self.layer_data_sheet_name)            
+            layer_data_workSheet = book.sheet_by_name(self.BENTHIC_PHOTO_DATA_SHEET_NAME)            
         else:
             print "Standard sheet names not detected. Attempting to read using sheet indices."
-            pond_data_workSheet = book.sheet_by_index(self.pond_data_sheet_index)
-            layer_data_workSheet = book.sheet_by_index(self.layer_data_sheet_index)
+            pond_data_workSheet = book.sheet_by_index(self.POND_DATA_SHEET_INDEX)
+            layer_data_workSheet = book.sheet_by_index(self.BENTHIC_PHOTO_DATA_SHEET_INDEX)
         
         #TODO: check number of columns
             
@@ -222,9 +256,8 @@ class DataReader(object):
                 pond.setLightAttenuationCoefficient(row_kd_value)
                 pond.setNoonSurfaceLight(row_noonlight_value)
                 pond.setLengthOfDay(row_lod_value) 
-                pond.setPondLayerList([]) #initialize empty list. TODO: try testing without this line now that I added in the proper line to the init() in Pond
+                pond.setPondLayerList([]) #initialize empty list. #TODO: try testing without this line now that I added in the proper line to the init() in Pond
                 
-    #             print "appending pond"
                 pondList.append(pond)         
             curr_row+=1       
             
