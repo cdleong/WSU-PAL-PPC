@@ -26,11 +26,6 @@ class SimpleMetricsPondShape(PondShape):
         return self.__surface_area_at_depth_zero
 
 
-
-
-
-
-
     def get_max_depth(self):
         return self.__max_depth
 
@@ -140,7 +135,7 @@ class SimpleMetricsPondShape(PondShape):
         
 
 #     def calculate_volume_in_interval_at_depth(self):
-#         #TODO this
+#         #TODO: this
 #         return -1 
     
 
@@ -210,7 +205,7 @@ def main():
     print "volume above 7.5:", pond_shape_instance.get_volume_above_depth(7.5)
     print "volume above 10.0:", pond_shape_instance.get_volume_above_depth(10.0)
     
-    #TODOO: why is the volume calculation 1% of expected?
+    #TODO: why is the volume calculation 1% of expected?
     
     
     
