@@ -26,12 +26,9 @@ class SimpleMetricsPondShape(PondShape):
         return self.__surface_area_at_depth_zero
 
 
-    def set_surface_area_at_depth_zero(self, value):
-        self.__surface_area_at_depth_zero = value
 
 
-    def del_surface_area_at_depth_zero(self):
-        del self.__surface_area_at_depth_zero
+
 
 
     def get_max_depth(self):
@@ -44,6 +41,9 @@ class SimpleMetricsPondShape(PondShape):
 
     def get_depth_interval(self):
         return self.__depth_interval
+    
+    def set_surface_area_at_depth_zero(self, value):
+        self.__surface_area_at_depth_zero = value    
 
 
     def set_max_depth(self, value):
@@ -71,13 +71,18 @@ class SimpleMetricsPondShape(PondShape):
 
 
 
+    def del_surface_area_at_depth_zero(self):
+        del self.__surface_area_at_depth_zero
         
 
 
 
     
     def calculate_depth_ratio(self):
-        return  self.get_mean_depth()/self.get_max_depth()
+        depth_ratio =self.get_mean_depth()/self.get_max_depth()
+        if(depth_ratio>=1):
+            depth_ratio = 0.9999
+        return  depth_ratio
 
 
     
@@ -90,7 +95,7 @@ class SimpleMetricsPondShape(PondShape):
 
     def get_volume(self):
         depth = self.get_max_depth()
-        volume =self.calculate_volume_above_depth(depth)
+        volume =self.get_volume_above_depth(depth)
         return volume
 
 
@@ -103,8 +108,8 @@ class SimpleMetricsPondShape(PondShape):
         surface_area_at_depth_zero = self.get_surface_area_at_depth_zero()   
         shape_factor = self.calculate_shape_factor()     
         #safety check
-        if(depth<0):
-            area_at_z=0;
+        if(depth<=0):
+            surface_area_at_depth_zero = self.get_surface_area_at_depth_zero()   
         elif (depth> self.get_max_depth()):
             area_at_z = self.get_water_surface_area_at_depth(self.get_max_depth())#recursive call            
         else:        
@@ -134,30 +139,49 @@ class SimpleMetricsPondShape(PondShape):
         
         
 
+#     def calculate_volume_in_interval_at_depth(self):
+#         #TODO this
+#         return -1 
+    
 
-    def calculate_volume_above_depth(self, depth):
+        
+    def get_volume_above_depth(self, depth):
         '''
         Source: Vadeboncoeur 2008, eqn. 2
         '''
         shape_factor = self.calculate_shape_factor()
-        volume = shape_factor*depth/(shape_factor+1)
+        volume =0.0
+#         z_index = 0
+#         depth_interval = self.get_depth_interval()
+        if(depth<=0):
+            volume=0.0
+        elif (depth>self.get_max_depth()):
+            
+            volume = self.get_volume_above_depth(self.get_max_depth())#recursive call using max depth
+        else:              
+            volume =(shape_factor*depth)/(shape_factor+1)   
+#             while z_index<depth:
+#                 interval_volume = shape_factor*z_index/(shape_factor+1)   
+#                 volume += interval_volume                               
+#                 z_index+=depth_interval            
+            
         return volume
 
 
-    def calculate_sediment_area_above_depth(self, depth):
-        z =0
+    def get_sediment_area_above_depth(self, depth):
+        z_index =0
         depth_interval=self.get_depth_interval()
-        total_area = 0;
+        total_area = 0.0;
         if(depth<0):
-            total_area = 0;
+            total_area = 0.0;
         elif (depth>self.get_max_depth()):
-            total_area = self.calculate_sediment_area_above_depth(self.get_max_depth())
+            total_area = self.get_sediment_area_above_depth(self.get_max_depth())
         else:    
-            while z<self.get_max_depth():
+            while z_index<depth:
                 
-                interval_area = self.get_sediment_surface_area_at_depth(z)
+                interval_area = self.get_sediment_surface_area_at_depth(z_index)
                 total_area+=interval_area
-                z+=depth_interval
+                z_index+=depth_interval
         return total_area
     
     
@@ -170,10 +194,30 @@ class SimpleMetricsPondShape(PondShape):
 
 
 
-
+#for basic testing
 def main():
     print "hello world"
-
+    #super-simple 10x10x10 "pond"
+    pond_shape_instance = SimpleMetricsPondShape(10, 10, 0.1, 100)
+    print "surface area at 0(should be 100): ", pond_shape_instance.get_surface_area_at_depth_zero()
+    print "max depth (should be 10): ", pond_shape_instance.get_max_depth()
+    print "mean depth (should be 10): ", pond_shape_instance.get_mean_depth()
+    print "depth interval (should be 0.1): ", pond_shape_instance.get_depth_interval()
+    
+    print "volume (should be 1000):", pond_shape_instance.get_volume()
+    
+    print "volume above 5:", pond_shape_instance.get_volume_above_depth(5.0)
+    print "volume above 7.5:", pond_shape_instance.get_volume_above_depth(7.5)
+    print "volume above 10.0:", pond_shape_instance.get_volume_above_depth(10.0)
+    
+    #TODOO: why is the volume calculation 1% of expected?
+    
+    
+    
+    
+    
+    
+    
 
 if __name__ == "__main__":
     main()    

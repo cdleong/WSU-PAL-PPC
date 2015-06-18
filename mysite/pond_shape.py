@@ -29,10 +29,10 @@ class PondShape(object):
     def get_sediment_surface_area_at_depth(self, depth=0.0):
         return 0.0
     
-    def calculate_volume_above_depth(self, depth):
+    def get_volume_above_depth(self, depth):
         return 0.0
         
-    def calculate_sediment_area_above_depth(self, depth):
+    def get_sediment_area_above_depth(self, depth):
         return 0.0
 
 
