@@ -6,7 +6,7 @@ This class reads in data from an excel file, packages it up, and sends it to the
 @author: cdleong
 '''
 import xlrd, xlwt #reading and writing, respectively.
-from pond_layer import Pond_Layer
+from pond_layer import PhotoSynthesisMeasurement
 from pond import Pond
 from numpy.distutils.npy_pkg_config import FormatError
 
@@ -32,12 +32,13 @@ class DataReader(object):
     #data starts at row 1. Row 0 is column headings
     DEFAULT_COLUMN_HEADINGS_ROW = 0
     DEFAULT_FIRST_DATA_ROW = 1
+    DEFAULT_NUMBER_OF_SHEETS = 4
     
     
     
-    ####################
-    #Worksheets
-    ####################
+    ########################
+    #Worksheet Names/Indices
+    ########################
     
     #TODO: maybe some arrays? Or some more flexible solution anyway
     
@@ -61,20 +62,29 @@ class DataReader(object):
     #Data Indices
     #############
     
-    #indices common to both sheets
+    #indices common to all sheets
     dayOfYearIndex = 0 #"DOY"
     lakeIDIndex = 1 #"Lake_ID"
     
-    #indices for Pond vars in pond_data worksheet
-    kd_index = 4 #index of light attenuation coefficient kd
-    noon_surface_light_index = 5 #"midday.mean.par"
-    length_of_day_index = 6 #"LOD" in hours                
     
-    #indices for Pond_layer vars in layer_data worksheet
-    depth_index = 2 #"z" in meters    
+    
+    
+    #indices for Pond vars in pond_data worksheet
+    kd_index = 2 #index of light attenuation coefficient kd
+    noon_surface_light_index = 3 #"midday.mean.par"
+    length_of_day_index = 4 #"LOD" in hours                
+    
+    #indices for vars in benthic_photo_data worksheet
+    depth_index = 2 #"z" in meters #depth is in several sheets        
     pmax_index = 3 #"pmax.z"
+    ikIndex = 4 #"ik_z" light intensity at onset of saturation
+    
+    #indices for vars in phytoplankton_photo_data worksheet
+    
+    #indices for vars in shape_data worksheet        
+#     depth_index = 2 #"z" in meters #depth is in several sheets #TODO: different variable?            
     area_index = 4 #"kat_div" in meters squared. 
-    ikIndex = 5 #"ik_z" light intensity at onset of saturation
+    
 
     
     
@@ -163,6 +173,11 @@ class DataReader(object):
         TODO: doc
         '''
         
+        
+        
+        ##############
+        #Worksheets
+        ##############
         nsheets = book.nsheets
         print "The number of worksheets is", book.nsheets
         
@@ -172,28 +187,47 @@ class DataReader(object):
         print sheet_names
         
         pond_data_workSheet = xlrd.book
-        layer_data_workSheet= xlrd.book
+        benthic_photo_data_workSheet= xlrd.book        
+        phytoplankton_photo_data_sheet= xlrd.book
+        shape_data_sheet =xlrd.book 
         
-        if(nsheets<2):
+        
+        if(nsheets<self.DEFAULT_NUMBER_OF_SHEETS):
             raise IOError("file format incorrect. Number of sheets less than two.")
         
-        if(self.POND_DATA_SHEET_NAME in sheet_names and self.BENTHIC_PHOTO_DATA_SHEET_NAME in sheet_names):
+        if(self.POND_DATA_SHEET_NAME in sheet_names and 
+           self.BENTHIC_PHOTO_DATA_SHEET_NAME in sheet_names and 
+           self.PHYTOPLANKTON_PHOTO_DATA_SHEET_NAME in sheet_names and
+           self.SHAPE_DATA_SHEET_NAME in sheet_names):
             print "pond_data sheet detected"
             pond_data_workSheet = book.sheet_by_name(self.POND_DATA_SHEET_NAME)
-            print "layer_data sheet detected"
-            layer_data_workSheet = book.sheet_by_name(self.BENTHIC_PHOTO_DATA_SHEET_NAME)            
+            print "benthic photosynthesis data sheet detected"
+            benthic_photo_data_workSheet = book.sheet_by_name(self.BENTHIC_PHOTO_DATA_SHEET_NAME)
+            print "phytoplankton photosynthesis data sheet detected"
+            phytoplankton_photo_data_sheet = book.sheet_by_name(self.PHYTOPLANKTON_PHOTO_DATA_SHEET_NAME)
+            print "lake shape data sheet detected"
+            shape_data_sheet = book.sheet_by_name(self.SHAPE_DATA_SHEET_NAME)
         else:
             print "Standard sheet names not detected. Attempting to read using sheet indices."
             pond_data_workSheet = book.sheet_by_index(self.POND_DATA_SHEET_INDEX)
-            layer_data_workSheet = book.sheet_by_index(self.BENTHIC_PHOTO_DATA_SHEET_INDEX)
+            benthic_photo_data_workSheet = book.sheet_by_index(self.BENTHIC_PHOTO_DATA_SHEET_INDEX)
+            phytoplankton_photo_data_sheet = book.sheet_by_name(self.PHYTOPLANKTON_PHOTO_DATA_SHEET_INDEX)
+            shape_data_sheet = book.sheet_by_name(self.SHAPE_DATA_SHEET_INDEX)
         
-        #TODO: check number of columns
+        ##############
+        #Rows, Columns
+        ##############
             
         pond_data_workSheet_num_rows = pond_data_workSheet.nrows
-        print "the number of rows in sheet " + pond_data_workSheet.name +  " is " + str(pond_data_workSheet_num_rows)
+        print "the number of rows in sheet " + pond_data_workSheet.name +  " is " + str(pond_data_workSheet_num_rows)        
+        benthic_data_workSheet_num_rows = benthic_photo_data_workSheet.nrows
+        print "the number of rows in sheet " + benthic_photo_data_workSheet.name + " is " + str(benthic_data_workSheet_num_rows)
+        phytoplankton_photo_data_sheet_num_rows = phytoplankton_photo_data_sheet.nrows
+        print "the number of rows in sheet " + phytoplankton_photo_data_sheet.name + " is " + str(phytoplankton_photo_data_sheet_num_rows)
+        shape_data_sheet_num_rows = shape_data_sheet.nrows
+        print "the number of rows in sheet " + shape_data_sheet.name + " is " + str(shape_data_sheet_num_rows)
         
-        layer_data_workSheet_num_rows = layer_data_workSheet.nrows
-        print "the number of rows in sheet " + layer_data_workSheet.name + " is " + str(layer_data_workSheet_num_rows)
+        
         
         curr_row = self.DEFAULT_COLUMN_HEADINGS_ROW
         columnnames = pond_data_workSheet.row(curr_row)
@@ -201,13 +235,19 @@ class DataReader(object):
         print columnnames
 
         curr_row = self.DEFAULT_COLUMN_HEADINGS_ROW
-        columnnames = layer_data_workSheet.row(curr_row)
-        print "the column names in sheet \"" + layer_data_workSheet.name +  "\" are "
+        columnnames = benthic_photo_data_workSheet.row(curr_row)
+        print "the column names in sheet \"" + benthic_photo_data_workSheet.name +  "\" are "
         print columnnames        
-
         
+        curr_row = self.DEFAULT_COLUMN_HEADINGS_ROW
+        columnnames = phytoplankton_photo_data_sheet.row(curr_row)
+        print "the column names in sheet \"" + phytoplankton_photo_data_sheet.name +  "\" are "
+        print columnnames                     
         
-        
+        curr_row = self.DEFAULT_COLUMN_HEADINGS_ROW
+        columnnames = shape_data_sheet.row(curr_row)
+        print "the column names in sheet \"" + shape_data_sheet.name +  "\" are "
+        print columnnames             
         
         
         #################################################
@@ -263,22 +303,34 @@ class DataReader(object):
             
         print "out of while loop. size of pond list is: ", len(pondList)
             
-        
+        #######################################################
         #we made all the ponds. Time to add all the layers. 
-        num_rows = layer_data_workSheet_num_rows
+        #######################################################
+        
+        #
+        #shape data
+        #
+        
+        #
+        #Benthic data
+        #
+        
+        
+        num_rows = benthic_data_workSheet_num_rows
         curr_row = self.DEFAULT_FIRST_DATA_ROW #start at 1. row 0 is column headings
         while curr_row<num_rows:
             print "adding layers to Ponds. curr_row = " + str(curr_row)
-            row = layer_data_workSheet.row(curr_row)
+            row = benthic_photo_data_workSheet.row(curr_row) 
             
             
             #values
             row_doy_value = row[self.dayOfYearIndex].value
-            row_lakeID_value = row[self.lakeIDIndex].value
-            row_depth_value = row[self.depth_index].value                                    
-            row_pmax_value = row[self.pmax_index].value                
-            row_area_value = row[self.area_index].value
+            row_lakeID_value = row[self.lakeIDIndex].value                                        
+            row_pmax_value = row[self.pmax_index].value                            
             row_ik_value = row[self.ikIndex].value
+            
+            row_depth_value = row[self.depth_index].value
+            row_area_value = row[self.area_index].value        
             
             #find the correct pond
             pond = next((i for i in pondList if (i.getLakeID()== row_lakeID_value and 
@@ -287,8 +339,8 @@ class DataReader(object):
                 print "oh no"#TODO: better error
                 raise FormatError("Something went wrong. Layer with DOY "+str(row_doy_value) + " and Lake ID " + row_lakeID_value + " does not match to any Pond.")                    
             else:
-                #create Pond_Layer object using values specific to that layer/row
-                layer = Pond_Layer()
+                #create PhotoSynthesisMeasurement object using values specific to that layer/row
+                layer = PhotoSynthesisMeasurement()
                 layer.set_depth(row_depth_value)
                 layer.set_ik(row_ik_value)
                 layer.set_pmax(row_pmax_value)
