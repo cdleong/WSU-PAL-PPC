@@ -26,8 +26,8 @@ class BenthicPhotoSynthesisMeasurement(PhotosynthesisMeasurement):
     def get_alpha(self):
         return PhotosynthesisMeasurement.get_alpha(self)
 
-    def set_optical_depth(self, value):
-        return PhotosynthesisMeasurement.set_optical_depth(self, value)
+    def set_depth(self, value):
+        return PhotosynthesisMeasurement.set_depth(self, value)
 
 
     def set_pmax(self, value):

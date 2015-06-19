@@ -41,7 +41,7 @@ class PhotosynthesisMeasurement(object):
         return self.__ik / self.__pmax 
 
 
-    def set_optical_depth(self, value):
+    def set_depth(self, value):
         self.__optical_depth = value
 
 
@@ -66,7 +66,7 @@ class PhotosynthesisMeasurement(object):
         
     
 
-    depth = property(get_depth, set_optical_depth, del_depth, "depth's docstring")
+    depth = property(get_depth, set_depth, del_depth, "depth's docstring")
     pmax = property(get_pmax, set_pmax, del_pmax, "pmax's docstring")
     ik = property(get_ik, set_ik, del_ik, "ik's docstring")
 

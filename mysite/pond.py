@@ -18,6 +18,7 @@ from scipy.interpolate import interp1d
 
 
 
+
 class Pond(object):
 
     ###################################
@@ -307,7 +308,7 @@ class Pond(object):
         return self.pond_shape_object.get_depth_interval_meters()
     
     def get_max_depth(self):
-        return self.pond_shape_object.get_max_depth()
+        return self.get_pond_shape().get_max_depth()
     
     #######################
     # SETTERS
@@ -451,9 +452,24 @@ class Pond(object):
             self.benthic_photosynthesis_measurements.append(measurement)
         else:
             raise Exception("ERROR: cannot add measurement to benthic measurements list - measurement must be of type BenthicPhotoSynthesisMeasurement")
+
+    def add_benthic_measurement_if_photic(self, measurement):
+        z1Percent = self.calculate_depth_of_specific_light_percentage(0.01)
+        if(measurement.get_depth()<z1Percent):
+            self.add_benthic_measurement(measurement)
+        else: 
+            print "measurement not within photic zone"
+
+        
         
     def remove_benthic_measurement(self, measurement=BenthicPhotoSynthesisMeasurement):
         self.benthic_photosynthesis_measurements.remove(measurement)
+        
+    def update_shape(self, other_pond_shape):
+        our_shape = self.get_pond_shape()
+        if(isinstance(other_pond_shape, BathymetricPondShape)):
+            our_shape.update_shape(other_pond_shape)
+            self.pond_shape_object = our_shape
 
 
     ########################################
@@ -534,20 +550,29 @@ class Pond(object):
  
  
         
-        depth_interval = self.get_depth_interval_meters()
+#         depth_interval = self.get_depth_interval_meters()
+        depth_interval =0.1 #TODO: undo this
         benthic_primary_production_answer = 0.0  # mg C per day
-        current_depth = 0
+        current_depth = 0.0
+        max_depth = self.get_max_depth()
         shape_object = self.get_pond_shape()        
-        shape_object.set_depth_interval_percentage(self.get_depth_interval_percentage())  # just making sure
+#         shape_object.set_depth_interval_percentage(self.get_depth_interval_percentage())  # just making sure
         # for each current_depth interval
-        while (current_depth < self.get_max_depth()):
+        for depth, area in shape_object.water_surface_areas.items():
+            current_depth = depth
             bpprz = 0.0  # mg C* m^-2 *day
  
             # for every time interval
             
             ik_z = self.get_benthic_ik_at_depth(current_depth)
             benthic_pmax_z = self.get_benthic_pmax_at_depth(current_depth)  # units?
-            f_area = shape_object.get_fractional_sediment_area_at_depth(current_depth, total_littoral_area)
+            area_z = area
+            f_area = area_z/total_littoral_area
+#             if(0==f_area):
+#                 print "wat"
+#                 print "*current depth is ", current_depth
+#                 print "*max depth is ", max_depth
+                
             t = 0.0  # start of day
             while t < lod:
  
@@ -564,8 +589,9 @@ class Pond(object):
  
             benthic_primary_production_answer += interval_bppr_fraction
             current_depth += depth_interval 
-            print "current_depth in superamazing is ", current_depth
-            print "interval_bppr_fraction is", interval_bppr_fraction
+#             print "current_depth in superamazing is ", current_depth
+#             print "fractional area is ", f_area
+#             print "interval_bppr_fraction is ", interval_bppr_fraction
  
  
         return benthic_primary_production_answer
@@ -627,7 +653,14 @@ class Pond(object):
         @rtype:  
         '''
         z1percent = self.calculate_depth_of_specific_light_percentage(0.01)
-        littoral_area = self.get_pond_shape().get_sediment_area_above_depth(z1percent)
+        shape_of_pond = self.get_pond_shape()
+        areas_dict = shape_of_pond.water_surface_areas
+        littoral_area=0.0
+        for key, elem in areas_dict.items():
+            if (key <z1percent):
+                littoral_area+=elem
+            
+#         littoral_area = self.get_pond_shape().get_sediment_area_above_depth(z1percent) #TODO: check?
         return littoral_area    
     
     def get_benthic_pmax_at_depth(self, depth=0.0):

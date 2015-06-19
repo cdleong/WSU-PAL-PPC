@@ -50,6 +50,8 @@ class PondShape(object):
     def validate_depth(self, depth):
         pass
     
+    def update_shape(self, other_pond_shape):
+        pass
 
 
 

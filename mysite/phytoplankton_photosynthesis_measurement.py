@@ -26,8 +26,8 @@ class PhytoPlanktonPhotosynthesisMeasurement(PhotosynthesisMeasurement):
         return PhotosynthesisMeasurement.get_ik(self)
 
 
-    def set_optical_depth(self, value):
-        return PhotosynthesisMeasurement.set_optical_depth(self, value)
+    def set_depth(self, value):
+        return PhotosynthesisMeasurement.set_depth(self, value)
 
 
     def set_pmax(self, value):

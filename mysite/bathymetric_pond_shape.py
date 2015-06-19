@@ -76,18 +76,21 @@ class BathymetricPondShape(PondShape):
         '''            
         return self.get_volume_above_depth(self.get_max_depth())
 
-    def addBathymetryLayer(self, depth=0.0, area=0.0):
+    def addBathymetryLayer(self, depth_value=0.0, area_value=0.0):
         '''
-        @param depth: float value, depth in meters of area measurement.
-        @param area:  float value, area in meters squared at depth. 
+        @param depth_value: float value, depth_value in meters of area_value measurement.
+        @param area_value:  float value, area_value in meters squared at depth_value. 
         '''
-        if (depth < 0.0 or area <= 0.0):
-            raise Exception("invalid depth or area")  #TODO: more details
+        if (depth_value < 0.0 or area_value <= 0.0):
+            raise Exception("invalid depth_value or area_value. depth_value = ",depth_value, " area_value = ",area_value)  #TODO: more details
         else:
-            self.water_surface_areas[depth] = area
+            self.water_surface_areas[depth_value]=area_value
             
         
-
+            
+    def update_shape(self, other_pond_shape):
+        otherdict = other_pond_shape.water_surface_areas
+        self.water_surface_areas.update(otherdict)
 
     def get_max_depth(self):
         '''
@@ -96,9 +99,13 @@ class BathymetricPondShape(PondShape):
         @return: in meters, the maximum depth of the lake.
         @rtype: float
         '''
+        max_depth =0.0
         keys = self.water_surface_areas.keys()
-        maxDepth = max(keys)
-        return maxDepth
+        if(len(keys)<=0):
+            max_depth = 0.0
+        else:
+            max_depth = max(keys)
+        return max_depth
     
     #########################
     # get_mean_depth(self):
@@ -135,8 +142,7 @@ class BathymetricPondShape(PondShape):
         For depths not in layers.
         @param depth: depth in meters to calculate at. depth should between 0 and max_depth. It'll be set to one of those if not so.   
         @rtype: float
-        '''
-        water_surface_area_at_depth = 0        
+        '''  
         validated_depth = self.validate_depth(depth)
         
         # get interpolation function
@@ -144,10 +150,8 @@ class BathymetricPondShape(PondShape):
         y = self.water_surface_areas.values() 
         f = interp1d(x, y)
         
-        try:
-            water_surface_area_at_depth = self.water_surface_areas[validated_depth]
-        except KeyError:
-            water_surface_area_at_depth = f(validated_depth) 
+
+        water_surface_area_at_depth = f(validated_depth) 
         
         
         return water_surface_area_at_depth
@@ -211,7 +215,9 @@ class BathymetricPondShape(PondShape):
         sediment_surface_area = upper_water_area - lower_water_area 
         
         # it's _possible_ that the lake gets *wider* as it goes down. 
-        sediment_surface_area = np.abs(sediment_surface_area)
+        sediment_surface_area = abs(sediment_surface_area)
+        
+#         print "in sediment_area_at_depth method, sediment_surface_area=",sediment_surface_area, " lower_edge_depth=",lower_edge_depth, " upper_edge_depth=",upper_edge_depth, " upper_water_area=",upper_water_area," lower_water_area=",lower_water_area  
         return sediment_surface_area
 
 
@@ -316,8 +322,10 @@ class BathymetricPondShape(PondShape):
         '''
         Sediment area at depth, as a fraction of total_sediment_area
         '''
-        sediment_area_at_depth = self.get_sediment_surface_area_at_depth(depth)
+        validated_depth = self.validate_depth(depth)
+        sediment_area_at_depth = self.get_sediment_surface_area_at_depth(validated_depth)
         fractional_sediment_area = sediment_area_at_depth/total_sediment_area
+#         print "fractional area is ", fractional_sediment_area, " with depth=",depth," and validated depth ", validated_depth, " and sediment area at depth =", sediment_area_at_depth
         return fractional_sediment_area
     
     def validate_depth(self, depth):
@@ -328,13 +336,26 @@ class BathymetricPondShape(PondShape):
         @param depth: the value to be validated.
         @return: a float value between 0 and max depth of pond 
         '''
+        validated_depth = 0.0
         if(depth < 0):
-            depth = 0
+            validated_depth=0.0
         elif(depth > self.get_max_depth()):
             print "depth greater than maximum depth. Setting to max depth."
-            depth = self.get_max_depth()
+            validated_depth = self.get_max_depth()
+        else:
+            validated_depth=depth
         
-        return depth
+        return validated_depth
+    
+    def add_bathymetry(self, otherObject):
+        '''
+        
+        '''
+        if(isinstance(otherObject, BathymetricPondShape)):
+            dict = self.water_surface_areas
+            otherdict = otherObject.water_surface_areas
+            dict.update(otherdict)
+            self.water_surface_areas=dict
 
 def main():
     print "hello world"
@@ -355,7 +376,8 @@ def main():
     
     print "mean depth is ", shape_instance.get_mean_depth()
 
-    shape_instance.addBathymetryLayer(1, 100)
+    shape_instance.addBathymetryLayer(0, 100)
+    shape_instance.addBathymetryLayer(1, 101)
      
     for depth in range (0, shape_instance.get_max_depth()):
         print "water surface area at depth ", depth, " is ", shape_instance.get_water_surface_area_at_depth(depth) 
