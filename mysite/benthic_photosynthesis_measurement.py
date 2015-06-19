@@ -9,11 +9,11 @@ class BenthicPhotoSynthesisMeasurement(PhotosynthesisMeasurement):
     '''
     classdocs
     '''
-    def __init__(self, optical_depth, pmax, ik):
-        super(optical_depth, pmax, ik)
+    def __init__(self, depth, pmax, ik):
+        super(BenthicPhotoSynthesisMeasurement, self).__init__(depth, pmax, ik)
 
-    def get_optical_depth(self):
-        return PhotosynthesisMeasurement.get_optical_depth(self)
+    def get_depth(self):
+        return PhotosynthesisMeasurement.get_depth(self)
 
 
     def get_pmax(self):
@@ -23,6 +23,8 @@ class BenthicPhotoSynthesisMeasurement(PhotosynthesisMeasurement):
     def get_ik(self):
         return PhotosynthesisMeasurement.get_ik(self)
 
+    def get_alpha(self):
+        return PhotosynthesisMeasurement.get_alpha(self)
 
     def set_optical_depth(self, value):
         return PhotosynthesisMeasurement.set_optical_depth(self, value)
@@ -36,8 +38,8 @@ class BenthicPhotoSynthesisMeasurement(PhotosynthesisMeasurement):
         return PhotosynthesisMeasurement.set_ik(self, value)
 
 
-    def del_optical_depth(self):
-        return PhotosynthesisMeasurement.del_optical_depth(self)
+    def del_depth(self):
+        return PhotosynthesisMeasurement.del_depth(self)
 
 
     def del_pmax(self):
@@ -51,6 +53,11 @@ class BenthicPhotoSynthesisMeasurement(PhotosynthesisMeasurement):
 
 def main():
     print "hello world"
+    bpm = BenthicPhotoSynthesisMeasurement(0.01, 15.0, 404.943)
+    print "optical depth is", bpm.get_depth()
+    print "benthic pmax is ", bpm.get_pmax()
+    print "ik is ", bpm.get_ik()
+    
 
 
 if __name__ == "__main__":
