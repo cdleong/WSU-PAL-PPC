@@ -394,8 +394,8 @@ def main():
         print "Daily Whole Lake Primary Production Per Meter Squared For lake ID " + pid + " is " + str(bppr)
         
         backgroundLightAttenuation = p.getLightAttenuationCoefficient()
-        zOnePercent = p.calculateDepthOfSpecificLightPercentage(0.01)
-        zFiftyPercent = p.calculateDepthOfSpecificLightPercentage(0.5)
+        zOnePercent = p.calculate_depth_of_specific_light_percentage(0.01)
+        zFiftyPercent = p.calculate_depth_of_specific_light_percentage(0.5)
         
         print "given a background light coefficient of " + str(backgroundLightAttenuation) + ", the depth of 1% light is about " + str(zOnePercent)
         print "given a background light coefficient of " + str(backgroundLightAttenuation) + ", the depth of 50% light is about " + str(zFiftyPercent)

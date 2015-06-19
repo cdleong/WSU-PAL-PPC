@@ -7,9 +7,12 @@ Created on Thu Jun 05 09:38:17 2014
 
 import math as mat
 import numpy as np
-from mysite import pond_shape
 from mysite.photosynthesis_measurement import PhotosynthesisMeasurement
 from mysite.pond_shape import PondShape
+from mysite import pond_shape
+from mysite.benthic_photosynthesis_measurement import BenthicPhotoSynthesisMeasurement
+from mysite.bathymetric_pond_shape import BathymetricPondShape
+from django.forms.formsets import all_valid
 
 
 
@@ -17,54 +20,75 @@ from mysite.pond_shape import PondShape
 
 class Pond(object):
 
-
-
+    ###################################
+    # CONSTANTS
+    ###################################
+    MINIMUM_VALID_DAY = 0
+    MAXIMUM_VALID_DAY = 366
+    
+    MINIMUM_LENGTH_OF_DAY = 0  # north of the arctic circle and south of the antarctic one, this is possible during winter.
+    MAXIMUM_LENGTH_OF_DAY = 24  # north of the arctic circle and south of the antarctic one, this is possible during summer.
 
 
     
     ###################################
-    #KNOWS 
+    # KNOWS 
     ###################################    
     
-    #identifying variables, aka Primary Key
-    lake_ID = -1 #invalid lake ID I'm assuming    
-    day_of_year = 0 #day of year 0-366    
+    # identifying variables, aka Primary Key
+    lake_ID = -1  # invalid lake ID I'm assuming    
+    day_of_year = 0  # day of year 0-366    
  
  
-    #General pond information. Light/photosynthesis
-    length_of_day = 15 #hours of sunlight
-    noon_surface_light = 1500 #micromol*m^(-2)*s^(-1 ) (aka microEinsteins?)
-    light_attenuation_coefficient = 0.05 #aka "kd"
+    # General pond information. Light/photosynthesis
+    length_of_day = 15  # hours of sunlight
+    noon_surface_light = 1500  # micromol*m^(-2)*s^(-1 ) (aka microEinsteins?)
+    light_attenuation_coefficient = 0.05  # aka "kd"
     
-    #shape
-    pond_shape=PondShape
+    # shape
+    pond_shape = PondShape
     
-    #benthic photosynthesis data
-    benthic_photosynthesis_measurements =[]
+    # benthic photosynthesis data list
+    benthic_photosynthesis_measurements = []
     
-    #phytoplankton photosynthesis data
-    phytoplankton_photosynthesis_measurements =[]
+    # phytoplankton photosynthesis data list
+    phytoplankton_photosynthesis_measurements = []
     
-    def __init__(self, 
-                 lake_ID, 
-                 day_of_year, 
-                 length_of_day, 
-                 noon_surface_light, 
-                 light_attenuation_coefficient, 
-                 benthic_photosynthesis_measurements, 
-                 phytoplankton_photosynthesis_measurements):
-        self.lake_ID = lake_ID
-        self.day_of_year = day_of_year
+    
+    
+    def __init__(self,
+                 lake_ID="",
+                 day_of_year=0,
+                 length_of_day=0.0,
+                 noon_surface_light=0.0,
+                 light_attenuation_coefficient=0.0,
+                 pond_shape=PondShape(),
+                 benthic_photosynthesis_measurements=[],
+                 phytoplankton_photosynthesis_measurements=[]):
+        '''
+        CONSTRUCTOR
+        @param lake_ID:
+        @param day_of_year:
+        @param length_of_day:
+        @param noon_surface_light:
+        @param light_attenuation_coefficient:
+        @param pond_shape: a PondShape object      
+        @param benthic_photosynthesis_measurements: a list of BenthicPhotoSynthesisMeasurements
+        @param phytoplankton_photosynthesis_measurements:  a list of PhyttoplanktonPhotoSynthesisMeasurements
+        '''
+        self.set_lake_id(lake_ID)
+        self.set_day_of_year(day_of_year)
         self.length_of_day = length_of_day
         self.noon_surface_light = noon_surface_light
         self.light_attenuation_coefficient = light_attenuation_coefficient
-        self.benthic_photosynthesis_measurements = benthic_photosynthesis_measurements
-        self.phytoplankton_photosynthesis_measurements = phytoplankton_photosynthesis_measurements
+        self.set_pond_shape(pond_shape)
+        self.set_benthic_photosynthesis_measurements(benthic_photosynthesis_measurements)
+        self.set_phytoplankton_photosynthesis_measurements(phytoplankton_photosynthesis_measurements)
 
 
 
     #######################
-    #GETTERS AND SETTERS
+    # GETTERS AND SETTERS
     #######################
     def get_lake_id(self):
         return self.__lake_ID
@@ -84,6 +108,9 @@ class Pond(object):
 
     def get_light_attenuation_coefficient(self):
         return self.__light_attenuation_coefficient
+
+    def get_pond_shape(self):
+        return self.pond_shape
 
 
     def get_benthic_photosynthesis_measurements(self):
@@ -113,13 +140,24 @@ class Pond(object):
     def set_light_attenuation_coefficient(self, value):
         self.__light_attenuation_coefficient = value
 
+        
+    def set_pond_shape(self, pond_shape=PondShape):
+        if(isinstance(pond_shape, PondShape)):
+            self.pond_shape = pond_shape
+        
 
-    def set_benthic_photosynthesis_measurements(self, value):
-        self.__benthic_photosynthesis_measurements = value
+    def set_benthic_photosynthesis_measurements(self, values=[]):
+        all_valid = self.validate_types_of_all_items_in_list(values, BenthicPhotoSynthesisMeasurement)
+        if(all_valid):
+            self.__benthic_photosynthesis_measurements = values
+        else:
+            raise Exception("ERROR: all values in benthic_photosynthesis_measurements must be of type BenthicPhotoSynthesisMeasurement")
 
 
     def set_phytoplankton_photosynthesis_measurements(self, value):
+        #TODO: Type-checking
         self.__phytoplankton_photosynthesis_measurements = value
+        
 
 
     def del_lake_id(self):
@@ -157,47 +195,147 @@ class Pond(object):
     benthic_photosynthesis_measurements = property(get_benthic_photosynthesis_measurements, set_benthic_photosynthesis_measurements, del_benthic_photosynthesis_measurements, "benthic_photosynthesis_measurements's docstring")
     phytoplankton_photosynthesis_measurements = property(get_phytoplankton_photosynthesis_measurements, set_phytoplankton_photosynthesis_measurements, del_phytoplankton_photosynthesis_measurements, "phytoplankton_photosynthesis_measurements's docstring")
 
+
+
         
-    ##########################################################################################
-    # CalculateDepthOfSpecificLightProportion
-    #
-    # Calculates the depth of, say, 1% light.
-    # Uses: light attenuation coefficient kd. 
-    # 
-    ##########################################################################################
-    def calculateDepthOfSpecificLightPercentage(self, 
-                                                desiredLightProportion=1.0):
+    def calculate_depth_of_specific_light_percentage(self, desired_light_proportion=1.0):
         '''
+        Calculate Depth Of Specific Light Proportion
+        
+        Calculates the depth of, say, 1% light.
+        Uses: light attenuation coefficient kd. 
+        This is how "optical depth" works.         
+        
         Given a proportion, say 0.01 for 1%, 
         calculates the depth of the pond at which that much light will reach.
+        
         Equation on which this is based: Iz/I0=e^-kd*z
-        Given a desired proportion for Iz/I0, and solved for z, 
-        this simplifies to z= kd/ln(desired proportion) 
+        Given a desired proportion for Iz/I0, and solved for z, this simplifies to 
+        z= kd/ln(desired proportion)
+        
          
-        @param desiredLightProportion:a float value from 0 to 1.0 
+         
+        @param desired_light_proportion:a float value from 0 to 1.0 
         @return: the depth, in meters, where that proportion of light penetrates.
-         
-        '''
-         
-        depthOfSpecifiedLightProportion = 0.0 # the surface of the pond
+        @rtype: float         
+        '''         
+        validated_desired_light_proportion = self.validate_proportional_value(desired_light_proportion)
+        depthOfSpecifiedLightProportion = 0.0  # the surface of the pond makes a good default
         backgroundLightAttenuation = self.get_light_attenuation_coefficient()
+        
          
-        if(desiredLightProportion>1.0): #greater than 100%? Just set to 100%. Not strictly necessary, since the default value would be the correct answer.
-            desiredLightProportion = 1.0
-        if(desiredLightProportion<0.0): #less than 0%? Just set to 0%
-            desiredLightProportion = 0.0
+
  
-        if(desiredLightProportion<1.0 and desiredLightProportion>0.0):         
-            naturalLogOfProportion = mat.log(desiredLightProportion)
-#             print "natural log = " + str(naturalLogOfProportion)
+        if(validated_desired_light_proportion < 1.0 and validated_desired_light_proportion > 0.0):         
+            naturalLogOfProportion = mat.log(validated_desired_light_proportion)
              
-            depthOfSpecifiedLightProportion = naturalLogOfProportion / -backgroundLightAttenuation #TODO: check if zero.
+            depthOfSpecifiedLightProportion = naturalLogOfProportion / -backgroundLightAttenuation  # TODO: check if zero.
          
          
              
              
-        return depthOfSpecifiedLightProportion        
-     
+        return depthOfSpecifiedLightProportion 
+    
+    def calculate_light_proportion_at_depth(self, depth=0.0):
+        '''
+        Calculate Light Proportion at Depth
+                
+        The inverse operation of "Calculate Depth Of Specific Light Proportion". Given the depth, calculates what proportion of light
+        will be visible at that depth.
+        
+        Given a depth, say "10" for 10 meters, calculates the proportion of light (Iz/I0) that will reach that depth 
+        
+        Equation on which this is based: Iz/I0=e^-kd*z        
+        
+        If you want Iz, just do Iz*I0 again. #TODO: just light at depth z
+        
+        @param depth: depth in meters. 
+        @return: proportion of light at depth z as a number in the range (0.0, 1.0), inclusive. 
+        @rtype:  float
+        '''       
+        validated_depth = self.validate_depth(depth)
+        light_attenuation_coefficient = self.get_light_attenuation_coefficient()
+#         e_value = mat.e
+        multiplied = light_attenuation_coefficient * validated_depth
+        light_proportion_at_depth = mat.exp(-multiplied)
+        return light_proportion_at_depth
+
+
+
+    ###################
+    # VALIDATORS
+    ###################
+    
+    def validate_numerical_value(self, value, max_value, min_value):
+        '''
+        Generic numerical validator. 
+        Checks if value is >max_value or <min_value.
+        If it's outside the valid range it'll be set to the closest valid value.
+        @param value: numerical value of some sort to be checked.
+        @param max_value: numerical value. Max valid value.
+        @param min_value: numerical value. Min valid value.
+        @return: a valid value in the range (min_value,max_value), inclusive 
+        @rtype: numerical value  
+        '''
+        validated_value = 0
+        if(value < min_value):
+            validated_value = min_value
+        elif(value > max_value):
+            validated_value = max_value
+        else: 
+            validated_value = value
+        return validated_value        
+    
+    def validate_day_of_year(self, day_of_year=0):
+        '''
+        
+        @param day_of_year: the day of year the measurement was made.
+        @return: a valid value in the range (Pond.MINIMUM_VALID_DAY,Pond.MAXIMUM_VALID_DAY), inclusive 
+        @rtype: int
+        '''        
+        return self.validate_numerical_value(day_of_year, Pond.MAXIMUM_VALID_DAY, Pond.MINIMUM_VALID_DAY)
+            
+    def validate_length_of_day(self, length_of_day=0.0):
+        '''
+        
+        @param length_of_day:
+        @return: a valid value in the range (Pond.MINIMUM_LENGTH_OF_DAY,Pond.MAXIMUM_LENGTH_OF_DAY), inclusive 
+        @rtype:  float
+        '''
+        return self.validate_numerical_value(length_of_day, Pond.MAXIMUM_LENGTH_OF_DAY, Pond.MINIMUM_LENGTH_OF_DAY)     
+    
+    def validate_proportional_value(self, proportional_value):
+        '''
+        @param proportional_value:
+        @return: a value in the range (0.0, 1.0) inclusive
+        @rtype: float 
+        '''
+        validated_proportional_value = self.validate_numerical_value(proportional_value, 1.0, 0.0)
+        return validated_proportional_value
+    
+    def validate_depth(self, depth=0.0):
+        '''
+        @param depth:
+        @return: 
+        @rtype:  
+        '''
+        validated_depth = self.pond_shape.validate_depth(depth) 
+        return validated_depth
+    
+    def validate_types_of_all_items_in_list(self, items=[], desired_type=object):
+        '''
+        @param items:
+        @param desired_type:
+
+        '''
+        all_valid = False
+        if(all(isinstance(item, desired_type) for item in items)):            
+            all_valid = True
+        else: 
+            all_valid = False
+        return all_valid
+                     
+        
 
 # 
 # 
@@ -305,7 +443,7 @@ class Pond(object):
 #         self.pondLayerList.append(layer)
 # 
 #     def appendPondLayerIfPhotic(self, layer):
-#         z1percent = self.calculateDepthOfSpecificLightPercentage(0.01) #1%
+#         z1percent = self.calculate_depth_of_specific_light_percentage(0.01) #1%
 #         if (layer.get_depth()<z1percent): #0 is surface, larger is deeper, smaller is shallower. We want depths shallower than z1percent
 # 
 #             self.pondLayerList.append(layer)
@@ -386,7 +524,7 @@ class Pond(object):
 #                                                         ):
 # 
 # 
-#         z1percent = self.calculateDepthOfSpecificLightPercentage(0.01)#1%
+#         z1percent = self.calculate_depth_of_specific_light_percentage(0.01)#1%
 #         noonlight = self.getNoonSurfaceLight()
 #         lod = self.getLengthOfDay()
 #         kd =self.getLightAttenuationCoefficient() #unitless coefficient
@@ -456,7 +594,7 @@ class Pond(object):
 #                                                                time_interval=0.25
 #                                                                ):
 #         A0 = self.getSufaceAreaAtDepthZero()
-#         z1percent = self.calculateDepthOfSpecificLightPercentage(0.01)#1%
+#         z1percent = self.calculate_depth_of_specific_light_percentage(0.01)#1%
 # 
 #         if (A0<0 or z1percent<0):
 #             #crash somehow I guess
@@ -474,8 +612,8 @@ class Pond(object):
 #     # Uses: light attenuation coefficient kd. 
 #     # 
 #     ##########################################################################################
-#     def calculateDepthOfSpecificLightPercentage(self, 
-#                                                 desiredLightProportion=1.0):
+#     def calculate_depth_of_specific_light_percentage(self, 
+#                                                 validated_desired_light_proportion=1.0):
 #         '''
 #         Given a proportion, say 0.01 for 1%, 
 #         calculates the depth of the pond at which that much light will reach.
@@ -483,7 +621,7 @@ class Pond(object):
 #         Given a desired proportion for Iz/I0, and solved for z, 
 #         this simplifies to z= kd/ln(desired proportion) 
 #         
-#         @param desiredLightProportion:a float value from 0 to 1.0 
+#         @param validated_desired_light_proportion:a float value from 0 to 1.0 
 #         @return: the depth, in meters, where that proportion of light penetrates.
 #         
 #         '''
@@ -491,13 +629,13 @@ class Pond(object):
 #         depthOfSpecifiedLightProportion = 0.0 # the surface of the pond
 #         backgroundLightAttenuation = self.getLightAttenuationCoefficient()
 #         
-#         if(desiredLightProportion>1.0): #greater than 100%? Just set to 100%. Not strictly necessary, since the default value would be the correct answer.
-#             desiredLightProportion = 1.0
-#         if(desiredLightProportion<0.0): #less than 0%? Just set to 0%
-#             desiredLightProportion = 0.0
+#         if(validated_desired_light_proportion>1.0): #greater than 100%? Just set to 100%. Not strictly necessary, since the default value would be the correct answer.
+#             validated_desired_light_proportion = 1.0
+#         if(validated_desired_light_proportion<0.0): #less than 0%? Just set to 0%
+#             validated_desired_light_proportion = 0.0
 # 
-#         if(desiredLightProportion<1.0 and desiredLightProportion>0.0):         
-#             naturalLogOfProportion = mat.log(desiredLightProportion)
+#         if(validated_desired_light_proportion<1.0 and validated_desired_light_proportion>0.0):         
+#             naturalLogOfProportion = mat.log(validated_desired_light_proportion)
 # #             print "natural log = " + str(naturalLogOfProportion)
 #             
 #             depthOfSpecifiedLightProportion = naturalLogOfProportion / -backgroundLightAttenuation #TODO: check if zero.
@@ -700,10 +838,20 @@ class Pond(object):
 
 def main():
     print "hello world"
-    m1 = PhotosynthesisMeasurement(1.0, 14.75637037, 404.943)
-    p = Pond("lake_ID", 360, 12.0, 1440.0, 0.3429805354, m1, m1)
+    m1 = BenthicPhotoSynthesisMeasurement(1.0, 14.75637037, 404.943)
+    measurement_list = [m1]
+    areas = {0:100, 50:50, 100:0}
+    depth_interval_percentage = 1 
     
-    print "depth of 1% light is ", p.calculateDepthOfSpecificLightPercentage(.01)
+    pond_shape_instance = BathymetricPondShape(areas, depth_interval_percentage)
+    
+    p = Pond("lake_ID", 360, 12.0, 1440.0, 0.3429805354, pond_shape_instance, measurement_list, measurement_list)
+    
+    depth_of_one_percent_light = p.calculate_depth_of_specific_light_percentage(.01)
+    
+    print "depth of 1% light is ", depth_of_one_percent_light
+    proportional_light = p.calculate_light_proportion_at_depth(depth_of_one_percent_light)
+    print "%light of depth ", depth_of_one_percent_light, " is ", proportional_light
 
 
 
