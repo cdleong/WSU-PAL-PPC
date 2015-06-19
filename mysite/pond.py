@@ -10,6 +10,8 @@ import numpy as np
 from mysite.pond_shape import PondShape
 from mysite.benthic_photosynthesis_measurement import BenthicPhotoSynthesisMeasurement
 from mysite.bathymetric_pond_shape import BathymetricPondShape
+from scipy.interpolate import interp1d
+
 
 
 
@@ -28,11 +30,11 @@ class Pond(object):
     MAXIMUM_LENGTH_OF_DAY = 24.0003  # north of the arctic circle and south of the antarctic one, this is possible during summer, if there's a leap second
     
     MINIMUM_NOON_SURFACE_LIGHT = 0.0
-    MAXIMUM_NOON_SURFACE_LIGHT = 1000000.0 #normally it's in the range of ~1000-2000. A 1000x increase, I'm pretty sure, would sterilize the lake
+    MAXIMUM_NOON_SURFACE_LIGHT = 1000000.0  # normally it's in the range of ~1000-2000. A 1000x increase, I'm pretty sure, would sterilize the lake
     
     
     MINIMUM_LIGHT_ATTENUATION_COEFFICIENT = 0.0
-    MAXIMUM_LIGHT_ATTENUATION_COEFFICIENT= float("inf") # no upper limit
+    MAXIMUM_LIGHT_ATTENUATION_COEFFICIENT = float("inf")  # no upper limit
     
 
 
@@ -52,7 +54,7 @@ class Pond(object):
     light_attenuation_coefficient = 0.05  # aka "kd"
     
     # shape
-    pond_shape = PondShape
+    pond_shape_object = PondShape()
     
     # benthic photosynthesis data list
     benthic_photosynthesis_measurements = []
@@ -60,7 +62,7 @@ class Pond(object):
     # phytoplankton photosynthesis data list #TODO: everything to do with this
     phytoplankton_photosynthesis_measurements = []
     
-    #default intervals for calculatations 
+    # default intervals for calculatations 
     time_interval = 0.25
     depth_interval_percentage = 1 
 
@@ -68,7 +70,7 @@ class Pond(object):
     
     
     ############################
-    #CONSTRUCTOR
+    # CONSTRUCTOR
     ###########################
     def __init__(self,
                  lake_ID="",
@@ -76,11 +78,11 @@ class Pond(object):
                  length_of_day=0.0,
                  noon_surface_light=0.0,
                  light_attenuation_coefficient=0.0,
-                 pond_shape=PondShape(),
+                 pond_shape_object=PondShape(),
                  benthic_photosynthesis_measurements=[],
                  phytoplankton_photosynthesis_measurements=[],
-                 time_interval =0.25,
-                 depth_interval_percentage = 1):
+                 time_interval=0.25,
+                 depth_interval_percentage=1):
         '''
         CONSTRUCTOR
         @param lake_ID:
@@ -88,7 +90,7 @@ class Pond(object):
         @param length_of_day:
         @param noon_surface_light:
         @param light_attenuation_coefficient:
-        @param pond_shape: a PondShape object      
+        @param pond_shape_object: a PondShape object      
         @param benthic_photosynthesis_measurements: a list of BenthicPhotoSynthesisMeasurements
         @param phytoplankton_photosynthesis_measurements:  a list of PhyttoplanktonPhotoSynthesisMeasurements
         '''
@@ -97,9 +99,23 @@ class Pond(object):
         self.length_of_day = length_of_day
         self.noon_surface_light = noon_surface_light
         self.light_attenuation_coefficient = light_attenuation_coefficient
-        self.set_pond_shape(pond_shape)
+        self.set_pond_shape(pond_shape_object)
         self.set_benthic_photosynthesis_measurements(benthic_photosynthesis_measurements)
         self.set_phytoplankton_photosynthesis_measurements(phytoplankton_photosynthesis_measurements)
+        self.set_time_interval(time_interval)
+        self.set_depth_interval_percentage(depth_interval_percentage)
+
+    def get_time_interval(self):
+        return self.__time_interval
+
+
+    def set_time_interval(self, value):
+        self.__time_interval = value
+
+
+    def del_time_interval(self):
+        del self.__time_interval
+
 
 
 
@@ -164,10 +180,11 @@ class Pond(object):
         @return: 
         @rtype: float
         '''
-        validated_depth = self.pond_shape.validate_depth(depth) 
+        pond_shape_object = self.get_pond_shape()
+        validated_depth = pond_shape_object.validate_depth(depth)
         return validated_depth
     
-    def validate_noon_surface_light(self, noon_surface_light = 0.0):
+    def validate_noon_surface_light(self, noon_surface_light=0.0):
         '''
         @param noon_surface_light:
         @return: 
@@ -258,7 +275,7 @@ class Pond(object):
         @return: a PondShape object, holding all the information describing the shape of the lake.
         @rtype: PondShape
         '''
-        return self.pond_shape
+        return self.pond_shape_object
 
 
     def get_benthic_photosynthesis_measurements(self):
@@ -278,12 +295,19 @@ class Pond(object):
         '''
         return self.__phytoplankton_photosynthesis_measurements
     
-    def get_time_interval(self):
-        return self.__time_interval
+
 
 
     def get_depth_interval_percentage(self):
         return self.__depth_interval_percentage
+    
+    def get_depth_interval_meters(self):
+        '''
+        '''
+        return self.pond_shape_object.get_depth_interval_meters()
+    
+    def get_max_depth(self):
+        return self.pond_shape_object.get_max_depth()
     
     #######################
     # SETTERS
@@ -301,7 +325,7 @@ class Pond(object):
         Setter method
         Validates the value        
         '''        
-        validated_day_of_year  = self.validate_day_of_year(day_of_year)
+        validated_day_of_year = self.validate_day_of_year(day_of_year)
         self.__day_of_year = validated_day_of_year
 
 
@@ -332,13 +356,16 @@ class Pond(object):
         self.__light_attenuation_coefficient = validated_light_attenuation_coefficient
 
         
-    def set_pond_shape(self, pond_shape=PondShape):
+    def set_pond_shape(self, pond_shape_object):
         '''
         Setter method
         Validates the value        
         '''           
-        if(isinstance(pond_shape, PondShape)):
-            self.pond_shape = pond_shape
+        if(isinstance(pond_shape_object, PondShape)):
+            print "setting pond shape."
+            self.pond_shape_object = pond_shape_object
+        else:
+            raise Exception("cannot set pond shape. Invalid type")
         
 
     def set_benthic_photosynthesis_measurements(self, values=[]):
@@ -354,12 +381,10 @@ class Pond(object):
 
 
     def set_phytoplankton_photosynthesis_measurements(self, value):
-        #TODO: Type-checking
+        # TODO: Type-checking
         self.__phytoplankton_photosynthesis_measurements = value
         
 
-    def set_time_interval(self, value):
-        self.__time_interval = value
 
 
     def set_depth_interval_percentage(self, value):
@@ -397,12 +422,8 @@ class Pond(object):
     def del_phytoplankton_photosynthesis_measurements(self):
         del self.__phytoplankton_photosynthesis_measurements
 
-    def del_pond_shape(self):
-        del self.__pond_shape
 
 
-    def del_time_interval(self):
-        del self.__time_interval
 
 
     def del_depth_interval_percentage(self):
@@ -415,8 +436,7 @@ class Pond(object):
     light_attenuation_coefficient = property(get_light_attenuation_coefficient, set_light_attenuation_coefficient, del_light_attenuation_coefficient, "light_attenuation_coefficient's docstring")
     benthic_photosynthesis_measurements = property(get_benthic_photosynthesis_measurements, set_benthic_photosynthesis_measurements, del_benthic_photosynthesis_measurements, "benthic_photosynthesis_measurements's docstring")
     phytoplankton_photosynthesis_measurements = property(get_phytoplankton_photosynthesis_measurements, set_phytoplankton_photosynthesis_measurements, del_phytoplankton_photosynthesis_measurements, "phytoplankton_photosynthesis_measurements's docstring")
-    pond_shape = property(get_pond_shape, set_pond_shape, del_pond_shape, "pond_shape's docstring")
-    time_interval = property(get_time_interval, set_time_interval, del_time_interval, "time_interval's docstring")
+
     depth_interval_percentage = property(get_depth_interval_percentage, set_depth_interval_percentage, del_depth_interval_percentage, "depth_interval_percentage's docstring")
                      
        
@@ -424,20 +444,20 @@ class Pond(object):
 
 
     ########################################
-    #Appenders/mutators
+    # Appenders/mutators
     ########################################
-    def add_benthic_measurement(self, measurement = BenthicPhotoSynthesisMeasurement):
+    def add_benthic_measurement(self, measurement=BenthicPhotoSynthesisMeasurement):
         if(isinstance(measurement, BenthicPhotoSynthesisMeasurement)):
             self.benthic_photosynthesis_measurements.append(measurement)
         else:
             raise Exception("ERROR: cannot add measurement to benthic measurements list - measurement must be of type BenthicPhotoSynthesisMeasurement")
         
-    def remove_benthic_measurement(self, measurement = BenthicPhotoSynthesisMeasurement):
+    def remove_benthic_measurement(self, measurement=BenthicPhotoSynthesisMeasurement):
         self.benthic_photosynthesis_measurements.remove(measurement)
 
 
     ########################################
-    #SCIENCE FUNCTIONS
+    # SCIENCE FUNCTIONS
     ########################################
 
     
@@ -509,96 +529,156 @@ class Pond(object):
         time_interval = self.get_time_interval()
         noonlight = self.get_noon_surface_light()
         lod = self.get_length_of_day()
-        kd =self.get_light_attenuation_coefficient()
+        kd = self.get_light_attenuation_coefficient()
         total_littoral_area = self.calculate_total_littoral_area()
  
  
-        #for each layer
-        bppr =0.0 #mg C per day
         
-        for layer in self.pondLayerList:
-            bpprz = 0.0 #mg C* m^-2 *day
+        depth_interval = self.get_depth_interval_meters()
+        benthic_primary_production_answer = 0.0  # mg C per day
+        current_depth = 0
+        shape_object = self.get_pond_shape()        
+        shape_object.set_depth_interval_percentage(self.get_depth_interval_percentage())  # just making sure
+        # for each current_depth interval
+        while (current_depth < self.get_max_depth()):
+            bpprz = 0.0  # mg C* m^-2 *day
  
-            #for every time interval
-            z = layer.get_depth() #meters
-            ik_z = layer.get_ik()
-            benthic_pmax_z = layer.get_pmax() #units?
-            f_area = layer.get_area()/total_littoral_area #fractional area of normalized 1m lake
-            t = 0.0 #start of day
+            # for every time interval
+            
+            ik_z = self.get_benthic_ik_at_depth(current_depth)
+            benthic_pmax_z = self.get_benthic_pmax_at_depth(current_depth)  # units?
+            f_area = shape_object.get_fractional_sediment_area_at_depth(current_depth, total_littoral_area)
+            t = 0.0  # start of day
             while t < lod:
  
-                light_zt = noonlight*np.sin(np.pi*t/lod) #light at depth z, time t
-                izt = light_zt* np.exp(-kd*z)
-                bpprzt = benthic_pmax_z* np.tanh(izt/ik_z)
-                bpprz +=bpprzt
+                light_zt = noonlight * np.sin(np.pi * t / lod)  # light at current_depth current_depth, time t
+                izt = light_zt * np.exp(-kd * current_depth)
+                bpprzt = benthic_pmax_z * np.tanh(izt / ik_z)
+                bpprz += bpprzt
  
                 t += time_interval
-            bpprz = bpprz / (1/time_interval) #account for the fractional time interval. e.g. dividing by 1/0.25 is equiv to dividing by 4
-            layer_bpprz = bpprz*f_area
-            layer.set_bpprz(layer_bpprz)
- 
-            bppr+=layer_bpprz
- 
- 
- 
-        return bppr
+            bpprz = bpprz / (1 / time_interval)  # account for the fractional time interval. e.g. dividing by 1/0.25 is equiv to dividing by 4
+            interval_bppr_fraction = bpprz * f_area  # normalizing
 
-    #####################################################################
-    #calculateDailyWholeLakeBenthicPrimaryProductionPerMeterSquared
-    #April 1 2015
-    #Function
-    #basically equation 12, TBP
-    #but works with pprinputs and datareader
-    #and sets layer bppr_z values
-    ######################################################################
-    #TODO: delete this
-    def oldcalculateDailyWholeLakeBenthicPrimaryProductionPerMeterSquared(self,
-                                                   time_interval=0.25   #15 minutes, or a quarter-hour
-                                                   ):
+
+ 
+            benthic_primary_production_answer += interval_bppr_fraction
+            current_depth += depth_interval 
+            print "current_depth in superamazing is ", current_depth
+            print "interval_bppr_fraction is", interval_bppr_fraction
  
  
-        noonlight = self.getNoonSurfaceLight()
-        lod = self.getLengthOfDay()
-        kd =self.getLightAttenuationCoefficient() #unitless coefficient
-        total_littoral_area = self.calculate_total_littoral_area()
- 
- 
-        #for each layer
-        bppr =0.0 #mg C per day
-        for layer in self.pondLayerList:
-            bpprz = 0.0 #mg C* m^-2 *day
- 
-            #for every time interval
-            z = layer.get_depth() #meters
-            ik_z = layer.get_ik()
-            benthic_pmax_z = layer.get_pmax() #units?
-            f_area = layer.get_area()/total_littoral_area #fractional area of normalized 1m lake
-            t = 0.0 #start of day
-            while t < lod:
- 
-                light_zt = noonlight*np.sin(np.pi*t/lod) #light at depth z, time t
-                izt = light_zt* np.exp(-kd*z)
-                bpprzt = benthic_pmax_z* np.tanh(izt/ik_z)
-                bpprz +=bpprzt
- 
-                t += time_interval
-            bpprz = bpprz / (1/time_interval) #account for the fractional time interval. e.g. dividing by 1/0.25 is equiv to dividing by 4
-            layer_bpprz = bpprz*f_area
-            layer.set_bpprz(layer_bpprz)
- 
-            bppr+=layer_bpprz
- 
- 
- 
-        return bppr
+        return benthic_primary_production_answer
+    
+
+
+#     #####################################################################
+#     #calculateDailyWholeLakeBenthicPrimaryProductionPerMeterSquared
+#     #April 1 2015
+#     #Function
+#     #basically equation 12, TBP
+#     #but works with pprinputs and datareader
+#     #and sets layer bppr_z values
+#     ######################################################################
+#     #TODO: delete this
+#     def oldcalculateDailyWholeLakeBenthicPrimaryProductionPerMeterSquared(self,
+#                                                    time_interval=0.25   #15 minutes, or a quarter-hour
+#                                                    ):
+#  
+#  
+#         noonlight = self.getNoonSurfaceLight()
+#         lod = self.getLengthOfDay()
+#         kd =self.getLightAttenuationCoefficient() #unitless coefficient
+#         total_littoral_area = self.calculate_total_littoral_area()
+#  
+#  
+#         #for each layer
+#         benthic_primary_production_answer =0.0 #mg C per day
+#         for layer in self.pondLayerList:
+#             bpprz = 0.0 #mg C* m^-2 *day
+#  
+#             #for every time interval
+#             current_depth = layer.get_depth() #meters
+#             ik_z = layer.get_ik()
+#             benthic_pmax_z = layer.get_pmax() #units?
+#             f_area = layer.get_area()/total_littoral_area #fractional area of normalized 1m lake
+#             t = 0.0 #start of day
+#             while t < lod:
+#  
+#                 light_zt = noonlight*np.sin(np.pi*t/lod) #light at current_depth current_depth, time t
+#                 izt = light_zt* np.exp(-kd*current_depth)
+#                 bpprzt = benthic_pmax_z* np.tanh(izt/ik_z)
+#                 bpprz +=bpprzt
+#  
+#                 t += time_interval
+#             bpprz = bpprz / (1/time_interval) #account for the fractional time interval. e.g. dividing by 1/0.25 is equiv to dividing by 4
+#             interval_bppr_fraction = bpprz*f_area
+#             layer.set_bpprz(interval_bppr_fraction)
+#  
+#             benthic_primary_production_answer+=interval_bppr_fraction
+#  
+#  
+#  
+#         return benthic_primary_production_answer
     
     def calculate_total_littoral_area(self):
         '''
+        @return:
+        @rtype:  
         '''
         z1percent = self.calculate_depth_of_specific_light_percentage(0.01)
         littoral_area = self.get_pond_shape().get_sediment_area_above_depth(z1percent)
         return littoral_area    
+    
+    def get_benthic_pmax_at_depth(self, depth=0.0):
+        '''
+        @return:
+        @rtype:  
+        '''                
+        pmax_values_list = []
+        depths_list = []
+        for measurement_value in self.get_benthic_photosynthesis_measurements():
+            pmax_value = measurement_value.get_pmax()
+            depth_value = measurement_value.get_depth()
+            pmax_values_list.append(pmax_value)
+            depths_list.append(depth_value)
+        bpmax_at_depth = self.interpolate_values_at_depth(depth, depths_list, pmax_values_list)
+        return bpmax_at_depth
+    
+    def get_benthic_ik_at_depth(self, depth=0.0):
+        '''
+        @return: 
+        @rtype: 
+        '''
+        values_list = []
+        depths_list = []
+        for measurement_value in self.get_benthic_photosynthesis_measurements():
+            pmax_value = measurement_value.get_ik()
+            depth_value = measurement_value.get_depth()
+            values_list.append(pmax_value)
+            depths_list.append(depth_value)
+        bpmax_at_depth = self.interpolate_values_at_depth(depth, depths_list, values_list)
+        return bpmax_at_depth        
+    
+        
+        
+        
 
+    def interpolate_values_at_depth(self, depth, depths_list=[], values_list=[]):
+        # Uses http://docs.scipy.org/doc/scipy/reference/tutorial/interpolate.html   
+        validated_depth = self.validate_depth(depth)
+        
+        # get interpolation function
+        x = depths_list
+        y = values_list 
+        f = interp1d(x, y)
+        
+        
+        value_at_depth = f(validated_depth) 
+        
+        
+        return value_at_depth        
+    time_interval = property(get_time_interval, set_time_interval, del_time_interval, "time_interval's docstring")
      
 
 # 
@@ -1102,12 +1182,28 @@ class Pond(object):
 
 def main():
     print "hello world"
-    m1 = BenthicPhotoSynthesisMeasurement(1.0, 14.75637037, 404.943)
-    measurement_list = [m1]
-    areas = {0:100, 50:50, 100:0}
+    m0 = BenthicPhotoSynthesisMeasurement(0.0, 14.75637037, 404.943)
+    m1 = BenthicPhotoSynthesisMeasurement(1.0, 25.96292587, 307.6793317)
+    m2 = BenthicPhotoSynthesisMeasurement(2.0, 57.98165587, 238.6559726)
+    m3 = BenthicPhotoSynthesisMeasurement(3.0, 47.35232783, 189.673406)
+    m4 = BenthicPhotoSynthesisMeasurement(4.0, 36.7229998, 154.9128285)
+    m5 = BenthicPhotoSynthesisMeasurement(5.0, 33.63753108, 130.2449143)
+    m6 = BenthicPhotoSynthesisMeasurement(6.0, 26.8494999, 112.7392791)
+    m7 = BenthicPhotoSynthesisMeasurement(7.0, 20.06146872, 100.3163696)
+    m8 = BenthicPhotoSynthesisMeasurement(8.0, 16.976, 91.50042668)
+    m9 = BenthicPhotoSynthesisMeasurement(9.0, 15.45920354, 85.24417497)
+    m10 = BenthicPhotoSynthesisMeasurement(10.0, 11.7585159, 80.80441327)
+    m11 = BenthicPhotoSynthesisMeasurement(11.0, 7.148489714, 77.6537274)
+    m12 = BenthicPhotoSynthesisMeasurement(12.0, 2.903677594, 75.41783679)
+    m13 = BenthicPhotoSynthesisMeasurement(13.0, 0.2986321643, 73.83113249)
+    
+    
+    measurement_list = [m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13]
+    areas = {0:3542.822, 1:3268.758, 2:2465.176, 3:2196.684, 4:1712.987, 5:2417.836, 6:2412.061, 7:2116.739, 8:1895.766, 9:2333.014, 10:2777.449, 11:2475.657, 12:2475.657, 13:2475.657}
     depth_interval_percentage = 1 
     
     pond_shape_instance = BathymetricPondShape(areas, depth_interval_percentage)
+       
     
     p = Pond("lake_ID", 360, 12.0, 1440.0, 0.3429805354, pond_shape_instance, measurement_list, measurement_list)
     
@@ -1116,7 +1212,24 @@ def main():
     print "depth of 1% light is ", depth_of_one_percent_light
     proportional_light = p.calculate_light_proportion_at_depth(depth_of_one_percent_light)
     print "%light of depth ", depth_of_one_percent_light, " is ", proportional_light
-
+    
+    depth_interval_meters = p.get_depth_interval_meters()
+    print "depth interval in meters is ", depth_interval_meters
+    
+    max_depth = p.get_max_depth()
+    print "max depth is ", max_depth
+    
+    current_depth = 0
+    depth_interval_meters = 0.5
+    while(current_depth < max_depth):
+        print "current depth is ", current_depth
+        print "benthic pmax at this depth is: ", p.get_benthic_pmax_at_depth(current_depth)     
+        print "benthic ik at this depth is: ", p.get_benthic_ik_at_depth(current_depth)   
+        current_depth += depth_interval_meters
+    
+    bob = p.calculateDailyWholeLakeBenthicPrimaryProductionPerMeterSquared()
+    print "bob is ", bob
+    
 
 
 

@@ -312,8 +312,15 @@ class BathymetricPondShape(PondShape):
         
         return total_area 
     
+    def get_fractional_sediment_area_at_depth(self, depth=0.0, total_sediment_area=0.0):
+        '''
+        Sediment area at depth, as a fraction of total_sediment_area
+        '''
+        sediment_area_at_depth = self.get_sediment_surface_area_at_depth(depth)
+        fractional_sediment_area = sediment_area_at_depth/total_sediment_area
+        return fractional_sediment_area
     
-    def validate_depth(self, depth=0.0):
+    def validate_depth(self, depth):
         '''
         I keep using the following bit of code.
         Given a depth, checks to see if it is between 0 and max_depth.
