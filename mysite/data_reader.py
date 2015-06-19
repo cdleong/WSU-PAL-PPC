@@ -6,7 +6,6 @@ This class reads in data from an excel file, packages it up, and sends it to the
 @author: cdleong
 '''
 import xlrd, xlwt #reading and writing, respectively.
-from pond_layer import PhotoSynthesisMeasurement
 from pond import Pond
 from numpy.distutils.npy_pkg_config import FormatError
 

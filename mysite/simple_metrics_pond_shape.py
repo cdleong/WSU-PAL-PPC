@@ -109,7 +109,7 @@ class SimpleMetricsPondShape(PondShape):
             area_at_z = self.get_water_surface_area_at_depth(self.get_max_depth())#recursive call            
         else:        
             max_depth = self.get_max_depth()
-            area_at_z = surface_area_at_depth_zero*mat.pow((1-(depth/max_depth), shape_factor))
+            area_at_z = surface_area_at_depth_zero*mat.pow((1-(depth/max_depth), shape_factor)) #TODO: this is erroneous. See MS paper line 235
         return area_at_z
 
 
