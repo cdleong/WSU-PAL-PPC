@@ -27,7 +27,8 @@ class DataReader(object):
     # Class variables
     ##################################
 #     filename = "template.xlsx" #name of file. Default is "template.xlsx"
-    filename = "template_example.xlsx" #name of file. Default is "template.xlsx"
+#     filename = "template_example.xlsx" #name of file. Default is "template.xlsx"
+    filename = "optical_depth_template_example.xlsx" #name of file. Default is "template.xlsx"    
     
     
 
@@ -417,32 +418,41 @@ def main():
         lod = p.get_length_of_day()
         kd = p.get_light_attenuation_coefficient()
         noon_light = p.get_noon_surface_light()
+        
+        
+        
+        print ""
+        print ""
+        print ""           
+        print "**************************************************************************************"
         print "lake ID: ", pid, " DOY: ", doy, "bppr is ", str(bppr) 
         
         
+        print "testing interpolation"
+        current_depth = 0
+        depth_interval = 0.1
+        max_depth = p.get_max_depth()
+        depths = []
+        pmaxes = []
+        iks = []
+        while current_depth<=max_depth:
+            bpmax = p.get_benthic_pmax_at_depth(current_depth)
+            ik = p.get_benthic_ik_at_depth(current_depth)
+#             print "__________________________________________________________________________________________________________________"
+#             print "at depth: ", current_depth, " the interpolated value of benthic pmax is: ", bpmax, " and ik is: ", ik
+#             print "interpolation also used for area at depth. The calculated value of area at this depth is: ", p.get_pond_shape().get_water_surface_area_at_depth(current_depth)
+            depths.append(current_depth)
+            pmaxes.append(bpmax+0.0)
+            iks.append(ik+0.0)
+            current_depth+=depth_interval
         
-        print "Daily Whole Lake Primary Production Per Meter Squared For lake ID " + pid + " is " + str(bppr)
-        
-        print "max depth is ", p.get_max_depth()
-        bob = p.get_pond_shape()
-        print bob.water_surface_areas
-        
-        print "shape object volume", p.get_pond_shape().get_volume()
-        print "number of shape measurements",len(bob.water_surface_areas)
-        print "total littoral area", p.calculate_total_littoral_area()
-        
-        backgroundLightAttenuation = p.get_light_attenuation_coefficient()
-        zOnePercent = p.calculate_depth_of_specific_light_percentage(0.01)
-        zFiftyPercent = p.calculate_depth_of_specific_light_percentage(0.5)
-        
-        print "given a background light coefficient of " + str(backgroundLightAttenuation) + ", the depth of 1% light is about " + str(zOnePercent)
-        print "given a background light coefficient of " + str(backgroundLightAttenuation) + ", the depth of 50% light is about " + str(zFiftyPercent)
-        
-        
+        print "depths: ", depths
+        print "pmaxes", pmaxes
+        print "iks", iks
         
         print ""
         print ""
-        print ""
+        print ""        
         
 
 

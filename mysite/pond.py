@@ -11,6 +11,7 @@ from mysite.pond_shape import PondShape
 from mysite.benthic_photosynthesis_measurement import BenthicPhotoSynthesisMeasurement
 from mysite.bathymetric_pond_shape import BathymetricPondShape
 from scipy.interpolate import interp1d
+from scipy import interpolate
 
 
 
@@ -660,7 +661,7 @@ class Pond(object):
             if (key <z1percent):
                 littoral_area+=elem
             
-#         littoral_area = self.get_pond_shape().get_sediment_area_above_depth(z1percent) #TODO: check?
+#         littoral_area = self.get_pond_shape().get_sediment_area_above_depth(z1percent) #TODO: check? 
         return littoral_area    
     
     def get_benthic_pmax_at_depth(self, depth=0.0):
@@ -706,9 +707,20 @@ class Pond(object):
         y = values_list 
         f = interp1d(x, y)
         
+        #magic from # Uses http://docs.scipy.org/doc/scipy/reference/tutorial/interpolate.html
+        #SPLINES....!!!
+        tck = interpolate.splrep(x, y, s=0)
+        xnew = [depth]
+#         ynew0 = interpolate.splev(x, tck, der=0) #0th derivative
+        ynew = interpolate.splev(xnew, tck, der=0) #0th derivative
         
-        value_at_depth = f(validated_depth) 
+#         print "tck is ", tck
+#         print "ynew0 is ", ynew0
+#         print "ynew1 is ", ynew1
         
+        
+#         value_at_depth = f(validated_depth) 
+        value_at_depth = ynew[0]
         
         return value_at_depth        
     time_interval = property(get_time_interval, set_time_interval, del_time_interval, "time_interval's docstring")
