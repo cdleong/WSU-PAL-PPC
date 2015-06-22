@@ -699,6 +699,13 @@ class Pond(object):
         
 
     def interpolate_values_at_depth(self, depth, depths_list=[], values_list=[]):
+        '''
+        INTERPOLATE VALUES AT DEPTH
+        Essentially, given an array of "x" (depth) and "y" values, interpolates "y" value at specified depth.
+        
+        
+        
+        '''
         # Uses http://docs.scipy.org/doc/scipy/reference/tutorial/interpolate.html   
         validated_depth = self.validate_depth(depth)
         
@@ -711,18 +718,22 @@ class Pond(object):
         #SPLINES....!!!
         tck = interpolate.splrep(x, y, s=0)
         xnew = [depth]
-#         ynew0 = interpolate.splev(x, tck, der=0) #0th derivative
-        ynew = interpolate.splev(xnew, tck, der=0) #0th derivative
+        spline_interpolated = interpolate.splev(xnew, tck, der=0) #0th derivative
+        linear_interpolated = f(validated_depth)         
         
 #         print "tck is ", tck
 #         print "ynew0 is ", ynew0
 #         print "ynew1 is ", ynew1
         
         
-#         value_at_depth = f(validated_depth) 
-        value_at_depth = ynew[0]
+
+        value_at_depth = spline_interpolated[0] #TODO: inefficient to get the whole array and return just one.
+#         value_at_depth = linear_interpolated
         
         return value_at_depth        
+    
+    
+    
     time_interval = property(get_time_interval, set_time_interval, del_time_interval, "time_interval's docstring")
      
 

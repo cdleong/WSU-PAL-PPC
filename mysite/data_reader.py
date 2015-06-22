@@ -28,14 +28,14 @@ class DataReader(object):
     ##################################
 #     filename = "template.xlsx" #name of file. Default is "template.xlsx"
 #     filename = "template_example.xlsx" #name of file. Default is "template.xlsx"
-    filename = "optical_depth_template_example.xlsx" #name of file. Default is "template.xlsx"    
+    filename = "relative_depth_template_example.xlsx" #name of file. Default is "template.xlsx"    
     
     
 
     #data starts at row 1. Row 0 is column headings
     DEFAULT_COLUMN_HEADINGS_ROW = 0
     DEFAULT_FIRST_DATA_ROW = 1
-    DEFAULT_NUMBER_OF_SHEETS = 4
+    DEFAULT_NUMBER_OF_SHEETS = 4 #Pond, benthic, planktonic. Guide optional.
     
     
     
@@ -52,6 +52,7 @@ class DataReader(object):
     BENTHIC_PHOTO_DATA_SHEET_INDEX = 1
     PHYTOPLANKTON_PHOTO_DATA_SHEET_INDEX = 2
     SHAPE_DATA_SHEET_INDEX = 3    
+#     WORKSHEET_INDICES ={"POND_DATA_SHEET_INDEX":0, "BENTHIC_PHOTO_DATA_SHEET_INDEX":1, "PHYTOPLANKTON_PHOTO_DATA_SHEET_INDEX":2,"SHAPE_DATA_SHEET_INDEX":3}#TODO: finish converting to dicts. 
     
     #default names       
     POND_DATA_SHEET_NAME = "pond_data"
@@ -66,7 +67,8 @@ class DataReader(object):
     #############
     #Data Indices
     #############
-    #TODO: a dict?
+    #TODO: a dict? 
+    #TODO: some way for the user to specify all this on sheet 0, perhaps?
     #indices common to all sheets
     dayOfYearIndex = 0 #"DOY"
     lakeIDIndex = 1 #"Lake_ID"
@@ -121,11 +123,12 @@ class DataReader(object):
 
 
 
-##########################################################################################################################
-#    READ FILE 
-#    Given an inputFile object, opens the workbook and calls the function to read the pondList. 
-##########################################################################################################################
+
     def readFile(self,inputfile):
+        '''
+        READ FILE
+        Given an inputFile object, opens the workbook and calls the function to read the pondList. 
+        '''
         #http://stackoverflow.com/questions/10458388/how-do-you-read-excel-files-with-xlrd-on-appengine
         try:
             book =  xlrd.open_workbook(file_contents=inputfile)
@@ -136,19 +139,11 @@ class DataReader(object):
         return self.readPondListFromFile(book)
 
 
-##########################################################################################################################
-##########################################################################################################################
-##########################################################################################################################
-#    READ POND LIST FROM FILE
-#    The primary meat of data_reader. 
-#
-##########################################################################################################################
-##########################################################################################################################
-##########################################################################################################################
     #reads all the pond data from the excel file.
     def readPondListFromFile(self,book):
         '''
-        TODO: doc
+        READ POND LIST FROM FILE
+        Opens the xlrd workbook and generates a list of Pond objects.
         @param book: an xlrd Workbook
         '''
         
@@ -171,7 +166,7 @@ class DataReader(object):
         shape_data_sheet =xlrd.book 
         
         
-        if(nsheets<self.DEFAULT_NUMBER_OF_SHEETS):
+        if(nsheets<self.DEFAULT_NUMBER_OF_SHEETS): #Pond, benthic, planktonic. Guide optional.
             raise IOError("file format incorrect. Number of sheets less than expected")
         
         if(self.POND_DATA_SHEET_NAME in sheet_names and 
@@ -200,7 +195,7 @@ class DataReader(object):
         pond_data_workSheet_num_rows = pond_data_workSheet.nrows
 #         print "the number of rows in sheet " + pond_data_workSheet.name +  " is " + str(pond_data_workSheet_num_rows)        
         benthic_data_workSheet_num_rows = benthic_photo_data_workSheet.nrows
-#         print "the number of rows in sheet " + benthic_photo_data_workSheet.name + " is " + str(benthic_data_workSheet_num_rows)
+        print "the number of rows in sheet " + benthic_photo_data_workSheet.name + " is " + str(benthic_data_workSheet_num_rows)
         phytoplankton_photo_data_sheet_num_rows = phytoplankton_photo_data_sheet.nrows
 #         print "the number of rows in sheet " + phytoplankton_photo_data_sheet.name + " is " + str(phytoplankton_photo_data_sheet_num_rows)
         shape_data_sheet_num_rows = shape_data_sheet.nrows
@@ -418,14 +413,26 @@ def main():
         lod = p.get_length_of_day()
         kd = p.get_light_attenuation_coefficient()
         noon_light = p.get_noon_surface_light()
+        relative_depths = [1.0, 0.8,0.5,0.25,0.1,0.01]
+        relative_depth_meters = []
         
         
-        
+               
         print ""
         print ""
-        print ""           
-        print "**************************************************************************************"
+        print ""      
+            
+        print "**************************************************************************************" 
         print "lake ID: ", pid, " DOY: ", doy, "bppr is ", str(bppr) 
+#         print "relative depths: ", relative_depths
+#         print "corresponding, m", relative_depth_meters 
+        
+        for rel_depth in  relative_depths:
+                    rel_dep_m=p.calculate_depth_of_specific_light_percentage(rel_depth)
+                    relative_depth_meters.append(rel_dep_m)
+                    print "relative depth = ", rel_depth, " meters: ", rel_dep_m
+        #             print "the corresponding depth in meters is ", p.calculate_depth_of_specific_light_percentage(rel_depth)
+        
         
         
         print "testing interpolation"
@@ -449,16 +456,16 @@ def main():
         print "depths: ", depths
         print "pmaxes", pmaxes
         print "iks", iks
-        
-        print ""
-        print ""
-        print ""        
+  
         
 
 
 
 
-
+        print ""
+        print ""
+        print ""           
+        print "**************************************************************************************"
 
 
 
