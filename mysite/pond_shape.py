@@ -26,16 +26,16 @@ class PondShape(object):
     def get_water_surface_area_at_depth(self, depth =0.0):
         pass
     
-    def get_sediment_surface_area_at_depth(self, depth=0.0):
+    def get_sediment_surface_area_at_depth(self, depth=0.0, depth_interval=0.1):
         pass
     
-    def get_volume_above_depth(self, depth=0.0):
+    def get_volume_above_depth(self, depth=0.0, depth_interval=0.1):
         pass
         
     def get_sediment_area_above_depth(self, depth=0.0):
         pass
 
-    def get_fractional_sediment_area_at_depth(self, depth=0.0, total_sediment_area=0.0):
+    def get_fractional_sediment_area_at_depth(self, depth=0.0, total_sediment_area=0.0, depth_interval=0.1):
         pass    
     
     #June 22: depth intervals aren't a thing now. 

@@ -261,18 +261,12 @@ class DataReader(object):
             
             
             #Do we need to make a pond object?
+            pond = None
             pond = next((i for i in pondList if (i.get_lake_id()== row_lakeID_value and i.get_day_of_year()==row_doy_value)),None) #source: http://stackoverflow.com/questions/7125467/find-object-in-list-that-has-attribute-equal-to-some-value-that-meets-any-condi
             if pond is None: #not in list. Must create Pond object
 #                 print "creating pond with lake ID = ", row_lakeID_value, " , and DOY = ", row_doy_value
-                emptyShape = BathymetricPondShape() #initialize with empty dict 
+                emptyShape = BathymetricPondShape({}) #initialize with empty dict 
                 pond = Pond(row_lakeID_value, row_doy_value, row_lod_value, row_noonlight_value, row_kd_value, emptyShape, [], [], self.DEFAULT_TIME_INTERVAL)
-#                 pond.set_day_of_year(row_doy_value)
-#                 pond.set_lake_id(row_lakeID_value)               
-#                 pond.set_light_attenuation_coefficient(row_kd_value)
-#                 pond.set_noon_surface_light(row_noonlight_value)
-#                 pond.set_length_of_day(row_lod_value) 
-#                 pond.set_benthic_photosynthesis_measurements([]) #initialize empty list. #TODO: try testing without this line now that I added in the proper line to the init() in Pond
-#                 
                 pondList.append(pond)         
             curr_row+=1       
             
@@ -298,12 +292,14 @@ class DataReader(object):
             row_doy_value = row[self.dayOfYearIndex].value
             row_lakeID_value = row[self.lakeIDIndex].value
             row_depth_value = row[self.shape_depth_index].value                                                                    
-            row_area_value = row[self.shape_area_index].value                                        
+            row_area_value = row[self.shape_area_index].value     
+
             
             row_dict = {row_depth_value:row_area_value}
             row_shape = BathymetricPondShape(row_dict)
             
             #find the correct pond
+            pond = None
             pond = next((i for i in pondList if (i.get_lake_id()== row_lakeID_value and 
                                                  i.get_day_of_year()==row_doy_value)),None) #source: http://stackoverflow.com/questions/7125467/find-object-in-list-that-has-attribute-equal-to-some-value-that-meets-any-condi
             if pond is None: #something is terribly wrong
@@ -311,16 +307,7 @@ class DataReader(object):
                 raise FormatError("Something went wrong. Benthic Measurement with DOY "+str(row_doy_value) + " and Lake ID " + row_lakeID_value + " does not match to any Pond.")                    
             else:
                 #create PhotoSynthesisMeasurement object using values specific to that benthic_measurement/row
-#                 print "pond shape thing. ", " row depth is ", row_depth_value," row area is ", row_area_value, " row doy is ", row_doy_value, " row lake ID is ", row_lakeID_value
-#                 print "still in pond shape thing, pond lake ID is ", pond.get_lake_id(), " and pond doy is ", pond.get_day_of_year() 
-#                 water_surface_area_dict = {row_depth_value:row_area_value}
-#                 print "created dict: ", water_surface_area_dict
-#                 depth_interval_percentage = pond.get_depth_interval_percentage()
-#                 pond_shape_object = BathymetricPondShape(water_surface_area_dict, depth_interval_percentage)  
-#                 print "about to update shape. max depth is currently ", pond.get_max_depth()
-                pond.update_shape(row_shape)
-#                 print "max depth is now ", pond.get_max_depth()
-                #add to Pond
+                pond.update_shape(row_shape)                #add to Pond
 
             curr_row+=1            
         
@@ -338,7 +325,6 @@ class DataReader(object):
         num_rows = benthic_data_workSheet_num_rows
         curr_row = self.DEFAULT_FIRST_DATA_ROW #start at 1. row 0 is column headings
         while curr_row<num_rows:
-#             print "adding layers to Ponds. curr_row = " + str(curr_row)
             row = sheet.row(curr_row) 
             
             
@@ -350,26 +336,25 @@ class DataReader(object):
             row_ik_value = row[self.benthic_ik_index].value                                        
             
             #find the correct pond
+            pond = None
             pond = next((i for i in pondList if (i.get_lake_id()== row_lakeID_value and 
                                                  i.get_day_of_year()==row_doy_value)),None) #source: http://stackoverflow.com/questions/7125467/find-object-in-list-that-has-attribute-equal-to-some-value-that-meets-any-condi
             if pond is None: #something is terribly wrong
-                print "oh no"#TODO: better error
                 raise FormatError("Something went wrong. Benthic Measurement with DOY "+str(row_doy_value) + " and Lake ID " + row_lakeID_value + " does not match to any Pond.")                    
             else:
                 #create PhotoSynthesisMeasurement object using values specific to that benthic_measurement/row
                 benthic_measurement = BenthicPhotoSynthesisMeasurement(row_depth_value, row_pmax_value, row_ik_value)                
 
                 
-                
                 #add to Pond
                 pond.add_benthic_measurement_if_photic(benthic_measurement)
             curr_row+=1    
+        
                        
 
         #end of while loop
 #         print "out of while loop. size of pond list is: ", len(pondList)
          
-        
         
 
 
@@ -404,8 +389,9 @@ def main():
 
     p = Pond()
     for p in pondList:
+        
 
-        bppr = p.calculateDailyWholeLakeBenthicPrimaryProductionPerMeterSquared()
+        
         pid = p.get_lake_id()
         doy = p.get_day_of_year()
         lod = p.get_length_of_day()
@@ -421,15 +407,21 @@ def main():
         print ""      
             
         print "**************************************************************************************" 
-        print "lake ID: ", pid, " DOY: ", doy, "bppr is ", str(bppr) 
-#         print "relative depths: ", relative_depths
-#         print "corresponding, m", relative_depth_meters 
+        bppr = p.calculateDailyWholeLakeBenthicPrimaryProductionPerMeterSquared()
+        print "lake ID: ", pid, " DOY: ", doy
+        print  "bppr is ", str(bppr) 
+        littoral_area = p.calculate_total_littoral_area()+0.0
+        print "the total littoral zone calculated using the bottom area - top area method is: ", littoral_area 
+        print "the depth of 1% light is ", p.calculate_depth_of_specific_light_percentage(0.01)
+        
+
         
         for rel_depth in  relative_depths:
                     rel_dep_m=p.calculate_depth_of_specific_light_percentage(rel_depth)
                     relative_depth_meters.append(rel_dep_m)
-                    print "relative depth = ", rel_depth, " meters: ", rel_dep_m
+#                     print "relative depth = ", rel_depth, " meters: ", rel_dep_m
         #             print "the corresponding depth in meters is ", p.calculate_depth_of_specific_light_percentage(rel_depth)
+        
         
         
         
@@ -438,20 +430,25 @@ def main():
         depth_interval = 0.1
         max_depth = p.get_max_depth()
         depths = []
+        areas = []
         pmaxes = []
         iks = []
         while current_depth<=max_depth:
             bpmax = p.get_benthic_pmax_at_depth(current_depth)
             ik = p.get_benthic_ik_at_depth(current_depth)
+            area = p.pond_shape_object.get_water_surface_area_at_depth(current_depth)
+            
 #             print "__________________________________________________________________________________________________________________"
 #             print "at depth: ", current_depth, " the interpolated value of benthic pmax is: ", bpmax, " and ik is: ", ik
 #             print "interpolation also used for area at depth. The calculated value of area at this depth is: ", p.get_pond_shape().get_water_surface_area_at_depth(current_depth)
             depths.append(current_depth)
             pmaxes.append(bpmax+0.0)
             iks.append(ik+0.0)
+            areas.append(area)
             current_depth+=depth_interval
         
         print "depths: ", depths
+        print "areas: ", areas
         print "pmaxes", pmaxes
         print "iks", iks
   
@@ -465,7 +462,7 @@ def main():
         print ""           
         print "**************************************************************************************"
 
-
+        
 
 if __name__ == "__main__":
     main()
