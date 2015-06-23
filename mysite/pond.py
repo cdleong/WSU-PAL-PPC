@@ -38,6 +38,8 @@ class Pond(object):
     MINIMUM_LIGHT_ATTENUATION_COEFFICIENT = 0.0
     MAXIMUM_LIGHT_ATTENUATION_COEFFICIENT = float("inf")  # no upper limit
     
+    PHOTIC_ZONE_LIGHT_PENETRATION_LEVEL_LOWER_BOUND = 0.01 #1% 
+    
 
 
     
@@ -66,7 +68,6 @@ class Pond(object):
     
     # default intervals for calculatations 
     time_interval = 0.25
-    depth_interval_percentage = 1 
 
 
     
@@ -83,8 +84,7 @@ class Pond(object):
                  pond_shape_object=PondShape(),
                  benthic_photosynthesis_measurements=[],
                  phytoplankton_photosynthesis_measurements=[],
-                 time_interval=0.25,
-                 depth_interval_percentage=1):
+                 time_interval=0.25):
         '''
         CONSTRUCTOR
         @param lake_ID:
@@ -105,7 +105,6 @@ class Pond(object):
         self.set_benthic_photosynthesis_measurements(benthic_photosynthesis_measurements)
         self.set_phytoplankton_photosynthesis_measurements(phytoplankton_photosynthesis_measurements)
         self.set_time_interval(time_interval)
-        self.set_depth_interval_percentage(depth_interval_percentage)
 
     def get_time_interval(self):
         return self.__time_interval
@@ -300,13 +299,8 @@ class Pond(object):
 
 
 
-    def get_depth_interval_percentage(self):
-        return self.__depth_interval_percentage
     
-    def get_depth_interval_meters(self):
-        '''
-        '''
-        return self.pond_shape_object.get_depth_interval_meters()
+
     
     def get_max_depth(self):
         return self.get_pond_shape().get_max_depth()
@@ -389,8 +383,7 @@ class Pond(object):
 
 
 
-    def set_depth_interval_percentage(self, value):
-        self.__depth_interval_percentage = value
+
 
 
     #############################
@@ -428,8 +421,7 @@ class Pond(object):
 
 
 
-    def del_depth_interval_percentage(self):
-        del self.__depth_interval_percentage        
+
 
     lake_ID = property(get_lake_id, set_lake_id, del_lake_id, "lake_ID's docstring")
     day_of_year = property(get_day_of_year, set_day_of_year, del_day_of_year, "day_of_year's docstring")
@@ -439,7 +431,6 @@ class Pond(object):
     benthic_photosynthesis_measurements = property(get_benthic_photosynthesis_measurements, set_benthic_photosynthesis_measurements, del_benthic_photosynthesis_measurements, "benthic_photosynthesis_measurements's docstring")
     phytoplankton_photosynthesis_measurements = property(get_phytoplankton_photosynthesis_measurements, set_phytoplankton_photosynthesis_measurements, del_phytoplankton_photosynthesis_measurements, "phytoplankton_photosynthesis_measurements's docstring")
 
-    depth_interval_percentage = property(get_depth_interval_percentage, set_depth_interval_percentage, del_depth_interval_percentage, "depth_interval_percentage's docstring")
                      
        
 
@@ -455,7 +446,7 @@ class Pond(object):
             raise Exception("ERROR: cannot add measurement to benthic measurements list - measurement must be of type BenthicPhotoSynthesisMeasurement")
 
     def add_benthic_measurement_if_photic(self, measurement):
-        z1Percent = self.calculate_depth_of_specific_light_percentage(0.01)
+        z1Percent = self.calculate_depth_of_specific_light_percentage(self.PHOTIC_ZONE_LIGHT_PENETRATION_LEVEL_LOWER_BOUND)
         if(measurement.get_depth()<z1Percent):
             self.add_benthic_measurement(measurement)
         else: 
@@ -476,6 +467,20 @@ class Pond(object):
     ########################################
     # SCIENCE FUNCTIONS
     ########################################
+    def check_if_depth_in_photic_zone(self, depth):
+        in_zone = True
+        photic_zone_lower_bound = self.calculate_photic_zone_lower_bound() 
+        if(depth<0 or depth>photic_zone_lower_bound):
+            in_zone = False
+        else: 
+            in_zone = True
+        return in_zone
+        
+    def calculate_photic_zone_lower_bound(self):
+        lower_bound = self.calculate_depth_of_specific_light_percentage(self.PHOTIC_ZONE_LIGHT_PENETRATION_LEVEL_LOWER_BOUND)
+        return lower_bound
+        
+        
 
     
         
@@ -542,6 +547,9 @@ class Pond(object):
     
     def calculateDailyWholeLakeBenthicPrimaryProductionPerMeterSquared(self):        
         '''
+        Everything else in this entire project works to make this method work.
+        @return: Benthic Primary Production, mg C per meter squared, per day.
+        @rtype: float 
         '''
         time_interval = self.get_time_interval()
         noonlight = self.get_noon_surface_light()
@@ -551,13 +559,11 @@ class Pond(object):
  
  
         
-#         depth_interval = self.get_depth_interval_meters()
         depth_interval =0.1 #TODO: undo this
         benthic_primary_production_answer = 0.0  # mg C per day
         current_depth = 0.0
         max_depth = self.get_max_depth()
         shape_object = self.get_pond_shape()        
-#         shape_object.set_depth_interval_percentage(self.get_depth_interval_percentage())  # just making sure
         # for each current_depth interval
         for depth, area in shape_object.water_surface_areas.items():
             current_depth = depth
@@ -569,10 +575,6 @@ class Pond(object):
             benthic_pmax_z = self.get_benthic_pmax_at_depth(current_depth)  # units?
             area_z = area
             f_area = area_z/total_littoral_area
-#             if(0==f_area):
-#                 print "wat"
-#                 print "*current depth is ", current_depth
-#                 print "*max depth is ", max_depth
                 
             t = 0.0  # start of day
             while t < lod:
@@ -590,9 +592,6 @@ class Pond(object):
  
             benthic_primary_production_answer += interval_bppr_fraction
             current_depth += depth_interval 
-#             print "current_depth in superamazing is ", current_depth
-#             print "fractional area is ", f_area
-#             print "interval_bppr_fraction is ", interval_bppr_fraction
  
  
         return benthic_primary_production_answer
@@ -668,7 +667,13 @@ class Pond(object):
         '''
         @return:
         @rtype:  
-        '''                
+        '''    
+        #if depth is lower than the depth of 1% light, pmax approaches zero.
+        if(self.check_if_depth_in_photic_zone(depth)==False):
+            return 0
+        
+        
+        validated_depth = self.validate_depth(depth)            
         pmax_values_list = []
         depths_list = []
         for measurement_value in self.get_benthic_photosynthesis_measurements():
@@ -676,7 +681,7 @@ class Pond(object):
             depth_value = measurement_value.get_depth()
             pmax_values_list.append(pmax_value)
             depths_list.append(depth_value)
-        bpmax_at_depth = self.interpolate_values_at_depth(depth, depths_list, pmax_values_list)
+        bpmax_at_depth = self.interpolate_values_at_depth(validated_depth, depths_list, pmax_values_list)
         return bpmax_at_depth
     
     def get_benthic_ik_at_depth(self, depth=0.0):
@@ -684,15 +689,19 @@ class Pond(object):
         @return: 
         @rtype: 
         '''
+        validated_depth = self.validate_depth(depth)
+        
+
         values_list = []
         depths_list = []
         for measurement_value in self.get_benthic_photosynthesis_measurements():
-            pmax_value = measurement_value.get_ik()
+            ik_value = measurement_value.get_ik()
             depth_value = measurement_value.get_depth()
-            values_list.append(pmax_value)
+            values_list.append(ik_value)
             depths_list.append(depth_value)
-        bpmax_at_depth = self.interpolate_values_at_depth(depth, depths_list, values_list)
-        return bpmax_at_depth        
+
+        ik_at_depth = self.interpolate_values_at_depth(validated_depth, depths_list, values_list)
+        return ik_at_depth        
     
         
         
@@ -701,13 +710,24 @@ class Pond(object):
     def interpolate_values_at_depth(self, depth, depths_list=[], values_list=[]):
         '''
         INTERPOLATE VALUES AT DEPTH
-        Essentially, given an array of "x" (depth) and "y" values, interpolates "y" value at specified depth.
+        Essentially, given an array of "x" (validated_depth) and "y" values, interpolates "y" value at specified validated_depth.
         
         
         
         '''
         # Uses http://docs.scipy.org/doc/scipy/reference/tutorial/interpolate.html   
         validated_depth = self.validate_depth(depth)
+        
+        max_depth_given = max(depths_list)
+        min_depth_given = min(depths_list)
+        
+        if(validated_depth>max_depth_given):            
+            print "depth is",validated_depth, "cannot interpolate outside the range of measurements given. setting to max."
+            validated_depth= max_depth_given
+        elif(min_depth_given<min_depth_given):
+            print "depth is",validated_depth, "cannot interpolate outside the range of measurements given. setting to min.."
+            validated_depth= min_depth_given            
+            
         
         # get interpolation function
         x = depths_list
@@ -717,18 +737,15 @@ class Pond(object):
         #magic from # Uses http://docs.scipy.org/doc/scipy/reference/tutorial/interpolate.html
         #SPLINES....!!!
         tck = interpolate.splrep(x, y, s=0)
-        xnew = [depth]
+        xnew = [validated_depth]
         spline_interpolated = interpolate.splev(xnew, tck, der=0) #0th derivative
         linear_interpolated = f(validated_depth)         
         
-#         print "tck is ", tck
-#         print "ynew0 is ", ynew0
-#         print "ynew1 is ", ynew1
         
         
 
-        value_at_depth = spline_interpolated[0] #TODO: inefficient to get the whole array and return just one.
-#         value_at_depth = linear_interpolated
+#         value_at_depth = spline_interpolated[0] #TODO: inefficient to get the whole array and return just one.
+        value_at_depth = linear_interpolated
         
         return value_at_depth        
     
@@ -1256,9 +1273,8 @@ def main():
     
     measurement_list = [m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13]
     areas = {0:3542.822, 1:3268.758, 2:2465.176, 3:2196.684, 4:1712.987, 5:2417.836, 6:2412.061, 7:2116.739, 8:1895.766, 9:2333.014, 10:2777.449, 11:2475.657, 12:2475.657, 13:2475.657}
-    depth_interval_percentage = 1 
     
-    pond_shape_instance = BathymetricPondShape(areas, depth_interval_percentage)
+    pond_shape_instance = BathymetricPondShape(areas)
        
     
     p = Pond("lake_ID", 360, 12.0, 1440.0, 0.3429805354, pond_shape_instance, measurement_list, measurement_list)
@@ -1269,8 +1285,7 @@ def main():
     proportional_light = p.calculate_light_proportion_at_depth(depth_of_one_percent_light)
     print "%light of depth ", depth_of_one_percent_light, " is ", proportional_light
     
-    depth_interval_meters = p.get_depth_interval_meters()
-    print "depth interval in meters is ", depth_interval_meters
+
     
     max_depth = p.get_max_depth()
     print "max depth is ", max_depth

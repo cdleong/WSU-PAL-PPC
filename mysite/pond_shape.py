@@ -8,9 +8,9 @@ class PondShape(object):
     '''
     abstract class. Nothing's really implemented. 
     '''
-    ###########
-    #KNOWS
-    ###########
+    #######################################################
+    #KNOWS... nothing. Depends on implementation.
+    #######################################################
     
 
 
@@ -38,18 +38,11 @@ class PondShape(object):
     def get_fractional_sediment_area_at_depth(self, depth=0.0, total_sediment_area=0.0):
         pass    
     
-    def get_depth_interval_meters(self):
-        pass
+    #June 22: depth intervals aren't a thing now. 
 
-    def get_depth_interval_percentage(self):
-        pass
-    
-    def set_depth_interval_percentage(self, depth_interval_percentage=0.0):
-        pass
-    
     def validate_depth(self, depth):
         pass
-    
+     
     def update_shape(self, other_pond_shape):
         pass
 

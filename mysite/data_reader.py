@@ -264,8 +264,8 @@ class DataReader(object):
             pond = next((i for i in pondList if (i.get_lake_id()== row_lakeID_value and i.get_day_of_year()==row_doy_value)),None) #source: http://stackoverflow.com/questions/7125467/find-object-in-list-that-has-attribute-equal-to-some-value-that-meets-any-condi
             if pond is None: #not in list. Must create Pond object
 #                 print "creating pond with lake ID = ", row_lakeID_value, " , and DOY = ", row_doy_value
-                emptyShape = BathymetricPondShape({}, self.DEFAULT_DEPTH_INTERVAL_PERCENTAGE)
-                pond = Pond(row_lakeID_value, row_doy_value, row_lod_value, row_noonlight_value, row_kd_value, emptyShape, [], [], self.DEFAULT_TIME_INTERVAL, self.DEFAULT_DEPTH_INTERVAL_PERCENTAGE)
+                emptyShape = BathymetricPondShape() #initialize with empty dict 
+                pond = Pond(row_lakeID_value, row_doy_value, row_lod_value, row_noonlight_value, row_kd_value, emptyShape, [], [], self.DEFAULT_TIME_INTERVAL)
 #                 pond.set_day_of_year(row_doy_value)
 #                 pond.set_lake_id(row_lakeID_value)               
 #                 pond.set_light_attenuation_coefficient(row_kd_value)
@@ -358,9 +358,7 @@ class DataReader(object):
             else:
                 #create PhotoSynthesisMeasurement object using values specific to that benthic_measurement/row
                 benthic_measurement = BenthicPhotoSynthesisMeasurement(row_depth_value, row_pmax_value, row_ik_value)                
-#                 benthic_measurement.set_depth(row_depth_value)
-#                 benthic_measurement.set_pmax(row_pmax_value)  
-#                 benthic_measurement.set_ik(row_ik_value)
+
                 
                 
                 #add to Pond
