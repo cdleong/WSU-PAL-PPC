@@ -118,7 +118,8 @@ class BathymetricPondShape(PondShape):
         f = interp1d(x, y)
         
 
-        water_surface_area_at_depth = f(validated_depth) 
+        water_surface_area_at_depth = f(validated_depth)
+ 
         
         
         return water_surface_area_at_depth

@@ -553,9 +553,11 @@ class Pond(object):
     
     def calculateDailyWholeLakeBenthicPrimaryProductionPerMeterSquared(self):        
         '''
+        !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         Everything else in this entire project works to make this method work.
         @return: Benthic Primary Production, mg C per meter squared, per day.
         @rtype: float 
+        !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         '''
         time_interval = self.get_time_interval()
         noonlight = self.get_noon_surface_light()
@@ -616,7 +618,7 @@ class Pond(object):
             runningTotal+=area            
             measurement_depths.append(measurement_depth)
 
-        
+        print "total littoral area from sum-of-chunks method is: ", runningTotal
         current_depth_interval = 0.0
         previous_depth = 0.0
         current_depth = 0.0
@@ -644,15 +646,30 @@ class Pond(object):
 
              
 #             f_area = area/total_littoral_area
-#             total_littoral_area = self.get_pond_shape().get_water_surface_area_at_depth(0)                        
+#             total_littoral_area = self.get_pond_shape().get_water_surface_area_at_depth(0)
+
+            #calculate fractional area using the area at highest depth - area at lowest depth method.
 #             f_area = shape_object.get_fractional_sediment_area_at_depth(current_depth, total_littoral_area, current_depth_interval) #TODO: debug this method. It doesn't work right.
+
+            #calculate fractional area with a running total of chunk areas
             total_littoral_area=runningTotal
             f_area = area/total_littoral_area
             f_area_total+=f_area
             
+            
+            #calculate area and fractional area using total_littoral_area = "sum up water surface area at every depth greater than 1% light" method. 
+#             area = shape_object.get_water_surface_area_at_depth(current_depth)
+#             total_littoral_area = 0.0
+#             shape_dictionary = self.pond_shape_object.water_surface_areas
+#             depth_keys = shape_dictionary.keys()
+#             for item in depth_keys:
+#                 depth = item
+#                 this_area = shape_dictionary[depth]
+#                 if(depth< self.calculate_photic_zone_lower_bound()):
+#                     total_littoral_area+=this_area
+#             f_area = area/total_littoral_area
 
-            print "for depth interval ",current_depth,"-",previous_depth,", f_area is", f_area, ", with total littoral area of ", total_littoral_area
-#             print "f_area total adds to ", f_area_total
+            
                  
             t = 0.0  # start of day
             while t < lod:
@@ -664,9 +681,12 @@ class Pond(object):
                 t += time_interval
             bpprz = bpprz / (1 / time_interval)  # account for the fractional time interval. e.g. dividing by 1/0.25 is equiv to dividing by 4
             interval_bppr_fraction = bpprz * f_area  # normalizing
- 
- 
-  
+            
+#             if(f_area>0):
+#                 print "for depth interval ",current_depth,"-",previous_depth,", f_area is", f_area, ", with total littoral area of ", total_littoral_area, ". Resulting bppr: ", interval_bppr_fraction
+#                 print "f_area total adds to ", f_area_total
+                    
+                
             benthic_primary_production_answer += interval_bppr_fraction             
   
  
@@ -746,8 +766,10 @@ class Pond(object):
             depth_value = measurement_value.get_depth()
             values_list.append(ik_value)
             depths_list.append(depth_value)
-
+        
+        
         ik_at_depth = self.interpolate_values_at_depth(validated_depth, depths_list, values_list)
+        
         return ik_at_depth        
     
         
@@ -762,6 +784,8 @@ class Pond(object):
         
         
         '''
+
+        
         # Uses http://docs.scipy.org/doc/scipy/reference/tutorial/interpolate.html   
         validated_depth = self.validate_depth(depth)
         
@@ -793,12 +817,25 @@ class Pond(object):
 
 #         value_at_depth = spline_interpolated[0] #TODO: inefficient to get the whole array and return just one.
         value_at_depth = linear_interpolated
-        
         return value_at_depth        
     
     
     
     time_interval = property(get_time_interval, set_time_interval, del_time_interval, "time_interval's docstring")
+
+    
+    def calculate_depths_of_specific_light_percentages(self, light_penetration_depths):
+        '''
+        given a list of light penetration depths returns the depth in meters needed for each of those light penetration levels.
+        @rtype: list 
+        '''
+        depths = []
+        for light_penetration_depth in light_penetration_depths:
+            depth_m_of_light_penetration = self.calculate_depth_of_specific_light_percentage(light_penetration_depth)
+            depths.append(depth_m_of_light_penetration)
+        return depths
+    
+    
      
 
 

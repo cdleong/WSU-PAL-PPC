@@ -11,6 +11,7 @@ from numpy.distutils.npy_pkg_config import FormatError
 from mysite.photosynthesis_measurement import PhotosynthesisMeasurement
 from mysite.benthic_photosynthesis_measurement import BenthicPhotoSynthesisMeasurement
 from mysite.bathymetric_pond_shape import BathymetricPondShape
+import numpy as np
 
 
 
@@ -27,8 +28,14 @@ class DataReader(object):
     # Class variables
     ##################################
 #     filename = "template.xlsx" #name of file. Default is "template.xlsx"
-#     filename = "template_example.xlsx" #name of file. Default is "template.xlsx"
-    filename = "relative_depth_template_example.xlsx" #name of file. Default is "template.xlsx"    
+    filename = "template_example.xlsx" #name of file. Has photo measurements at 0.1 meter intervals
+#     filename = "relative_depth_template_example.xlsx" #name of file. Only has photo data at light penetration levels [1.0, 0.8,0.5,0.25,0.1,0.01]
+    
+#     light_penetration_levels = [1.0,0.8,0.5,0.25,0.1,0.01]
+#     light_penetration_levels = [1.0,0.95,0.9,0.85,0.8,0.75,0.7,0.9,0.65,0.6,0.55,0.5,0.45,0.4,0.35,0.3,0.25,0.2,0.15,0.1,0.01]
+    light_penetration_levels = np.arange(0, 1, 0.01)
+    
+    
     
     
 
@@ -105,6 +112,8 @@ class DataReader(object):
         Constructor
         '''        
         self.filename = filename
+        self.light_penetration_levels = np.arange(0,1, 0.01)
+        print "wanted: ", self.light_penetration_levels
                        
             
 
@@ -140,6 +149,22 @@ class DataReader(object):
 
 
     #reads all the pond data from the excel file.
+
+    
+    def get_wanted_depths(self, pond):
+        '''
+        GET WANTED DEPTHS
+        '''
+        pond.calculate_depth_of_specific_light_percentage()
+        wanted_depths = pond.calculate_depths_of_specific_light_percentages(self.light_penetration_levels)
+        wanted_depths_rounded = []
+        for depth in wanted_depths:
+            rounded_depth = int((depth*10**1))/10.0**1 #truncate to 1 decimal place
+            wanted_depths_rounded.append(rounded_depth)
+        return wanted_depths_rounded
+        
+    
+    
     def readPondListFromFile(self,book):
         '''
         READ POND LIST FROM FILE
@@ -196,7 +221,7 @@ class DataReader(object):
 #         print "the number of rows in sheet " + pond_data_workSheet.name +  " is " + str(pond_data_workSheet_num_rows)        
         benthic_data_workSheet_num_rows = benthic_photo_data_workSheet.nrows
         print "the number of rows in sheet " + benthic_photo_data_workSheet.name + " is " + str(benthic_data_workSheet_num_rows)
-        phytoplankton_photo_data_sheet_num_rows = phytoplankton_photo_data_sheet.nrows
+        phytoplankton_photo_data_sheet_num_rows = phytoplankton_photo_data_sheet.nrows #TODO: implement ppp
 #         print "the number of rows in sheet " + phytoplankton_photo_data_sheet.name + " is " + str(phytoplankton_photo_data_sheet_num_rows)
         shape_data_sheet_num_rows = shape_data_sheet.nrows
 #         print "the number of rows in sheet " + shape_data_sheet.name + " is " + str(shape_data_sheet_num_rows)
@@ -343,11 +368,24 @@ class DataReader(object):
                 raise FormatError("Something went wrong. Benthic Measurement with DOY "+str(row_doy_value) + " and Lake ID " + row_lakeID_value + " does not match to any Pond.")                    
             else:
                 #create PhotoSynthesisMeasurement object using values specific to that benthic_measurement/row
-                benthic_measurement = BenthicPhotoSynthesisMeasurement(row_depth_value, row_pmax_value, row_ik_value)                
+                row_depth_value_rounded = int(row_depth_value*10)/10.0 #truncate to 1 decimal place.
+                print "truncated depth value", row_depth_value
+                
+                wanted_depths = []
+                wanted_depths.extend(self.get_wanted_depths(pond))
+                
+                
+                if( row_depth_value_rounded in wanted_depths):
+                    print "original number: ", row_depth_value, " rounded to ", row_depth_value_rounded
+                    print "wanted depths are: ", wanted_depths
+                    print "row value contains wanted depth. Adding Benthic Photosynthesis Measurement to Pond."
+                
+                    benthic_measurement = BenthicPhotoSynthesisMeasurement(row_depth_value, row_pmax_value, row_ik_value)
+                    pond.add_benthic_measurement_if_photic(benthic_measurement)                
 
                 
                 #add to Pond
-                pond.add_benthic_measurement_if_photic(benthic_measurement)
+                
             curr_row+=1    
         
                        
@@ -362,6 +400,9 @@ class DataReader(object):
         return pondList
 
     def write(self, filename="output.xls"):
+        '''
+        Write to file
+        '''
 
         #Create a new workbook object
         workbook = xlwt.Workbook()
@@ -425,7 +466,7 @@ def main():
         
         
         
-        print "testing interpolation"
+        
         current_depth = 0
         depth_interval = 0.1
         max_depth = p.get_max_depth()
@@ -433,19 +474,33 @@ def main():
         areas = []
         pmaxes = []
         iks = []
-        while current_depth<=max_depth:
-            bpmax = p.get_benthic_pmax_at_depth(current_depth)
-            ik = p.get_benthic_ik_at_depth(current_depth)
+        bp_measurements = p.get_benthic_photosynthesis_measurements()
+        for measurement in bp_measurements:
+            bpmax = measurement.get_pmax()
+            ik = measurement.get_ik()
+            current_depth = measurement.get_depth()
             area = p.pond_shape_object.get_water_surface_area_at_depth(current_depth)
             
-#             print "__________________________________________________________________________________________________________________"
-#             print "at depth: ", current_depth, " the interpolated value of benthic pmax is: ", bpmax, " and ik is: ", ik
-#             print "interpolation also used for area at depth. The calculated value of area at this depth is: ", p.get_pond_shape().get_water_surface_area_at_depth(current_depth)
             depths.append(current_depth)
             pmaxes.append(bpmax+0.0)
             iks.append(ik+0.0)
             areas.append(area)
-            current_depth+=depth_interval
+            current_depth+=depth_interval            
+            
+            
+#         while current_depth<=max_depth:
+#             bpmax = p.get_benthic_pmax_at_depth(current_depth)
+#             ik = p.get_benthic_ik_at_depth(current_depth)
+#             area = p.pond_shape_object.get_water_surface_area_at_depth(current_depth)
+#             
+# #             print "__________________________________________________________________________________________________________________"
+# #             print "at depth: ", current_depth, " the interpolated value of benthic pmax is: ", bpmax, " and ik is: ", ik
+# #             print "interpolation also used for area at depth. The calculated value of area at this depth is: ", p.get_pond_shape().get_water_surface_area_at_depth(current_depth)
+#             depths.append(current_depth)
+#             pmaxes.append(bpmax+0.0)
+#             iks.append(ik+0.0)
+#             areas.append(area)
+#             current_depth+=depth_interval
         
         print "depths: ", depths
         print "areas: ", areas
