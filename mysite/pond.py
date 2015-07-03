@@ -547,6 +547,10 @@ class Pond(object):
     
 
     def calculate_benthic_primary_productivity(self, light_at_time_and_depth, benthic_pmax_z, benthic_ik_z):
+        '''
+        Equation for productivity that doesn't include photoinhibition, etc. 
+        TODO: Source of this equation? Doesn't match the one from Wikipedia. 
+        '''
         bpprzt = benthic_pmax_z * np.tanh(light_at_time_and_depth / benthic_ik_z)
         return bpprzt
     

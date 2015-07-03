@@ -28,12 +28,14 @@ class DataReader(object):
     # Class variables
     ##################################
 #     filename = "template.xlsx" #name of file. Default is "template.xlsx"
-    filename = "template_example.xlsx" #name of file. Has photo measurements at 0.1 meter intervals
+#     filename = "template_example.xlsx" #name of file. Has photo measurements at 0.1 meter intervals
+#     filename = "June_26_light_penetration_testing_data_fixed_surface_area.xlsx" #Attempted to fix water surface area. Only photo data at certain intervals.
+    filename = "June_26_10cm_testing_data_fixed_surface_area.xlsx"#Attempted to fix water surface area. photo data at 10cm intervals
 #     filename = "relative_depth_template_example.xlsx" #name of file. Only has photo data at light penetration levels [1.0, 0.8,0.5,0.25,0.1,0.01]
     
 #     light_penetration_levels = [1.0,0.8,0.5,0.25,0.1,0.01]
-#     light_penetration_levels = [1.0,0.95,0.9,0.85,0.8,0.75,0.7,0.9,0.65,0.6,0.55,0.5,0.45,0.4,0.35,0.3,0.25,0.2,0.15,0.1,0.01]
-    light_penetration_levels = np.arange(0, 1, 0.01)
+    light_penetration_levels = [1.0,0.95,0.9,0.85,0.8,0.75,0.7,0.9,0.65,0.6,0.55,0.5,0.45,0.4,0.35,0.3,0.25,0.2,0.15,0.1,0.01]
+#     light_penetration_levels = np.arange(0, 1, 0.01)
     
     
     
@@ -484,7 +486,7 @@ def main():
             depths.append(current_depth)
             pmaxes.append(bpmax+0.0)
             iks.append(ik+0.0)
-            areas.append(area)
+            areas.append(float(area))
             current_depth+=depth_interval            
             
             
@@ -507,7 +509,7 @@ def main():
         print "pmaxes", pmaxes
         print "iks", iks
   
-        
+        print "littoral area is: ", p.calculate_total_littoral_area()
 
 
 
