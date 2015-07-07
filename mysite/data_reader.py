@@ -6,9 +6,12 @@ This class reads in data from an excel file, packages it up, and sends it to the
 @author: cdleong
 '''
 import xlrd, xlwt #reading and writing, respectively.
-from pond_layer import Pond_Layer
 from pond import Pond
 from numpy.distutils.npy_pkg_config import FormatError
+from mysite.photosynthesis_measurement import PhotosynthesisMeasurement
+from mysite.benthic_photosynthesis_measurement import BenthicPhotoSynthesisMeasurement
+from mysite.bathymetric_pond_shape import BathymetricPondShape
+import numpy as np
 
 
 
@@ -16,6 +19,7 @@ from numpy.distutils.npy_pkg_config import FormatError
 #Useful notes: http://www.youlikeprogramming.com/2012/03/examples-reading-excel-xls-documents-using-pythons-xlrd/
 
 class DataReader(object):
+    
     '''
     classdocs
     '''
@@ -23,80 +27,94 @@ class DataReader(object):
     ##################################
     # Class variables
     ##################################
-    filename = "template.xlsx" #name of file. Default is "template.xlsx"
-    TOTALPHOS_DEFAULT = 500.0 #COMPLETELY arbitrary. TODO: refine this
+#     filename = "template.xlsx" #name of file. Default is "template.xlsx"
+#     filename = "template_example.xlsx" #name of file. Has photo measurements at 0.1 meter intervals
+#     filename = "June_26_light_penetration_testing_data_fixed_surface_area.xlsx" #Attempted to fix water surface area. Only photo data at certain intervals.
+#     filename = "June_26_10cm_testing_data_fixed_surface_area.xlsx"#Attempted to fix water surface area. photo data at 10cm intervals
+#     filename = "relative_depth_template_example.xlsx" #name of file. Only has photo data at light penetration levels [1.0, 0.8,0.5,0.25,0.1,0.01]
+    filename = "Jul_03_data_template_example.xlsx" #"reasonable" values for everything, including phytoplankton photosynthesis. Benthic measurements use light penetration proportions.
     
-    #Default sheet names Alternate method: Worksheet indices. 
-    pond_data_sheet_index =0
-    layer_data_sheet_index = 1        
-    pond_data_sheet_name = "pond_data"
-    layer_data_sheet_name = "layer_data"
+
+    
+    
+    
+    
 
     #data starts at row 1. Row 0 is column headings
     DEFAULT_COLUMN_HEADINGS_ROW = 0
     DEFAULT_FIRST_DATA_ROW = 1
+    DEFAULT_NUMBER_OF_SHEETS = 4 #Pond, benthic, planktonic. Guide optional.
+    
+    
+    
+    
+    
+    ########################
+    #Worksheet Names/Indices
+    ########################
+    
+    #TODO: maybe some arrays? Or some more flexible solution anyway
+    
+    #default indices. 
+    POND_DATA_SHEET_INDEX =0
+    BENTHIC_PHOTO_DATA_SHEET_INDEX = 1
+    PHYTOPLANKTON_PHOTO_DATA_SHEET_INDEX = 2
+    SHAPE_DATA_SHEET_INDEX = 3     
+    
+    #default names       
+    POND_DATA_SHEET_NAME = "pond_data"
+    BENTHIC_PHOTO_DATA_SHEET_NAME = "benthic_photo_data"
+    PHYTOPLANKTON_PHOTO_DATA_SHEET_NAME = "phytoplankton_photo_data"
+    SHAPE_DATA_SHEET_NAME = "shape_data"    
+    
+    
+        
     
     
     #############
     #Data Indices
     #############
-    
-    #indices common to both sheets
+    #TODO: a dict? 
+    #TODO: some way for the user to specify all this on sheet 0, perhaps?
+    #indices common to all sheets
     dayOfYearIndex = 0 #"DOY"
     lakeIDIndex = 1 #"Lake_ID"
     
+    
+    
+    
     #indices for Pond vars in pond_data worksheet
-    surface_area_index = 2 #"LA.m2"
-    gam_index = 3
-    kd_index = 4 #index of light attenuation coefficient kd
-    noonLightIndex = 5 #"midday.mean.par"
-    lengthOfDayIndex = 6 #"LOD" in hours                
+    kd_index = 2 #index of light attenuation coefficient kd
+    noon_surface_light_index = 3 #"midday.mean.par"
+    length_of_day_index = 4 #"LOD" in hours             
+    latitude_index = 5 #latitude in decimal degrees.    
     
-    #indices for Pond_layer vars in layer_data worksheet
-    depth_index = 2 #"z" in meters    
-    pmax_index = 3 #"pmax.z"
-    area_index = 4 #"kat_div" in meters squared. 
-    ikIndex = 5 #"ik_z" light intensity at onset of saturation
+    #indices for vars in benthic_photo_data worksheet
+    benthic_light_penetration_proportion_index = 2 #"z" in meters #depth is in several sheets        
+    benthic_pmax_index = 3 #"pmax.z"
+    benthic_ik_index = 4 #"ik_z" light intensity at onset of saturation
+    
+    #indices for vars in phytoplankton_photo_data worksheet
+    
+    #indices for vars in shape_data worksheet        
+    shape_ID_index = 0
+    shape_depth_index = 1 #"z" in meters #depth is in several sheets #TODO: different variable?            
+    shape_area_index = 2 #"kat_div" in meters squared. 
+    
 
-    
-    
+    ###############
+    #CONSTANTS
+    ###############
+    DEFAULT_DEPTH_INTERVAL_PERCENTAGE=1 
+    DEFAULT_TIME_INTERVAL = 0.25
 
 
     def __init__(self, filename, testFlag=0):
         '''
         Constructor
         '''        
-        if(2==testFlag): #based off pprinputs_colin.xlsx
-            self.filename = "pprinputs_Colin.xlsx"
-            self.dayOfYearIndex = 1 #"DOY"
-            self.lakeIDIndex = 2 #"Lake_ID"
-            self.depth_index = 3 #"z" in meters
-            self.surface_area_index = 9 #"LA.m2"
-            self.gam_index = 10
-            self.pmax_index = 13 #"pmax.z"
-            self.kd_index = 14 #index of light attenuation coefficient kd
-            self.area_index = 16 #"kat_div" in meters squared. TODO: why is it not even close to LA at z=0?
-            self.noonLightIndex = 18 #"midday.mean.par"
-            self.ikIndex = 21 #"ik_z" light intensity at onset of saturation
-            self.lengthOfDayIndex = 27 #"LOD" in hours
+        self.filename = filename
 
-        elif(1==testFlag):#based off inputs_pruned.xlsx
-            self.filename = "example.xlsx"
-            self.dayOfYearIndex = 0 #"DOY"
-            self.lakeIDIndex = 1 #"Lake_ID"
-            self.depth_index = 2 #"z" in meters
-            self.surface_area_index = 3 #"LA.m2"
-            self.gam_index = 4
-            self.pmax_index = 5 #"pmax.z"
-            self.kd_index = 6 #index of light attenuation coefficient kd
-            self.area_index = 7 #"kat_div" in meters squared. TODO: why is it not even close to LA at z=0?
-            self.noonLightIndex = 8 #"midday.mean.par"
-            self.ikIndex = 9 #"ik_z" light intensity at onset of saturation
-            self.lengthOfDayIndex = 10 #"LOD" in hours
-
-        else:
-            #use default indices
-            self.filename = filename
                        
             
 
@@ -104,19 +122,23 @@ class DataReader(object):
                         
 
 
-
+    #TODO: this should return nothing. Bad style. Or rename it.  
     def read(self):
         try:
             book = xlrd.open_workbook(self.filename)
         except:
             raise
 
-        return self.getPondList(book)
+        return self.readPondListFromFile(book)
 
 
 
 
     def readFile(self,inputfile):
+        '''
+        READ FILE
+        Given an inputFile object, opens the workbook and calls the function to read the pondList. 
+        '''
         #http://stackoverflow.com/questions/10458388/how-do-you-read-excel-files-with-xlrd-on-appengine
         try:
             book =  xlrd.open_workbook(file_contents=inputfile)
@@ -124,13 +146,49 @@ class DataReader(object):
             raise
          
              
-        return self.getPondList(book)
-
+        return self.readPondListFromFile(book)
 
 
     #reads all the pond data from the excel file.
-    def getPondList(self,book):
+
+    
+    def get_wanted_depths(self, pond):
+        '''
+        GET WANTED DEPTHS
+        Used for testing purposes. The original pprinputs file had benthic photosynthesis measurements organized by depth rather than light penetration. 
+        @param param: a pond object. 
+        @return: 
+        @rtype: 
+        '''
+        pond.calculate_depth_of_specific_light_percentage()
+        wanted_depths = pond.calculate_depths_of_specific_light_percentages(self.light_penetration_levels)
+        wanted_depths_rounded = []
+        for depth in wanted_depths:
+            rounded_depth = int((depth*10**1))/10.0**1 #truncate to 1 decimal place
+            wanted_depths_rounded.append(rounded_depth)
+        return wanted_depths_rounded
         
+    
+    
+    
+    
+    
+    
+    def readPondListFromFile(self,book):
+        '''
+        READ POND LIST FROM FILE
+        If you change the name of this, you have to update the name in all the HTML templates, etc.
+        Opens the xlrd workbook and returns a list of Pond objects. 
+        @param book: an xlrd Workbook
+        @return: 
+        @rtype: 
+        '''
+        
+        
+        
+        ##############
+        #Worksheets
+        ##############
         nsheets = book.nsheets
         print "The number of worksheets is", book.nsheets
         
@@ -140,28 +198,47 @@ class DataReader(object):
         print sheet_names
         
         pond_data_workSheet = xlrd.book
-        layer_data_workSheet= xlrd.book
+        benthic_photo_data_workSheet= xlrd.book        
+        phytoplankton_photo_data_sheet= xlrd.book
+        shape_data_sheet =xlrd.book 
         
-        if(nsheets<2):
-            raise IOError("file format incorrect. Number of sheets less than two.")
         
-        if(self.pond_data_sheet_name in sheet_names and self.layer_data_sheet_name in sheet_names):
-            print "pond_data sheet detected"
-            pond_data_workSheet = book.sheet_by_name(self.pond_data_sheet_name)
-            print "layer_data sheet detected"
-            layer_data_workSheet = book.sheet_by_name(self.layer_data_sheet_name)            
+        if(nsheets<self.DEFAULT_NUMBER_OF_SHEETS): #Pond, benthic, planktonic. Guide optional.
+            raise IOError("file format incorrect. Number of sheets less than expected")
+        
+        if(self.POND_DATA_SHEET_NAME in sheet_names and 
+           self.BENTHIC_PHOTO_DATA_SHEET_NAME in sheet_names and 
+           self.PHYTOPLANKTON_PHOTO_DATA_SHEET_NAME in sheet_names and
+           self.SHAPE_DATA_SHEET_NAME in sheet_names):
+#             print "pond_data sheet detected"
+            pond_data_workSheet = book.sheet_by_name(self.POND_DATA_SHEET_NAME)
+#             print "benthic photosynthesis data sheet detected"
+            benthic_photo_data_workSheet = book.sheet_by_name(self.BENTHIC_PHOTO_DATA_SHEET_NAME)
+#             print "phytoplankton photosynthesis data sheet detected"
+            phytoplankton_photo_data_sheet = book.sheet_by_name(self.PHYTOPLANKTON_PHOTO_DATA_SHEET_NAME)
+#             print "lake shape data sheet detected"
+            shape_data_sheet = book.sheet_by_name(self.SHAPE_DATA_SHEET_NAME)
         else:
             print "Standard sheet names not detected. Attempting to read using sheet indices."
-            pond_data_workSheet = book.sheet_by_index(self.pond_data_sheet_index)
-            layer_data_workSheet = book.sheet_by_index(self.layer_data_sheet_index)
+            pond_data_workSheet = book.sheet_by_index(self.POND_DATA_SHEET_INDEX)
+            benthic_photo_data_workSheet = book.sheet_by_index(self.BENTHIC_PHOTO_DATA_SHEET_INDEX)
+            phytoplankton_photo_data_sheet = book.sheet_by_name(self.PHYTOPLANKTON_PHOTO_DATA_SHEET_INDEX)
+            shape_data_sheet = book.sheet_by_name(self.SHAPE_DATA_SHEET_INDEX)
         
-        #TODO: check number of columns
+        ##############
+        #Rows, Columns
+        ##############
             
         pond_data_workSheet_num_rows = pond_data_workSheet.nrows
-        print "the number of rows in sheet " + pond_data_workSheet.name +  " is " + str(pond_data_workSheet_num_rows)
+#         print "the number of rows in sheet " + pond_data_workSheet.name +  " is " + str(pond_data_workSheet_num_rows)        
+        benthic_data_workSheet_num_rows = benthic_photo_data_workSheet.nrows
+        print "the number of rows in sheet " + benthic_photo_data_workSheet.name + " is " + str(benthic_data_workSheet_num_rows)
+        phytoplankton_photo_data_sheet_num_rows = phytoplankton_photo_data_sheet.nrows #TODO: implement ppp
+#         print "the number of rows in sheet " + phytoplankton_photo_data_sheet.name + " is " + str(phytoplankton_photo_data_sheet_num_rows)
+        shape_data_sheet_num_rows = shape_data_sheet.nrows
+#         print "the number of rows in sheet " + shape_data_sheet.name + " is " + str(shape_data_sheet_num_rows)
         
-        layer_data_workSheet_num_rows = layer_data_workSheet.nrows
-        print "the number of rows in sheet " + layer_data_workSheet.name + " is " + str(layer_data_workSheet_num_rows)
+        
         
         curr_row = self.DEFAULT_COLUMN_HEADINGS_ROW
         columnnames = pond_data_workSheet.row(curr_row)
@@ -169,13 +246,19 @@ class DataReader(object):
         print columnnames
 
         curr_row = self.DEFAULT_COLUMN_HEADINGS_ROW
-        columnnames = layer_data_workSheet.row(curr_row)
-        print "the column names in sheet \"" + layer_data_workSheet.name +  "\" are "
+        columnnames = benthic_photo_data_workSheet.row(curr_row)
+        print "the column names in sheet \"" + benthic_photo_data_workSheet.name +  "\" are "
         print columnnames        
-
         
+        curr_row = self.DEFAULT_COLUMN_HEADINGS_ROW
+        columnnames = phytoplankton_photo_data_sheet.row(curr_row)
+        print "the column names in sheet \"" + phytoplankton_photo_data_sheet.name +  "\" are "
+        print columnnames                     
         
-        
+        curr_row = self.DEFAULT_COLUMN_HEADINGS_ROW
+        columnnames = shape_data_sheet.row(curr_row)
+        print "the column names in sheet \"" + shape_data_sheet.name +  "\" are "
+        print columnnames             
         
         
         #################################################
@@ -190,163 +273,165 @@ class DataReader(object):
         ################################################
         #Make Pond objects from pond_data sheet
         ################################################
-        
+        sheet = pond_data_workSheet
         num_rows  = pond_data_workSheet_num_rows
         curr_row = self.DEFAULT_FIRST_DATA_ROW #start at 1. row 0 is column headings
         while curr_row<num_rows:
-            print "adding Ponds. curr_row = " + str(curr_row) + ", which is still less than num_rows = " + str(num_rows)
+#             print "adding Ponds. curr_row = " + str(curr_row) + ", which is still less than num_rows = " + str(num_rows)
             #for quick reference, these are the Pond row indices            
             #     dayOfYearIndex = 0 #"DOY"
             #     lakeIDIndex = 1 #"Lake_ID"
             #     surface_area_index = 2 #"LA.m2"
             #     gam_index = 3
             #     kd_index = 4 #index of light attenuation coefficient kd
-            #     noonLightIndex = 5 #"midday.mean.par"
-            #     lengthOfDayIndex = 10 #"LOD" in hours                     
-            row = pond_data_workSheet.row(curr_row)        
+            #     noon_surface_light_index = 5 #"midday.mean.par"
+            #     length_of_day_index = 10 #"LOD" in hours                     
+            row = sheet.row(curr_row)        
             
             #values
             row_doy_value = row[self.dayOfYearIndex].value
-            row_lakeID_value = row[self.lakeIDIndex].value            
-            row_surface_area_value = row[self.surface_area_index].value
-            row_gam_value = row[self.gam_index].value        
-            row_kd_value = row[self.kd_index].value          
-            row_noonlight_value = row[self.noonLightIndex].value 
-            row_lod_value = row[self.lengthOfDayIndex].value            
-            totalphos_value = self.TOTALPHOS_DEFAULT           
+            row_lakeID_value = row[self.lakeIDIndex].value              
+            row_kd_value = float(row[self.kd_index].value)          
+            row_noonlight_value = float(row[self.noon_surface_light_index].value) 
+            row_latitude_value = float(row[self.latitude_index].value)         
+            row_lod_value = float(row[self.length_of_day_index].value)
+                    
+    
             
             
             #Do we need to make a pond object?
-            pond = next((i for i in pondList if (i.getLakeID()== row_lakeID_value and i.getDayOfYear()==row_doy_value)),None) #source: http://stackoverflow.com/questions/7125467/find-object-in-list-that-has-attribute-equal-to-some-value-that-meets-any-condi
+            pond = None
+            pond = next((i for i in pondList if (i.get_lake_id()== row_lakeID_value and i.get_day_of_year()==row_doy_value)),None) #source: http://stackoverflow.com/questions/7125467/find-object-in-list-that-has-attribute-equal-to-some-value-that-meets-any-condi
             if pond is None: #not in list. Must create Pond object
-                print "creating pond with lake ID = ", row_lakeID_value, " , and DOY = ", row_doy_value
-                pond = Pond()
-                pond.setDayOfYear(row_doy_value)
-                pond.setLakeID(row_lakeID_value)
-                pond.setSufaceAreaAtDepthZero(row_surface_area_value)                
-                pond.setShapeFactor(row_gam_value)
-                pond.setBackgroundLightAttenuation(row_kd_value)
-                pond.setNoonSurfaceLight(row_noonlight_value)
-                pond.setDayLength(row_lod_value)
-                pond.setTotalPhos(totalphos_value)                         
-                pond.setPondLayerList([]) #initialize empty list. TODO: try testing without this line now that I added in the proper line to the init() in Pond
-                
-    #             print "appending pond"
+#                 print "creating pond with lake ID = ", row_lakeID_value, " , and DOY = ", row_doy_value
+                emptyShape = BathymetricPondShape({}) #initialize with empty dict 
+                pond = Pond(row_lakeID_value, row_doy_value, row_lod_value, row_noonlight_value, row_kd_value, emptyShape, [], [], row_latitude_value, self.DEFAULT_TIME_INTERVAL)
                 pondList.append(pond)         
             curr_row+=1       
             
         print "out of while loop. size of pond list is: ", len(pondList)
             
+        #######################################################
+        #we made all the ponds. Time to add all the members
+        #######################################################
         
-        #we made all the ponds. Time to add all the layers. 
-        num_rows = layer_data_workSheet_num_rows
+        
+        
+        
+        ############
+        #Shape data
+        ############
+        
+        
+        sheet = shape_data_sheet
+        num_rows = shape_data_sheet_num_rows
         curr_row = self.DEFAULT_FIRST_DATA_ROW #start at 1. row 0 is column headings
         while curr_row<num_rows:
-            print "adding layers to Ponds. curr_row = " + str(curr_row)
-            row = layer_data_workSheet.row(curr_row)
+            row = sheet.row(curr_row) 
+            
+            
+            #values
+            row_lakeID_value = row[self.shape_ID_index].value
+            row_depth_value = float(row[self.shape_depth_index].value)                                                                    
+            row_area_value = float(row[self.shape_area_index].value)     
+
+            
+            row_dict = {row_depth_value:row_area_value}
+            row_shape = BathymetricPondShape(row_dict)
+            
+            #find the correct pond
+            pond = None
+#             pond = next((i for i in pondList if (i.get_lake_id()== row_lakeID_value )),None) #source: http://stackoverflow.com/questions/7125467/find-object-in-list-that-has-attribute-equal-to-some-value-that-meets-any-condi
+            #http://stackoverflow.com/questions/14366511/return-the-first-item-in-a-list-matching-a-condition            
+#             matchingPonds = filter(next((i for i in pondList if (i.get_lake_id()== row_lakeID_value )),None), pondList)
+            for pond in pondList:
+                if(pond.get_lake_id()==row_lakeID_value):            
+                    pond.update_shape(row_shape)                #add to Pond
+
+            #increment while loop to next row
+            curr_row+=1            
+        
+        print "added shape data"
+        
+        
+        
+        
+        
+        ###############
+        #Benthic data
+        ###############
+        
+        sheet = benthic_photo_data_workSheet
+        num_rows = benthic_data_workSheet_num_rows
+        curr_row = self.DEFAULT_FIRST_DATA_ROW #start at 1. row 0 is column headings
+        while curr_row<num_rows:
+            row = sheet.row(curr_row) 
             
             
             #values
             row_doy_value = row[self.dayOfYearIndex].value
             row_lakeID_value = row[self.lakeIDIndex].value
-            row_depth_value = row[self.depth_index].value                                    
-            row_pmax_value = row[self.pmax_index].value                
-            row_area_value = row[self.area_index].value
-            row_ik_value = row[self.ikIndex].value
+            row_light_penetration_proportion_value = float(row[self.benthic_light_penetration_proportion_index].value)                                        
+            row_pmax_value = float(row[self.benthic_pmax_index].value)                            
+            row_ik_value = float(row[self.benthic_ik_index].value)                                        
             
             #find the correct pond
-            pond = next((i for i in pondList if (i.getLakeID()== row_lakeID_value and 
-                                                 i.getDayOfYear()==row_doy_value)),None) #source: http://stackoverflow.com/questions/7125467/find-object-in-list-that-has-attribute-equal-to-some-value-that-meets-any-condi
+            pond = None
+            pond = next((i for i in pondList if (i.get_lake_id()== row_lakeID_value and 
+                                                 i.get_day_of_year()==row_doy_value)),None) #source: http://stackoverflow.com/questions/7125467/find-object-in-list-that-has-attribute-equal-to-some-value-that-meets-any-condi
             if pond is None: #something is terribly wrong
-                print "oh no"#TODO:
-                raise FormatError("Something went wrong. Layer with DOY "+str(row_doy_value) + " and Lake ID " + row_lakeID_value + " does not match to any Pond.")                    
+                raise FormatError("Something went wrong. Benthic Measurement with DOY "+str(row_doy_value) + " and Lake ID " + row_lakeID_value + " does not match to any Pond.")                    
             else:
-                #create Pond_Layer object using values specific to that layer/row
-                layer = Pond_Layer()
-                layer.set_depth(row_depth_value)
-                layer.set_ik(row_ik_value)
-                layer.set_pmax(row_pmax_value)
-                layer.set_area(row_area_value)         
-                
+                #create PhotoSynthesisMeasurement object using values specific to that benthic_measurement/row
+#                 print "proportion is ", row_light_penetration_proportion_value
+                row_depth_value = pond.calculate_depth_of_specific_light_percentage(row_light_penetration_proportion_value)
+                print "proportion is ", row_light_penetration_proportion_value, " depth is ", row_depth_value
+                benthic_measurement = BenthicPhotoSynthesisMeasurement(row_depth_value, row_pmax_value, row_ik_value)
+                pond.add_benthic_measurement_if_photic(benthic_measurement)                          
                 #add to Pond
-                pond.appendPondLayerIfPhotic(layer)    
+
+                
+#                 wanted_depths = []
+#                 wanted_depths.extend(self.get_wanted_depths(pond))
+                
+                
+#                 if( row_depth_value_rounded in wanted_depths):
+#                     print "original number: ", row_light_penetration_proportion_value, " rounded to ", row_depth_value_rounded
+#                     print "wanted depths are: ", wanted_depths
+#                     print "row value contains wanted depth. Adding Benthic Photosynthesis Measurement to Pond."
+#                 
+#                     benthic_measurement = BenthicPhotoSynthesisMeasurement(row_light_penetration_proportion_value, row_pmax_value, row_ik_value)
+#                     pond.add_benthic_measurement_if_photic(benthic_measurement)                
+
+                
+                
+                
             curr_row+=1    
+        
                        
 
         #end of while loop
-        print "out of while loop. size of pond list is: ", len(pondList)
+#         print "out of while loop. size of pond list is: ", len(pondList)
          
         
-        
-#         #for each row
-#         curr_row = 1 #start at 1. row 0 is column headings
-#         while curr_row<num_rows:
-#             row = workSheet.row(curr_row)
-#             if (1==curr_row):
-#                 print "row #", curr_row, " is ", row
-# 
-#             #extract relevant values from row
-#             row_doy_value = row[dayOfYearIndex].value
-#             row_lakeID_value = row[lakeIDIndex].value
-#             row_depth_value = row[depth_index].value
-#             row_surface_area_value = row[surface_area_index].value
-#             row_gam_value = row[gam_index].value
-#             row_pmax_value = row[pmax_index].value
-#             row_kd_value = row[kd_index].value
-#             row_area_value = row[area_index].value
-#             row_noonlight_value = row[noonLightIndex].value
-#             row_ik_value = row[ikIndex].value
-#             row_lod_value = row[lengthOfDayIndex].value
-# 
-# 
-#             #totalPhos value arbitrarily picked
-#             totalphos_value = 500.0
-# 
-# 
-#             #create Pond_Layer object using values specific to that layer/row
-#             layer = Pond_Layer()
-#             layer.set_depth(row_depth_value)
-#             layer.set_ik(row_ik_value)
-#             layer.set_pmax(row_pmax_value)
-#             layer.set_area(row_area_value)
-# 
-#             #Do we need to make a pond object?
-#             pond = next((i for i in pondList if (i.getLakeID()== row_lakeID_value and i.getDayOfYear()==row_doy_value)),None) #source: http://stackoverflow.com/questions/7125467/find-object-in-list-that-has-attribute-equal-to-some-value-that-meets-any-condi
-# 
-#             if pond is None: #not in list. Must create Pond object
-#                 print "creating pond with lake ID = ", row_lakeID_value, " , and DOY = ", row_doy_value
-#                 pond = Pond()
-#                 pond.setDayOfYear(row_doy_value)
-#                 pond.setLakeID(row_lakeID_value)
-#                 pond.setShapeFactor(row_gam_value)
-#                 pond.setBackgroundLightAttenuation(row_kd_value)
-#                 pond.setNoonSurfaceLight(row_noonlight_value)
-#                 pond.setDayLength(row_lod_value)
-#                 pond.setPondLayerList([]) #set to empty list I hope
-#                 #why do I need to do that
-#                 #that makes no darn sense
-#                 pond.setSufaceAreaAtDepthZero(row_surface_area_value)
-#                 pond.setTotalPhos(totalphos_value)
-# 
-# 
-# 
-#     #             print "appending layer 1"
-#                 pond.appendPondLayerIfPhotic(layer)
-# 
-#     #             print "appending pond"
-#                 pondList.append(pond)
-# 
-#             else: #Pond exists. just append the PondLayer
-#                 pond.appendPondLayerIfPhotic(layer)
-# 
-#             print "curr_row = ", curr_row, " size of pond list is: ", len(pondList)
-#             curr_row+=1
-            #end of while loop!
+
 
  
         return pondList
+    
+    #END OF readPondListFromFile METHOD
+    
+    
+    
+    
+    
+    
+    
 
     def write(self, filename="output.xls"):
+        '''
+        Write to file
+        '''
 
         #Create a new workbook object
         workbook = xlwt.Workbook()
@@ -371,24 +456,97 @@ def main():
 
     reader = DataReader(filename)
     pondList = reader.read()
-#     pond = pondList[0]
-#     bppr0=pond.calculateDailyWholeLakeBenthicPrimaryProductionPerMeterSquared()
 
-#     bpproneline = reader.read()[0].calculateDailyWholeLakeBenthicPrimaryProductionPerMeterSquared(0.25)
-
+    p = Pond()
     for p in pondList:
-        bppr = p.calculateDailyWholeLakeBenthicPrimaryProductionPerMeterSquared()
-        pid = p.getLakeID()
-        print "Daily Whole Lake Primary Production Per Meter Squared For lake ID " + pid + " is " + str(bppr)
         
 
+        
+        pid = p.get_lake_id()
+        doy = p.get_day_of_year()
+        lod = p.get_length_of_day()
+        kd = p.get_light_attenuation_coefficient()
+        noon_light = p.get_noon_surface_light()
+        relative_depths = [1.0, 0.8,0.5,0.25,0.1,0.01]
+        relative_depth_meters = []
+        
+        
+               
+        print ""
+        print ""
+        print ""      
+            
+        print "**************************************************************************************" 
+        bppr = p.calculateDailyWholeLakeBenthicPrimaryProductionPerMeterSquared()
+        print "lake ID: ", pid, " DOY: ", doy
+        print  "bppr is ", str(bppr) 
+        littoral_area = p.calculate_total_littoral_area()+0.0
+        print "the total littoral zone calculated using the bottom area - top area method is: ", littoral_area 
+        print "the depth of 1% light is ", p.calculate_depth_of_specific_light_percentage(0.01)
+        
+
+        
+        for rel_depth in  relative_depths:
+                    rel_dep_m=p.calculate_depth_of_specific_light_percentage(rel_depth)
+                    relative_depth_meters.append(rel_dep_m)
+#                     print "relative depth = ", rel_depth, " meters: ", rel_dep_m
+        #             print "the corresponding depth in meters is ", p.calculate_depth_of_specific_light_percentage(rel_depth)
+        
+        
+        
+        
+        
+        current_depth = 0
+        depth_interval = 0.1
+        max_depth = p.get_max_depth()
+        depths = []
+        areas = []
+        pmaxes = []
+        iks = []
+        bp_measurements = p.get_benthic_photosynthesis_measurements()
+        for measurement in bp_measurements:
+            bpmax = measurement.get_pmax()
+            ik = measurement.get_ik()
+            current_depth = measurement.get_depth()
+            area = p.pond_shape_object.get_water_surface_area_at_depth(current_depth)
+            
+            depths.append(current_depth)
+            pmaxes.append(bpmax+0.0)
+            iks.append(ik+0.0)
+            areas.append(float(area))
+            current_depth+=depth_interval            
+            
+            
+#         while current_depth<=max_depth:
+#             bpmax = p.get_benthic_pmax_at_depth(current_depth)
+#             ik = p.get_benthic_ik_at_depth(current_depth)
+#             area = p.pond_shape_object.get_water_surface_area_at_depth(current_depth)
+#             
+# #             print "__________________________________________________________________________________________________________________"
+# #             print "at depth: ", current_depth, " the interpolated value of benthic pmax is: ", bpmax, " and ik is: ", ik
+# #             print "interpolation also used for area at depth. The calculated value of area at this depth is: ", p.get_pond_shape().get_water_surface_area_at_depth(current_depth)
+#             depths.append(current_depth)
+#             pmaxes.append(bpmax+0.0)
+#             iks.append(ik+0.0)
+#             areas.append(area)
+#             current_depth+=depth_interval
+        
+        print "depths: ", depths
+        print "areas: ", areas
+        print "pmaxes", pmaxes
+        print "iks", iks
+  
+        print "littoral area is: ", p.calculate_total_littoral_area()
 
 
 
 
+        print ""
+        print ""
+        print ""           
+        print "**************************************************************************************"
 
-
-
+        
 
 if __name__ == "__main__":
     main()
