@@ -12,6 +12,7 @@ from mysite.benthic_photosynthesis_measurement import BenthicPhotoSynthesisMeasu
 from mysite.bathymetric_pond_shape import BathymetricPondShape
 from scipy.interpolate import interp1d
 from scipy import interpolate
+from astropy.coordinates.angles import Latitude
 
 
 
@@ -66,6 +67,9 @@ class Pond(object):
     # phytoplankton photosynthesis data list #TODO: everything to do with this
     phytoplankton_photosynthesis_measurements = []
     
+    #latitude, for seasonal calculations.
+    latitude = 0.0 
+    
     # default intervals for calculatations 
     time_interval = 0.25
 
@@ -84,6 +88,7 @@ class Pond(object):
                  pond_shape_object=PondShape(),
                  benthic_photosynthesis_measurements=[],
                  phytoplankton_photosynthesis_measurements=[],
+                 lattitude = 0.0,
                  time_interval=0.25):
         '''
         CONSTRUCTOR
@@ -104,7 +109,20 @@ class Pond(object):
         self.set_pond_shape(pond_shape_object)
         self.set_benthic_photosynthesis_measurements(benthic_photosynthesis_measurements)
         self.set_phytoplankton_photosynthesis_measurements(phytoplankton_photosynthesis_measurements)
+        self.set_latitude(lattitude)
         self.set_time_interval(time_interval)
+
+    def get_latitude(self):
+        return self.__latitude
+
+
+    def set_latitude(self, value):
+        self.__latitude = value
+
+
+    def del_latitude(self):
+        del self.__latitude
+
 
     def get_time_interval(self):
         return self.__time_interval
@@ -564,117 +582,43 @@ class Pond(object):
         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         '''
         time_interval = self.get_time_interval()
-        noonlight = self.get_noon_surface_light()
         lod = self.get_length_of_day()
-        kd = self.get_light_attenuation_coefficient()
         total_littoral_area = self.calculate_total_littoral_area()
  
  
-        
-        depth_interval =0.1 #TODO: undo this
-        benthic_primary_production_answer = 0.0  # mg C per day
-        current_depth = 0.0
-        shape_object = self.get_pond_shape()        
-#         # for each current_depth interval
-#         for depth, area in shape_object.water_surface_areas.items():
-#             current_depth = depth
-#             bpprz = 0.0  # mg C* m^-2 *day
-#   
-#             # for every time interval
-#              
-#             ik_z = self.get_benthic_ik_at_depth(current_depth)
-#             benthic_pmax_z = self.get_benthic_pmax_at_depth(current_depth)  # units?
-#             area_z = area
-#             f_area = area_z/total_littoral_area
-#                  
-#             t = 0.0  # start of day
-#             while t < lod:
-#   
-#                 light_t = noonlight * np.sin(np.pi * t / lod)  # light at current_depth current_depth, time t
-#                 izt = light_t * np.exp(-kd * current_depth)
-#                 bpprzt = benthic_pmax_z * np.tanh(izt / ik_z)
-#                 bpprz += bpprzt
-#   
-#                 t += time_interval
-#             bpprz = bpprz / (1 / time_interval)  # account for the fractional time interval. e.g. dividing by 1/0.25 is equiv to dividing by 4
-#             interval_bppr_fraction = bpprz * f_area  # normalizing
-#  
-#  
-#   
-#             benthic_primary_production_answer += interval_bppr_fraction
-#             current_depth += depth_interval 
-            
-        current_depth_interval = 0.0
-        previous_depth = 0.0
-        measurement_depths = []
-        runningTotal=0
-        for measurement in self.benthic_photosynthesis_measurements:
-            
-            measurement_depth = measurement.get_depth()
-            previous_depth = current_depth
-            current_depth = measurement_depth
-            
-            ik_z = measurement.get_ik()
-            benthic_pmax_z = measurement.get_pmax()                     
-             
-            current_depth_interval = current_depth-previous_depth
-            area = self.get_pond_shape().get_sediment_surface_area_at_depth(current_depth, current_depth_interval)
-            runningTotal+=area            
-            measurement_depths.append(measurement_depth)
 
-        print "total littoral area from sum-of-chunks method is: ", runningTotal
+        benthic_primary_production_answer = 0.0  # mg C per day
+
+
+            
+
+        measurements = self.get_benthic_photosynthesis_measurements()
+
+ 
         current_depth_interval = 0.0
         previous_depth = 0.0
         current_depth = 0.0
         f_area_total = 0.0 #should end up adding to 1.0
-        sorted_measurement_depths = sorted(measurement_depths)
-        for measurement_depth in sorted_measurement_depths:
+        sorted_measurements = sorted(measurements)
+        for measurement in sorted_measurements:
                         
             previous_depth = current_depth
-            current_depth = measurement_depth
+            current_depth = measurement.get_depth()
              
             current_depth_interval = current_depth-previous_depth
             area = self.get_pond_shape().get_sediment_surface_area_at_depth(current_depth, current_depth_interval)
-            bpprz = 0.0  # mg C* m^-2 *day
-  
-            # for every time interval
-             
-#             ik_z = self.get_benthic_ik_at_depth(current_depth)
-#             benthic_pmax_z = self.get_benthic_pmax_at_depth(current_depth)  # units?
-            measurement = next((i for i in self.benthic_photosynthesis_measurements if (i.get_depth()==measurement_depth)),None)
-            
-                
+            bpprz = 0.0  # mg C* m^-2 *day                
             ik_z = measurement.get_ik()
             benthic_pmax_z = measurement.get_pmax()          
-#             print "ik is ", ik_z, " and pmax is ", benthic_pmax_z  
-
-             
-#             f_area = area/total_littoral_area
-#             total_littoral_area = self.get_pond_shape().get_water_surface_area_at_depth(0)
-
-            #calculate fractional area using the area at highest depth - area at lowest depth method.
-#             f_area = shape_object.get_fractional_sediment_area_at_depth(current_depth, total_littoral_area, current_depth_interval) #TODO: debug this method. It doesn't work right.
-
-            #calculate fractional area with a running total of chunk areas
-            total_littoral_area=runningTotal
+            total_littoral_area=self.calculate_total_littoral_area()
             f_area = area/total_littoral_area
             f_area_total+=f_area
             
             
-            #calculate area and fractional area using total_littoral_area = "sum up water surface area at every depth greater than 1% light" method. 
-#             area = shape_object.get_water_surface_area_at_depth(current_depth)
-#             total_littoral_area = 0.0
-#             shape_dictionary = self.pond_shape_object.water_surface_areas
-#             depth_keys = shape_dictionary.keys()
-#             for item in depth_keys:
-#                 depth = item
-#                 this_area = shape_dictionary[depth]
-#                 if(depth< self.calculate_photic_zone_lower_bound()):
-#                     total_littoral_area+=this_area
-#             f_area = area/total_littoral_area
+
 
             
-                 
+            # for every time interval                 
             t = 0.0  # start of day
             while t < lod:
   
@@ -686,9 +630,7 @@ class Pond(object):
             bpprz = bpprz / (1 / time_interval)  # account for the fractional time interval. e.g. dividing by 1/0.25 is equiv to dividing by 4
             interval_bppr_fraction = bpprz * f_area  # normalizing
             
-#             if(f_area>0):
-#                 print "for depth interval ",current_depth,"-",previous_depth,", f_area is", f_area, ", with total littoral area of ", total_littoral_area, ". Resulting bppr: ", interval_bppr_fraction
-#                 print "f_area total adds to ", f_area_total
+
                     
                 
             benthic_primary_production_answer += interval_bppr_fraction             
@@ -838,6 +780,7 @@ class Pond(object):
             depth_m_of_light_penetration = self.calculate_depth_of_specific_light_percentage(light_penetration_depth)
             depths.append(depth_m_of_light_penetration)
         return depths
+    latitude = property(get_latitude, set_latitude, del_latitude, "latitude's docstring")
     
     
      
