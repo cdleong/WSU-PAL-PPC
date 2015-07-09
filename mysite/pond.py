@@ -563,6 +563,8 @@ class Pond(object):
         light_proportion_at_depth = mat.exp(-multiplied)
         return light_proportion_at_depth
     
+    
+    
 
     def calculate_benthic_primary_productivity(self, light_at_time_and_depth, benthic_pmax_z, benthic_ik_z):
         '''
@@ -571,6 +573,16 @@ class Pond(object):
         '''
         bpprzt = benthic_pmax_z * np.tanh(light_at_time_and_depth / benthic_ik_z)
         return bpprzt
+    
+    def sort_benthic_measurements_by_depth(self):
+        '''
+        
+        '''
+        #http://stackoverflow.com/questions/403421/how-to-sort-a-list-of-objects-in-python-based-on-an-attribute-of-the-objects
+        unsorted_measurements = self.get_benthic_photosynthesis_measurements()
+        sorted_measurements = sorted(unsorted_measurements, key=lambda x: x.get_depth(), reverse=False)
+        return sorted_measurements
+        
     
     
     def calculateDailyWholeLakeBenthicPrimaryProductionPerMeterSquared(self):        
@@ -599,11 +611,14 @@ class Pond(object):
         previous_depth = 0.0
         current_depth = 0.0
         f_area_total = 0.0 #should end up adding to 1.0
-        sorted_measurements = sorted(measurements)
+        sorted_measurements = self.sort_benthic_measurements_by_depth()
+        sorted_depths = []
+#         print "sorted measurements", sorted_measurements
         for measurement in sorted_measurements:
                         
             previous_depth = current_depth
             current_depth = measurement.get_depth()
+            sorted_depths.append(current_depth)
              
             current_depth_interval = current_depth-previous_depth
             area = self.get_pond_shape().get_sediment_surface_area_at_depth(current_depth, current_depth_interval)
@@ -634,8 +649,9 @@ class Pond(object):
                     
                 
             benthic_primary_production_answer += interval_bppr_fraction             
-  
- 
+        
+        print "sorted depths ", sorted_depths
+        print "f_area_total ", f_area_total
         return benthic_primary_production_answer
     
     
@@ -673,7 +689,7 @@ class Pond(object):
         z1percent = self.calculate_photic_zone_lower_bound()        
         shape_of_pond = self.get_pond_shape()
         
-        littoral_area = shape_of_pond.get_sediment_area_above_depth(z1percent, z1percent)
+        littoral_area = shape_of_pond.get_sediment_area_above_depth(z1percent)
         return littoral_area    
     
     def get_benthic_pmax_at_depth(self, depth=0.0):

@@ -12,6 +12,7 @@ from mysite.photosynthesis_measurement import PhotosynthesisMeasurement
 from mysite.benthic_photosynthesis_measurement import BenthicPhotoSynthesisMeasurement
 from mysite.bathymetric_pond_shape import BathymetricPondShape
 import numpy as np
+from mysite.pond_shape import PondShape
 
 
 
@@ -32,7 +33,10 @@ class DataReader(object):
 #     filename = "June_26_light_penetration_testing_data_fixed_surface_area.xlsx" #Attempted to fix water surface area. Only photo data at certain intervals.
 #     filename = "June_26_10cm_testing_data_fixed_surface_area.xlsx"#Attempted to fix water surface area. photo data at 10cm intervals
 #     filename = "relative_depth_template_example.xlsx" #name of file. Only has photo data at light penetration levels [1.0, 0.8,0.5,0.25,0.1,0.01]
-    filename = "Jul_03_data_template_example.xlsx" #"reasonable" values for everything, including phytoplankton photosynthesis. Benthic measurements use light penetration proportions.
+#     filename = "Jul_03_data_template_example.xlsx" #"reasonable" values for everything, including phytoplankton photosynthesis. Benthic measurements use light penetration proportions.
+#     filename = "Jul_08_data_template_example_interim.xlsx" #"reasonable" values for everything, except the benthic data is back to the old pprinputs 10cm intervals by actual depth instead of proportions.
+    filename = "Jul_08_data_template_example_with_benthic_light_proportions.xlsx" #"reasonable" values for everything, benthic data uses proportions calculated from the 10 cm individuals
+    
     
 
     
@@ -276,16 +280,7 @@ class DataReader(object):
         sheet = pond_data_workSheet
         num_rows  = pond_data_workSheet_num_rows
         curr_row = self.DEFAULT_FIRST_DATA_ROW #start at 1. row 0 is column headings
-        while curr_row<num_rows:
-#             print "adding Ponds. curr_row = " + str(curr_row) + ", which is still less than num_rows = " + str(num_rows)
-            #for quick reference, these are the Pond row indices            
-            #     dayOfYearIndex = 0 #"DOY"
-            #     lakeIDIndex = 1 #"Lake_ID"
-            #     surface_area_index = 2 #"LA.m2"
-            #     gam_index = 3
-            #     kd_index = 4 #index of light attenuation coefficient kd
-            #     noon_surface_light_index = 5 #"midday.mean.par"
-            #     length_of_day_index = 10 #"LOD" in hours                     
+        while curr_row<num_rows:                  
             row = sheet.row(curr_row)        
             
             #values
@@ -383,25 +378,14 @@ class DataReader(object):
                 raise FormatError("Something went wrong. Benthic Measurement with DOY "+str(row_doy_value) + " and Lake ID " + row_lakeID_value + " does not match to any Pond.")                    
             else:
                 #create PhotoSynthesisMeasurement object using values specific to that benthic_measurement/row
-#                 print "proportion is ", row_light_penetration_proportion_value
-                row_depth_value = pond.calculate_depth_of_specific_light_percentage(row_light_penetration_proportion_value)
-                print "proportion is ", row_light_penetration_proportion_value, " depth is ", row_depth_value
+                row_depth_value = pond.calculate_depth_of_specific_light_percentage(row_light_penetration_proportion_value) #TODO: fix this it's only commented out for the interim file. 
+
+#                 print "proportion is ", row_light_penetration_proportion_value, " depth is ", row_depth_value
                 benthic_measurement = BenthicPhotoSynthesisMeasurement(row_depth_value, row_pmax_value, row_ik_value)
                 pond.add_benthic_measurement_if_photic(benthic_measurement)                          
                 #add to Pond
 
                 
-#                 wanted_depths = []
-#                 wanted_depths.extend(self.get_wanted_depths(pond))
-                
-                
-#                 if( row_depth_value_rounded in wanted_depths):
-#                     print "original number: ", row_light_penetration_proportion_value, " rounded to ", row_depth_value_rounded
-#                     print "wanted depths are: ", wanted_depths
-#                     print "row value contains wanted depth. Adding Benthic Photosynthesis Measurement to Pond."
-#                 
-#                     benthic_measurement = BenthicPhotoSynthesisMeasurement(row_light_penetration_proportion_value, row_pmax_value, row_ik_value)
-#                     pond.add_benthic_measurement_if_photic(benthic_measurement)                
 
                 
                 
@@ -481,16 +465,17 @@ def main():
         print "lake ID: ", pid, " DOY: ", doy
         print  "bppr is ", str(bppr) 
         littoral_area = p.calculate_total_littoral_area()+0.0
-        print "the total littoral zone calculated using the bottom area - top area method is: ", littoral_area 
-        print "the depth of 1% light is ", p.calculate_depth_of_specific_light_percentage(0.01)
+        print "the percentage of 1% light is ", p.calculate_depth_of_specific_light_percentage(0.01)
+        print "the total littoral zone is: ", littoral_area 
+        
         
 
         
         for rel_depth in  relative_depths:
                     rel_dep_m=p.calculate_depth_of_specific_light_percentage(rel_depth)
                     relative_depth_meters.append(rel_dep_m)
-#                     print "relative depth = ", rel_depth, " meters: ", rel_dep_m
-        #             print "the corresponding depth in meters is ", p.calculate_depth_of_specific_light_percentage(rel_depth)
+#                     print "relative percentage = ", rel_depth, " meters: ", rel_dep_m
+        #             print "the corresponding percentage in meters is ", p.calculate_depth_of_specific_light_percentage(rel_depth)
         
         
         
@@ -503,18 +488,22 @@ def main():
         areas = []
         pmaxes = []
         iks = []
+        proportions = []
         bp_measurements = p.get_benthic_photosynthesis_measurements()
         for measurement in bp_measurements:
             bpmax = measurement.get_pmax()
             ik = measurement.get_ik()
             current_depth = measurement.get_depth()
             area = p.pond_shape_object.get_water_surface_area_at_depth(current_depth)
+            light_proportion = p.calculate_light_proportion_at_depth(current_depth)
             
             depths.append(current_depth)
             pmaxes.append(bpmax+0.0)
             iks.append(ik+0.0)
             areas.append(float(area))
-            current_depth+=depth_interval            
+            proportions.append(light_proportion)
+            current_depth+=depth_interval    
+                    
             
             
 #         while current_depth<=max_depth:
@@ -523,20 +512,25 @@ def main():
 #             area = p.pond_shape_object.get_water_surface_area_at_depth(current_depth)
 #             
 # #             print "__________________________________________________________________________________________________________________"
-# #             print "at depth: ", current_depth, " the interpolated value of benthic pmax is: ", bpmax, " and ik is: ", ik
-# #             print "interpolation also used for area at depth. The calculated value of area at this depth is: ", p.get_pond_shape().get_water_surface_area_at_depth(current_depth)
+# #             print "at percentage: ", current_depth, " the interpolated value of benthic pmax is: ", bpmax, " and ik is: ", ik
+# #             print "interpolation also used for area at percentage. The calculated value of area at this percentage is: ", p.get_pond_shape().get_water_surface_area_at_depth(current_depth)
 #             depths.append(current_depth)
 #             pmaxes.append(bpmax+0.0)
 #             iks.append(ik+0.0)
 #             areas.append(area)
 #             current_depth+=depth_interval
-        
+        print "lake ID", p.get_lake_id()
         print "depths: ", depths
         print "areas: ", areas
         print "pmaxes", pmaxes
         print "iks", iks
-  
-        print "littoral area is: ", p.calculate_total_littoral_area()
+        print "light proportions", proportions
+        
+
+            
+            
+#         if( p.get_lake_id() == "US_SPARK"):
+#             print "littoral area is: ", p.calculate_total_littoral_area()
 
 
 
