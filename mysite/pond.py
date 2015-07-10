@@ -8,11 +8,12 @@ Created on Thu Jun 05 09:38:17 2014
 import math as mat
 import numpy as np
 from mysite.pond_shape import PondShape
-from mysite.benthic_photosynthesis_measurement import BenthicPhotoSynthesisMeasurement
+from mysite.benthic_photosynthesis_measurement import BenthicPhotosynthesisMeasurement
 from mysite.bathymetric_pond_shape import BathymetricPondShape
 from scipy.interpolate import interp1d
 from scipy import interpolate
 from astropy.coordinates.angles import Latitude
+from mysite.phytoplankton_photosynthesis_measurement import PhytoPlanktonPhotosynthesisMeasurement
 
 
 
@@ -301,7 +302,7 @@ class Pond(object):
         '''
         Get Benthic Photosynthesis Measurements
         @return: the list containing all the Benthic Photosynthesis Measurement objects, that hold the information regarding benthic photosynthesis.
-        @rtype: list containing BenthicPhotoSynthesisMeasurement objects
+        @rtype: list containing BenthicPhotosynthesisMeasurement objects
         '''
         return self.__benthic_photosynthesis_measurements
 
@@ -387,16 +388,20 @@ class Pond(object):
         Setter method
         Validates the value        
         '''           
-        all_valid = self.validate_types_of_all_items_in_list(values, BenthicPhotoSynthesisMeasurement)
+        all_valid = self.validate_types_of_all_items_in_list(values, BenthicPhotosynthesisMeasurement)
         if(all_valid):
             self.__benthic_photosynthesis_measurements = values
         else:
-            raise Exception("ERROR: all values in benthic_photosynthesis_measurements must be of type BenthicPhotoSynthesisMeasurement")
+            raise Exception("ERROR: all values in benthic_photosynthesis_measurements must be of type BenthicPhotosynthesisMeasurement")
 
 
-    def set_phytoplankton_photosynthesis_measurements(self, value):
+    def set_phytoplankton_photosynthesis_measurements(self, values=[]):
         # TODO: Type-checking
-        self.__phytoplankton_photosynthesis_measurements = value
+        all_valid = self.validate_types_of_all_items_in_list(values, PhytoPlanktonPhotosynthesisMeasurement)
+        if(all_valid):
+            self.__phytoplankton_photosynthesis_measurements = values
+        else:
+            raise Exception("ERROR: all values in phytoplankton_photosynthesis_measurements must be of type PhytoPlanktonPhotosynthesisMeasurement")
         
 
 
@@ -457,11 +462,11 @@ class Pond(object):
     ########################################
     # Appenders/mutators
     ########################################
-    def add_benthic_measurement(self, measurement=BenthicPhotoSynthesisMeasurement):
-        if(isinstance(measurement, BenthicPhotoSynthesisMeasurement)):
+    def add_benthic_measurement(self, measurement=BenthicPhotosynthesisMeasurement):
+        if(isinstance(measurement, BenthicPhotosynthesisMeasurement)):
             self.benthic_photosynthesis_measurements.append(measurement)
         else:
-            raise Exception("ERROR: cannot add measurement to benthic measurements list - measurement must be of type BenthicPhotoSynthesisMeasurement")
+            raise Exception("ERROR: cannot add measurement to benthic measurements list - measurement must be of type BenthicPhotosynthesisMeasurement")
 
     def add_benthic_measurement_if_photic(self, measurement):
         z1Percent = self.calculate_depth_of_specific_light_percentage(self.PHOTIC_ZONE_LIGHT_PENETRATION_LEVEL_LOWER_BOUND)
@@ -472,7 +477,7 @@ class Pond(object):
 
         
         
-    def remove_benthic_measurement(self, measurement=BenthicPhotoSynthesisMeasurement):
+    def remove_benthic_measurement(self, measurement=BenthicPhotosynthesisMeasurement):
         self.benthic_photosynthesis_measurements.remove(measurement)
         
     def update_shape(self, other_pond_shape):
@@ -585,13 +590,17 @@ class Pond(object):
         
     
     
+    ###########################################################################
+    #BENTHIC PRIMARY PRODUCTIVITY
+    ###########################################################################    
     def calculateDailyWholeLakeBenthicPrimaryProductionPerMeterSquared(self):        
         '''
-        !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         Everything else in this entire project works to make this method work.
+        #TODO: allow specification of littoral or surface area
         @return: Benthic Primary Production, mg C per meter squared, per day.
         @rtype: float 
-        !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         '''
         time_interval = self.get_time_interval()
         lod = self.get_length_of_day()
@@ -600,13 +609,6 @@ class Pond(object):
  
 
         benthic_primary_production_answer = 0.0  # mg C per day
-
-
-            
-
-        measurements = self.get_benthic_photosynthesis_measurements()
-
- 
         current_depth_interval = 0.0
         previous_depth = 0.0
         current_depth = 0.0
@@ -808,20 +810,20 @@ class Pond(object):
 
 def main():
     print "hello world"
-    m0 = BenthicPhotoSynthesisMeasurement(0.0, 14.75637037, 404.943)
-    m1 = BenthicPhotoSynthesisMeasurement(1.0, 25.96292587, 307.6793317)
-    m2 = BenthicPhotoSynthesisMeasurement(2.0, 57.98165587, 238.6559726)
-    m3 = BenthicPhotoSynthesisMeasurement(3.0, 47.35232783, 189.673406)
-    m4 = BenthicPhotoSynthesisMeasurement(4.0, 36.7229998, 154.9128285)
-    m5 = BenthicPhotoSynthesisMeasurement(5.0, 33.63753108, 130.2449143)
-    m6 = BenthicPhotoSynthesisMeasurement(6.0, 26.8494999, 112.7392791)
-    m7 = BenthicPhotoSynthesisMeasurement(7.0, 20.06146872, 100.3163696)
-    m8 = BenthicPhotoSynthesisMeasurement(8.0, 16.976, 91.50042668)
-    m9 = BenthicPhotoSynthesisMeasurement(9.0, 15.45920354, 85.24417497)
-    m10 = BenthicPhotoSynthesisMeasurement(10.0, 11.7585159, 80.80441327)
-    m11 = BenthicPhotoSynthesisMeasurement(11.0, 7.148489714, 77.6537274)
-    m12 = BenthicPhotoSynthesisMeasurement(12.0, 2.903677594, 75.41783679)
-    m13 = BenthicPhotoSynthesisMeasurement(13.0, 0.2986321643, 73.83113249)
+    m0 = BenthicPhotosynthesisMeasurement(0.0, 14.75637037, 404.943)
+    m1 = BenthicPhotosynthesisMeasurement(1.0, 25.96292587, 307.6793317)
+    m2 = BenthicPhotosynthesisMeasurement(2.0, 57.98165587, 238.6559726)
+    m3 = BenthicPhotosynthesisMeasurement(3.0, 47.35232783, 189.673406)
+    m4 = BenthicPhotosynthesisMeasurement(4.0, 36.7229998, 154.9128285)
+    m5 = BenthicPhotosynthesisMeasurement(5.0, 33.63753108, 130.2449143)
+    m6 = BenthicPhotosynthesisMeasurement(6.0, 26.8494999, 112.7392791)
+    m7 = BenthicPhotosynthesisMeasurement(7.0, 20.06146872, 100.3163696)
+    m8 = BenthicPhotosynthesisMeasurement(8.0, 16.976, 91.50042668)
+    m9 = BenthicPhotosynthesisMeasurement(9.0, 15.45920354, 85.24417497)
+    m10 = BenthicPhotosynthesisMeasurement(10.0, 11.7585159, 80.80441327)
+    m11 = BenthicPhotosynthesisMeasurement(11.0, 7.148489714, 77.6537274)
+    m12 = BenthicPhotosynthesisMeasurement(12.0, 2.903677594, 75.41783679)
+    m13 = BenthicPhotosynthesisMeasurement(13.0, 0.2986321643, 73.83113249)
     
     
     measurement_list = [m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13]

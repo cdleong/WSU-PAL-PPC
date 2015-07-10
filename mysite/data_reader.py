@@ -9,7 +9,7 @@ import xlrd, xlwt #reading and writing, respectively.
 from pond import Pond
 from numpy.distutils.npy_pkg_config import FormatError
 from mysite.photosynthesis_measurement import PhotosynthesisMeasurement
-from mysite.benthic_photosynthesis_measurement import BenthicPhotoSynthesisMeasurement
+from mysite.benthic_photosynthesis_measurement import BenthicPhotosynthesisMeasurement
 from mysite.bathymetric_pond_shape import BathymetricPondShape
 import numpy as np
 from mysite.pond_shape import PondShape
@@ -94,7 +94,7 @@ class DataReader(object):
     latitude_index = 5 #latitude in decimal degrees.    
     
     #indices for vars in benthic_photo_data worksheet
-    benthic_light_penetration_proportion_index = 2 #"z" in meters #depth is in several sheets        
+    benthic_light_penetration_proportion_index = 2 #        
     benthic_pmax_index = 3 #"pmax.z"
     benthic_ik_index = 4 #"ik_z" light intensity at onset of saturation
     
@@ -378,10 +378,12 @@ class DataReader(object):
                 raise FormatError("Something went wrong. Benthic Measurement with DOY "+str(row_doy_value) + " and Lake ID " + row_lakeID_value + " does not match to any Pond.")                    
             else:
                 #create PhotoSynthesisMeasurement object using values specific to that benthic_measurement/row
-                row_depth_value = pond.calculate_depth_of_specific_light_percentage(row_light_penetration_proportion_value) #TODO: fix this it's only commented out for the interim file. 
+                row_depth_value = pond.calculate_depth_of_specific_light_percentage(row_light_penetration_proportion_value) #convert from light proportions to depth in meters.
+#                 row_depth_value = row_light_penetration_proportion_value #Read the depths directly. TODO: delete this. Used for testing only.
+                 
 
 #                 print "proportion is ", row_light_penetration_proportion_value, " depth is ", row_depth_value
-                benthic_measurement = BenthicPhotoSynthesisMeasurement(row_depth_value, row_pmax_value, row_ik_value)
+                benthic_measurement = BenthicPhotosynthesisMeasurement(row_depth_value, row_pmax_value, row_ik_value)
                 pond.add_benthic_measurement_if_photic(benthic_measurement)                          
                 #add to Pond
 
