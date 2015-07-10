@@ -9,46 +9,46 @@ class BenthicPhotosynthesisMeasurement(PhotosynthesisMeasurement):
     '''
     classdocs
     '''
+    MAX_VALID_IK = 10 #Arbitrary value one order of magnitude greater than typical. According to Kalff's Limnology, page 333, Ik typically falls between 0.14 and 0.72
+    MIN_VALID_IK = 0.01 #Arbitrary value one order of magnitude less than typical. According to Kalff's Limnology, page 333, Ik typically falls between 0.14 and 0.72
     
-    ik=0.0
+    ik=0.0 #accor
     
     def __init__(self, depth, pmax, ik):
         super(BenthicPhotosynthesisMeasurement, self).__init__(depth, pmax)
         self.set_ik(ik)
 
-    def get_ik(self):
-        return self.__ik
-
-
-    def set_ik(self, value):
-        self.__ik = value
-
-
-    def del_ik(self):
-        del self.__ik
-
-
+    #GETTERS
+    
     def get_depth(self):
         return PhotosynthesisMeasurement.get_depth(self)
 
 
     def get_pmax(self):
         return PhotosynthesisMeasurement.get_pmax(self)
-
-
-
-
-    def get_alpha(self):
-        return PhotosynthesisMeasurement.get_alpha(self)
-
+    
+    def get_ik(self):
+        return self.__ik
+    
+    #SETTERS
+    
     def set_depth(self, value):
+        #TODO: validate
         return PhotosynthesisMeasurement.set_depth(self, value)
 
 
     def set_pmax(self, value):
-        return PhotosynthesisMeasurement.set_pmax(self, value)
+        #TODO: validate
+        return PhotosynthesisMeasurement.set_pmax(self, value)    
 
 
+    def set_ik(self, value):
+        #TODO: validate
+        self.__ik = value
+
+
+    def del_ik(self):
+        del self.__ik
 
 
     def del_depth(self):
