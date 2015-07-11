@@ -272,7 +272,7 @@ class Pond(object):
     def get_noon_surface_light(self):
         '''
         Get Noon Surface Light
-        @return: The surface light intensite at solar noon, in micromoles per square meter per second(μmol*m^-2*s^-1)
+        @return: The surface light intensite at solar noon, in micromoles per square meter per second(umol*m^-2*s^-1)
         @rtype: float
         '''
         return self.__noon_surface_light
