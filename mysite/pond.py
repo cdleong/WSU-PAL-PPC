@@ -12,7 +12,6 @@ from mysite.benthic_photosynthesis_measurement import BenthicPhotosynthesisMeasu
 from mysite.bathymetric_pond_shape import BathymetricPondShape
 from scipy.interpolate import interp1d
 from scipy import interpolate
-from astropy.coordinates.angles import Latitude
 from mysite.phytoplankton_photosynthesis_measurement import PhytoPlanktonPhotosynthesisMeasurement
 
 
@@ -609,12 +608,12 @@ class Pond(object):
   
                 t += time_interval
             bpprz = bpprz / (1 / time_interval)  # account for the fractional time interval. e.g. dividing by 1/0.25 is equiv to dividing by 4
-            interval_bppr_fraction = bpprz * f_area  # normalizing
+            weighted_bpprz = bpprz * f_area  # normalizing
             
 
                     
                 
-            benthic_primary_production_answer += interval_bppr_fraction             
+            benthic_primary_production_answer += weighted_bpprz             
         
 
         return benthic_primary_production_answer    

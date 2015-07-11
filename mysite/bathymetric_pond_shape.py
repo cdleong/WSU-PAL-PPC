@@ -4,7 +4,6 @@ Created on Jun 18, 2015
 @author: cdleong
 '''
 from mysite.pond_shape import PondShape
-import numpy as np
 from scipy.interpolate import interp1d
 
 
