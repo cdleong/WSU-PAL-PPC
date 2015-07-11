@@ -21,7 +21,7 @@ class PhytoPlanktonPhotosynthesisMeasurement(PhotosynthesisMeasurement):
     MAX_VALID_ALPHA = 100 #arbitrary. Biggest I've ever seen is less than 1. 
     MIN_VALID_ALPHA = 0.00001 #arbitrary value greater than zero. Smallest I've seen is ~0.05
     MAX_VALID_BETA = 100 #arbitrary. Biggest I've ever seen is less than 1.
-    MIN_VALID_BETA = 0.00001 #arbitrary value greater than zero. Smallest I've seen is ~0.01 
+    MIN_VALID_BETA = 0.0 
     
     ##################
     #VARIABLES

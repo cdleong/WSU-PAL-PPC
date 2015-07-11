@@ -13,6 +13,7 @@ from mysite.benthic_photosynthesis_measurement import BenthicPhotosynthesisMeasu
 from mysite.bathymetric_pond_shape import BathymetricPondShape
 import numpy as np
 from mysite.pond_shape import PondShape
+from mysite.phytoplankton_photosynthesis_measurement import PhytoPlanktonPhotosynthesisMeasurement
 
 
 
@@ -99,6 +100,11 @@ class DataReader(object):
     benthic_ik_index = 4 #"ik_z" light intensity at onset of saturation
     
     #indices for vars in phytoplankton_photo_data worksheet
+    phyto_thermal_layer_index =2
+    phyto_depth_index = 3
+    phyto_pmax_index = 4
+    phyto_alpha_index = 5
+    phyto_beta_index = 6
     
     #indices for vars in shape_data worksheet        
     shape_ID_index = 0
@@ -236,8 +242,8 @@ class DataReader(object):
         pond_data_workSheet_num_rows = pond_data_workSheet.nrows
 #         print "the number of rows in sheet " + pond_data_workSheet.name +  " is " + str(pond_data_workSheet_num_rows)        
         benthic_data_workSheet_num_rows = benthic_photo_data_workSheet.nrows
-        print "the number of rows in sheet " + benthic_photo_data_workSheet.name + " is " + str(benthic_data_workSheet_num_rows)
-        phytoplankton_photo_data_sheet_num_rows = phytoplankton_photo_data_sheet.nrows #TODO: implement ppp
+#         print "the number of rows in sheet " + benthic_photo_data_workSheet.name + " is " + str(benthic_data_workSheet_num_rows)
+        phytoplankton_photo_data_sheet_num_rows = phytoplankton_photo_data_sheet.nrows
 #         print "the number of rows in sheet " + phytoplankton_photo_data_sheet.name + " is " + str(phytoplankton_photo_data_sheet_num_rows)
         shape_data_sheet_num_rows = shape_data_sheet.nrows
 #         print "the number of rows in sheet " + shape_data_sheet.name + " is " + str(shape_data_sheet_num_rows)
@@ -387,16 +393,45 @@ class DataReader(object):
                 pond.add_benthic_measurement_if_photic(benthic_measurement)                          
                 #add to Pond
 
-                
-
-                
-                
-                
             curr_row+=1    
-        
-                       
-
         #end of while loop
+        ###############
+        #Phyto data
+        ###############
+        
+        sheet = phytoplankton_photo_data_sheet
+        num_rows = phytoplankton_photo_data_sheet_num_rows
+        curr_row = self.DEFAULT_FIRST_DATA_ROW #start at 1. row 0 is column headings
+        while curr_row<num_rows:
+            row = sheet.row(curr_row) 
+            
+            
+            #values
+            row_doy_value = row[self.dayOfYearIndex].value
+            row_lakeID_value = row[self.lakeIDIndex].value
+            row_thermal_layer_value = row[self.phyto_thermal_layer_index].value
+            row_depth_value = row[self.phyto_depth_index].value
+            row_phyto_pmax_value = row[self.phyto_pmax_index].value
+            row_alpha_value = row[self.phyto_alpha_index].value
+            row_beta_value = row[self.phyto_beta_index].value                                       
+            
+            print "row pmax value ", row_phyto_pmax_value
+            print "row alpha ", row_alpha_value
+            print "row beta ", row_beta_value
+            #find the correct pond
+            pond = None
+            pond = next((i for i in pondList if (i.get_lake_id()== row_lakeID_value and 
+                                                 i.get_day_of_year()==row_doy_value)),None) #source: http://stackoverflow.com/questions/7125467/find-object-in-list-that-has-attribute-equal-to-some-value-that-meets-any-condi
+            if pond is None: #something is terribly wrong
+                raise FormatError("Something went wrong. Benthic Measurement with DOY "+str(row_doy_value) + " and Lake ID " + row_lakeID_value + " does not match to any Pond.")                    
+            else:
+                #create PhotoSynthesisMeasurement object using values specific to that benthic_measurement/row
+
+                phyto_measurement = PhytoPlanktonPhotosynthesisMeasurement(row_thermal_layer_value, row_depth_value, row_phyto_pmax_value, row_alpha_value, row_beta_value)
+                pond.add_phytoplankton_measurement(phyto_measurement)                          
+                #add to Pond
+
+            curr_row+=1            
 #         print "out of while loop. size of pond list is: ", len(pondList)
          
         
@@ -464,8 +499,10 @@ def main():
             
         print "**************************************************************************************" 
         bppr = p.calculateDailyWholeLakeBenthicPrimaryProductionPerMeterSquared()
+        pppr = p.calculateDailyWholeLakePhytoplanktonPrimaryProductionPerMeterSquared(0.1)
         print "lake ID: ", pid, " DOY: ", doy
         print  "bppr is ", str(bppr) 
+        print "pppr is ", str(pppr)
         littoral_area = p.calculate_total_littoral_area()+0.0
         print "the percentage of 1% light is ", p.calculate_depth_of_specific_light_percentage(0.01)
         print "the total littoral zone is: ", littoral_area 
@@ -492,6 +529,7 @@ def main():
         iks = []
         proportions = []
         bp_measurements = p.get_benthic_photosynthesis_measurements()
+        phyto_measurements = p.get_phytoplankton_photosynthesis_measurements()
         for measurement in bp_measurements:
             bpmax = measurement.get_pmax()
             ik = measurement.get_ik()
@@ -506,7 +544,20 @@ def main():
             proportions.append(light_proportion)
             current_depth+=depth_interval    
                     
+        p_depths = []
+        p_pmaxes = []
+        p_alphas = []
+        p_betas = []
+        for measurement in phyto_measurements:
+            p_depth = measurement.get_depth()
+            p_pmax = measurement.get_pmax()
+            p_alpha = measurement.get_phyto_alpha()
+            p_beta = measurement.get_phyto_beta()
             
+            p_depths.append(p_depth)
+            p_pmaxes.append(p_pmax)
+            p_alphas.append(p_alpha)
+            p_betas.append(p_beta)
             
 #         while current_depth<=max_depth:
 #             bpmax = p.get_benthic_pmax_at_depth(current_depth)
@@ -527,6 +578,13 @@ def main():
         print "pmaxes", pmaxes
         print "iks", iks
         print "light proportions", proportions
+        
+        
+        print "PHYTOPHYTOPHYTOPHYTOPHYTOPHYTOPHYTOPHYTOPHYTOPHYTOPHYTOPHYTOPHYTOPHYTO"
+        print "depths ", p_depths
+        print "pmaxes ", p_pmaxes
+        print "alphas ", p_alphas
+        print "betas ", p_betas
         
 
             
