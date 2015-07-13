@@ -710,7 +710,7 @@ class Pond(object):
 #         total_littoral_area=self.calculate_total_littoral_area()
         photic_zone_lower_bound = self.calculate_photic_zone_lower_bound()
         photic_volume = self.get_pond_shape().get_volume_above_depth(photic_zone_lower_bound, depth_interval)
-        print "photic volume is ", photic_volume
+#         print "photic volume is ", photic_volume
 
         #for each depth interval #TODO: integration over whole lake?
         while current_depth<self.calculate_photic_zone_lower_bound():
@@ -742,7 +742,7 @@ class Pond(object):
                 
             phyto_primary_production_answer += interval_pppr_fraction             
         
-        print "phyto answer is ", phyto_primary_production_answer
+#         print "phyto answer is ", phyto_primary_production_answer
         return phyto_primary_production_answer #essentially a weighted average.         
     
     def get_phyto_pmax_at_depth(self, depth):

@@ -14,6 +14,7 @@ from mysite.bathymetric_pond_shape import BathymetricPondShape
 import numpy as np
 from mysite.pond_shape import PondShape
 from mysite.phytoplankton_photosynthesis_measurement import PhytoPlanktonPhotosynthesisMeasurement
+import copy
 
 
 
@@ -200,12 +201,12 @@ class DataReader(object):
         #Worksheets
         ##############
         nsheets = book.nsheets
-        print "The number of worksheets is", book.nsheets
+#         print "The number of worksheets is", book.nsheets
         
         
         sheet_names = book.sheet_names()
-        print "Worksheet name(s):" 
-        print sheet_names
+#         print "Worksheet name(s):" 
+#         print sheet_names
         
         pond_data_workSheet = xlrd.book
         benthic_photo_data_workSheet= xlrd.book        
@@ -229,7 +230,7 @@ class DataReader(object):
 #             print "lake shape data sheet detected"
             shape_data_sheet = book.sheet_by_name(self.SHAPE_DATA_SHEET_NAME)
         else:
-            print "Standard sheet names not detected. Attempting to read using sheet indices."
+#             print "Standard sheet names not detected. Attempting to read using sheet indices."
             pond_data_workSheet = book.sheet_by_index(self.POND_DATA_SHEET_INDEX)
             benthic_photo_data_workSheet = book.sheet_by_index(self.BENTHIC_PHOTO_DATA_SHEET_INDEX)
             phytoplankton_photo_data_sheet = book.sheet_by_name(self.PHYTOPLANKTON_PHOTO_DATA_SHEET_INDEX)
@@ -252,23 +253,23 @@ class DataReader(object):
         
         curr_row = self.DEFAULT_COLUMN_HEADINGS_ROW
         columnnames = pond_data_workSheet.row(curr_row)
-        print "the column names in sheet \"" + pond_data_workSheet.name +  "\" are "
-        print columnnames
+#         print "the column names in sheet \"" + pond_data_workSheet.name +  "\" are "
+#         print columnnames
 
         curr_row = self.DEFAULT_COLUMN_HEADINGS_ROW
         columnnames = benthic_photo_data_workSheet.row(curr_row)
-        print "the column names in sheet \"" + benthic_photo_data_workSheet.name +  "\" are "
-        print columnnames        
+#         print "the column names in sheet \"" + benthic_photo_data_workSheet.name +  "\" are "
+#         print columnnames        
         
         curr_row = self.DEFAULT_COLUMN_HEADINGS_ROW
         columnnames = phytoplankton_photo_data_sheet.row(curr_row)
-        print "the column names in sheet \"" + phytoplankton_photo_data_sheet.name +  "\" are "
-        print columnnames                     
+#         print "the column names in sheet \"" + phytoplankton_photo_data_sheet.name +  "\" are "
+#         print columnnames                     
         
         curr_row = self.DEFAULT_COLUMN_HEADINGS_ROW
         columnnames = shape_data_sheet.row(curr_row)
-        print "the column names in sheet \"" + shape_data_sheet.name +  "\" are "
-        print columnnames             
+#         print "the column names in sheet \"" + shape_data_sheet.name +  "\" are "
+#         print columnnames             
         
         
         #################################################
@@ -310,7 +311,7 @@ class DataReader(object):
                 pondList.append(pond)         
             curr_row+=1       
             
-        print "out of while loop. size of pond list is: ", len(pondList)
+#         print "out of while loop. size of pond list is: ", len(pondList)
             
         #######################################################
         #we made all the ponds. Time to add all the members
@@ -352,7 +353,7 @@ class DataReader(object):
             #increment while loop to next row
             curr_row+=1            
         
-        print "added shape data"
+#         print "added shape data"
         
         
         
@@ -415,9 +416,9 @@ class DataReader(object):
             row_alpha_value = row[self.phyto_alpha_index].value
             row_beta_value = row[self.phyto_beta_index].value                                       
             
-            print "row pmax value ", row_phyto_pmax_value
-            print "row alpha ", row_alpha_value
-            print "row beta ", row_beta_value
+#             print "row pmax value ", row_phyto_pmax_value
+#             print "row alpha ", row_alpha_value
+#             print "row beta ", row_beta_value
             #find the correct pond
             pond = None
             pond = next((i for i in pondList if (i.get_lake_id()== row_lakeID_value and 
@@ -491,6 +492,17 @@ def main():
         relative_depths = [1.0, 0.8,0.5,0.25,0.1,0.01]
         relative_depth_meters = []
         
+        #testing phyto stuff
+        #US sparkling lake
+#         us_spark_p_m1 = PhytoPlanktonPhotosynthesisMeasurement(1, 5, 4.113867544, 0.05, 0.01) #US sparkling lake
+#         us_spark_p_m2 = PhytoPlanktonPhotosynthesisMeasurement(2, 10, 2.636765965,0.0412667109,0)
+#         us_spark_p_m3 = PhytoPlanktonPhotosynthesisMeasurement(3, 15, 4.959339837, 0.1646230769,0)        
+#         
+#         us_cryst_p_m1 = PhytoPlanktonPhotosynthesisMeasurement(1, 5.25, 4.113867544, 0.05, 0.01) #US sparkling lake
+#         us_cryst_p_m2 = PhytoPlanktonPhotosynthesisMeasurement(2, 11, 4.113867544, 0.05, 0.01) #US sparkling lake
+#         us_cryst_p_m3 = PhytoPlanktonPhotosynthesisMeasurement(3, 18.4, 4.113867544, 0.05, 0.01) #US sparkling lake
+#         
+        
         
                
         print ""
@@ -501,20 +513,15 @@ def main():
         bppr = p.calculateDailyWholeLakeBenthicPrimaryProductionPerMeterSquared()
         pppr = p.calculateDailyWholeLakePhytoplanktonPrimaryProductionPerMeterSquared(0.1)
         print "lake ID: ", pid, " DOY: ", doy
-        print  "bppr is ", str(bppr) 
+        print "bppr is ", str(bppr) 
         print "pppr is ", str(pppr)
         littoral_area = p.calculate_total_littoral_area()+0.0
         print "the percentage of 1% light is ", p.calculate_depth_of_specific_light_percentage(0.01)
         print "the total littoral zone is: ", littoral_area 
         
         
-
         
-        for rel_depth in  relative_depths:
-                    rel_dep_m=p.calculate_depth_of_specific_light_percentage(rel_depth)
-                    relative_depth_meters.append(rel_dep_m)
-#                     print "relative percentage = ", rel_depth, " meters: ", rel_dep_m
-        #             print "the corresponding percentage in meters is ", p.calculate_depth_of_specific_light_percentage(rel_depth)
+
         
         
         
@@ -548,49 +555,48 @@ def main():
         p_pmaxes = []
         p_alphas = []
         p_betas = []
-        for measurement in phyto_measurements:
-            p_depth = measurement.get_depth()
-            p_pmax = measurement.get_pmax()
-            p_alpha = measurement.get_phyto_alpha()
-            p_beta = measurement.get_phyto_beta()
+        
+        test_operands=[0.25,0.5,1.0,2.0,4.0]
+        old_pmax_values =[]
+        
+        pppr_values = []        
+        
+        
+        for operand in test_operands:
+            print "let's try that, but multiply every phyto pmax by ", operand
+            old_measurements = []
             
-            p_depths.append(p_depth)
-            p_pmaxes.append(p_pmax)
-            p_alphas.append(p_alpha)
-            p_betas.append(p_beta)
+            print "length ", len(p.phytoplankton_photosynthesis_measurements)
+            i = 0
+            for measurement in p.phytoplankton_photosynthesis_measurements:
+                i+=1
+                old_measurement = copy.copy(measurement)
+#                 print "bob: ",i 
+                pmax_original = measurement.get_pmax()
+                new_pmax = pmax_original*operand
+                measurement.set_pmax(new_pmax)
+                old_measurements.append(old_measurement)
+                
+                
+                
             
-#         while current_depth<=max_depth:
-#             bpmax = p.get_benthic_pmax_at_depth(current_depth)
-#             ik = p.get_benthic_ik_at_depth(current_depth)
-#             area = p.pond_shape_object.get_water_surface_area_at_depth(current_depth)
-#             
-# #             print "__________________________________________________________________________________________________________________"
-# #             print "at percentage: ", current_depth, " the interpolated value of benthic pmax is: ", bpmax, " and ik is: ", ik
-# #             print "interpolation also used for area at percentage. The calculated value of area at this percentage is: ", p.get_pond_shape().get_water_surface_area_at_depth(current_depth)
-#             depths.append(current_depth)
-#             pmaxes.append(bpmax+0.0)
-#             iks.append(ik+0.0)
-#             areas.append(area)
-#             current_depth+=depth_interval
-        print "lake ID", p.get_lake_id()
-        print "depths: ", depths
-        print "areas: ", areas
-        print "pmaxes", pmaxes
-        print "iks", iks
-        print "light proportions", proportions
+            pppr_value = p.calculateDailyWholeLakePhytoplanktonPrimaryProductionPerMeterSquared(0.1)
+            pppr_values.append(pppr_value)
+            print "set all the phyto photo measurements. New PPPR for lake ", p.get_lake_id()," operand ", operand , " is ", pppr_value
+            
+            #reset measurements
+            p.set_phytoplankton_photosynthesis_measurements(old_measurements)
+            
+            #make sure 
+            for measurement in p.phytoplankton_photosynthesis_measurements:
+                print "the resetted value of measurement is ", measurement.get_pmax()
+                
         
-        
-        print "PHYTOPHYTOPHYTOPHYTOPHYTOPHYTOPHYTOPHYTOPHYTOPHYTOPHYTOPHYTOPHYTOPHYTO"
-        print "depths ", p_depths
-        print "pmaxes ", p_pmaxes
-        print "alphas ", p_alphas
-        print "betas ", p_betas
-        
+        print "here's all the new pppr values for lake  ", p.get_lake_id(), ": ",pppr_values
+                
 
             
-            
-#         if( p.get_lake_id() == "US_SPARK"):
-#             print "littoral area is: ", p.calculate_total_littoral_area()
+
 
 
 
