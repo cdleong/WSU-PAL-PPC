@@ -517,14 +517,19 @@ def main():
         print ""      
             
         print "**************************************************************************************" 
-        bppr = p.calculateDailyWholeLakeBenthicPrimaryProductionPerMeterSquared()
+        bppr = p.calculateDailyWholeLakeBenthicPrimaryProductionPerMeterSquared(0.1)
+        bppr_surface_area = p.calculateDailyWholeLakeBenthicPrimaryProductionPerMeterSquared(0.1, False)
         pppr = p.calculateDailyWholeLakePhytoplanktonPrimaryProductionPerMeterSquared(0.1)
+        
         print "lake ID: ", pid, " DOY: ", doy
-        print "bppr is ", str(bppr) 
+        print "bppr is ", str(bppr), " mg C per square meter of littoral area"
+        print "bppr is ", str(bppr_surface_area),  " mg C per square meter of lake surface area"
         print "pppr is ", str(pppr)
         littoral_area = p.calculate_total_littoral_area()+0.0
+        surface_area = p.get_pond_shape().get_water_surface_area_at_depth(0)
         print "the percentage of 1% light is ", p.calculate_depth_of_specific_light_percentage(0.01)
-        print "the total littoral zone is: ", littoral_area 
+        print "the total littoral zone is: ", littoral_area
+        print "the surface area is: ",  surface_area
         print "max depth is: ", shape.get_max_depth()
         print "number of bpp measurements is:", len(bppmeasurements) 
         

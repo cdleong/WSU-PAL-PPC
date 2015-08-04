@@ -555,7 +555,7 @@ class Pond(object):
     ##############################
     # BENTHIC PRIMARY PRODUCTIVITY
     ##############################    
-    def calculateDailyWholeLakeBenthicPrimaryProductionPerMeterSquared(self, depth_interval = DEFAULT_DEPTH_INTERVAL_FOR_CALCULATIONS):        
+    def calculateDailyWholeLakeBenthicPrimaryProductionPerMeterSquared(self, depth_interval = DEFAULT_DEPTH_INTERVAL_FOR_CALCULATIONS, use_littoral_area=True):        
         '''
         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         Almost everything else in this entire project works to make this method work.
@@ -575,6 +575,7 @@ class Pond(object):
         previous_depth = 0.0
         current_depth = 0.0
         total_littoral_area=self.calculate_total_littoral_area()
+        total_surface_area = self.get_pond_shape().get_water_surface_area_at_depth(0.0)
 
         depth_interval = Pond.DEFAULT_DEPTH_INTERVAL_FOR_CALCULATIONS #use the class value. 
         #for each depth interval #TODO: integration over whole lake?
@@ -594,7 +595,10 @@ class Pond(object):
             ik_z = self.get_benthic_ik_at_depth(current_depth)
             benthic_pmax_z = self.get_benthic_pmax_at_depth(current_depth)
             
-            f_area = area/total_littoral_area #TODO: these add up to 1.0, right?
+            if(True==use_littoral_area):
+                f_area = area/total_littoral_area #TODO: these add up to 1.0, right?
+            else: 
+                f_area = area/total_surface_area
 
             
             # for every time interval                 
