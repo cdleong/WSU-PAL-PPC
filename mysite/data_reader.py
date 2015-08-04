@@ -8,13 +8,13 @@ This class reads in data from an excel file, packages it up, and sends it to the
 import xlrd, xlwt #reading and writing, respectively.
 from pond import Pond
 from numpy.distutils.npy_pkg_config import FormatError
-from mysite.photosynthesis_measurement import PhotosynthesisMeasurement
+
 from mysite.benthic_photosynthesis_measurement import BenthicPhotosynthesisMeasurement
 from mysite.bathymetric_pond_shape import BathymetricPondShape
-import numpy as np
-from mysite.pond_shape import PondShape
+
+
 from mysite.phytoplankton_photosynthesis_measurement import PhytoPlanktonPhotosynthesisMeasurement
-import copy
+import sys
 
 
 
@@ -37,8 +37,11 @@ class DataReader(object):
 #     filename = "relative_depth_template_example.xlsx" #name of file. Only has photo data at light penetration levels [1.0, 0.8,0.5,0.25,0.1,0.01]
 #     filename = "Jul_03_data_template_example.xlsx" #"reasonable" values for everything, including phytoplankton photosynthesis. Benthic measurements use light penetration proportions.
 #     filename = "Jul_08_data_template_example_interim.xlsx" #"reasonable" values for everything, except the benthic data is back to the old pprinputs 10cm intervals by actual depth instead of proportions.
-    filename = "Jul_08_data_template_example_with_benthic_light_proportions.xlsx" #"reasonable" values for everything, benthic data uses proportions calculated from the 10 cm individuals
-    
+#     filename = "Jul_08_data_template_example_with_benthic_light_proportions.xlsx" #"reasonable" values for everything, benthic data uses light penetration proportions calculated from the 10 cm individuals
+#     filename = "Aug_03_test_data.xls" #"Same as Jul_08_data_template_example_with_benthic_light_proportions, but added in BIGMU lake.
+#     filename = "Aug_03_test_data_bppr10percent_intervals.xls" #"Same as Aug_03_test_data, but reducing data points to 10-percent intervals.
+    filename = "Aug_03_test_data_bppr5measurements.xls" #"Same as Aug_03_test_data_bppr10percent_intervals.xls, but with bppr data points at the following light proportions: [1.00,0.5,0.25,0.1,0.01] 
+ 
     
 
     
@@ -373,6 +376,7 @@ class DataReader(object):
             #values
             row_doy_value = row[self.dayOfYearIndex].value
             row_lakeID_value = row[self.lakeIDIndex].value
+            print "light penetration proportion is", row[self.benthic_light_penetration_proportion_index].value
             row_light_penetration_proportion_value = float(row[self.benthic_light_penetration_proportion_index].value)                                        
             row_pmax_value = float(row[self.benthic_pmax_index].value)                            
             row_ik_value = float(row[self.benthic_ik_index].value)                                        
@@ -481,6 +485,9 @@ def main():
 
     p = Pond()
     for p in pondList:
+        shape = p.get_pond_shape()
+        bppmeasurements_sorted = p.get_benthic_measurements_sorted_by_depth()
+        bppmeasurements = p.get_benthic_photosynthesis_measurements()
         
 
         
@@ -518,81 +525,80 @@ def main():
         littoral_area = p.calculate_total_littoral_area()+0.0
         print "the percentage of 1% light is ", p.calculate_depth_of_specific_light_percentage(0.01)
         print "the total littoral zone is: ", littoral_area 
+        print "max depth is: ", shape.get_max_depth()
+        print "number of bpp measurements is:", len(bppmeasurements) 
         
         
         
 
         
-        
-        
-        
-        
-        current_depth = 0
-        depth_interval = 0.1
-        max_depth = p.get_max_depth()
-        depths = []
-        areas = []
-        pmaxes = []
-        iks = []
-        proportions = []
-        bp_measurements = p.get_benthic_photosynthesis_measurements()
-        phyto_measurements = p.get_phytoplankton_photosynthesis_measurements()
-        for measurement in bp_measurements:
-            bpmax = measurement.get_pmax()
-            ik = measurement.get_ik()
-            current_depth = measurement.get_depth()
-            area = p.pond_shape_object.get_water_surface_area_at_depth(current_depth)
-            light_proportion = p.calculate_light_proportion_at_depth(current_depth)
-            
-            depths.append(current_depth)
-            pmaxes.append(bpmax+0.0)
-            iks.append(ik+0.0)
-            areas.append(float(area))
-            proportions.append(light_proportion)
-            current_depth+=depth_interval    
-                    
-        p_depths = []
-        p_pmaxes = []
-        p_alphas = []
-        p_betas = []
-        
-        test_operands=[0.25,0.5,1.0,2.0,4.0]
-        old_pmax_values =[]
-        
-        pppr_values = []        
-        
-        
-        for operand in test_operands:
-            print "let's try that, but multiply every phyto pmax by ", operand
-            old_measurements = []
-            
-            print "length ", len(p.phytoplankton_photosynthesis_measurements)
-            i = 0
-            for measurement in p.phytoplankton_photosynthesis_measurements:
-                i+=1
-                old_measurement = copy.copy(measurement)
-#                 print "bob: ",i 
-                pmax_original = measurement.get_pmax()
-                new_pmax = pmax_original*operand
-                measurement.set_pmax(new_pmax)
-                old_measurements.append(old_measurement)
-                
-                
-                
-            
-            pppr_value = p.calculateDailyWholeLakePhytoplanktonPrimaryProductionPerMeterSquared(0.1)
-            pppr_values.append(pppr_value)
-            print "set all the phyto photo measurements. New PPPR for lake ", p.get_lake_id()," operand ", operand , " is ", pppr_value
-            
-            #reset measurements
-            p.set_phytoplankton_photosynthesis_measurements(old_measurements)
-            
-            #make sure 
-            for measurement in p.phytoplankton_photosynthesis_measurements:
-                print "the resetted value of measurement is ", measurement.get_pmax()
-                
-        
-        print "here's all the new pppr values for lake  ", p.get_lake_id(), ": ",pppr_values
+#         
+#         
+#         
+#         
+#         current_depth = 0
+#         depth_interval = 0.1
+#         max_depth = p.get_max_depth()
+#         depths = []
+#         areas = []
+#         pmaxes = []
+#         iks = []
+#         proportions = []
+#         bp_measurements = p.get_benthic_photosynthesis_measurements()
+#         phyto_measurements = p.get_phytoplankton_photosynthesis_measurements()
+#         for measurement in bp_measurements:
+#             bpmax = measurement.get_pmax()
+#             ik = measurement.get_ik()
+#             current_depth = measurement.get_depth()
+#             area = p.pond_shape_object.get_water_surface_area_at_depth(current_depth)
+#             light_proportion = p.calculate_light_proportion_at_depth(current_depth)
+#             
+#             depths.append(current_depth)
+#             pmaxes.append(bpmax+0.0)
+#             iks.append(ik+0.0)
+#             areas.append(float(area))
+#             proportions.append(light_proportion)
+#             current_depth+=depth_interval    
+#                     
+#         p_depths = []
+#         p_pmaxes = []
+#         p_alphas = []
+#         p_betas = []
+#         
+#         test_operands=[0.25,0.5,1.0,2.0,4.0]
+#         old_pmax_values =[]
+#         
+#         pppr_values = []        
+#         
+#         
+#         for operand in test_operands:
+#             print "let's try that, but multiply every phyto pmax by ", operand
+#             old_measurements = []
+#             
+# 
+#             i = 0
+#             for measurement in p.phytoplankton_photosynthesis_measurements:
+#                 i+=1
+#                 old_measurement = copy.copy(measurement)
+# #                 print "bob: ",i 
+#                 pmax_original = measurement.get_pmax()
+#                 new_pmax = pmax_original*operand
+#                 measurement.set_pmax(new_pmax)
+#                 old_measurements.append(old_measurement)
+#                 
+#                 
+#                 
+#             
+#             pppr_value = p.calculateDailyWholeLakePhytoplanktonPrimaryProductionPerMeterSquared(0.1)
+#             pppr_values.append(pppr_value)
+#             print "set all the phyto photo measurements. New PPPR for lake ", p.get_lake_id()," operand ", operand , " is ", pppr_value
+#             
+#             #reset measurements
+#             p.set_phytoplankton_photosynthesis_measurements(old_measurements)
+# 
+#                 
+#         
+#         print "here's all the new pppr values for lake  ", p.get_lake_id(), ": ",pppr_values
                 
 
             
@@ -605,8 +611,9 @@ def main():
         print ""
         print ""           
         print "**************************************************************************************"
-
-        
+    
+    print "done with all the ponds"
+    sys.exit()
 
 if __name__ == "__main__":
     main()

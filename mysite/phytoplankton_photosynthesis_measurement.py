@@ -39,6 +39,8 @@ class PhytoPlanktonPhotosynthesisMeasurement(PhotosynthesisMeasurement):
         self.set_thermal_layer(thermal_layer)
         self.set_phyto_alpha(phyto_alpha)
         self.set_phyto_beta(phyto_beta)
+        
+    
 
     def get_thermal_layer(self):
         return self.__thermal_layer

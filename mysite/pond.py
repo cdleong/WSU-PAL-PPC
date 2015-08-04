@@ -510,7 +510,7 @@ class Pond(object):
 
     def add_benthic_measurement_if_photic(self, measurement):
         z1Percent = self.calculate_depth_of_specific_light_percentage(self.PHOTIC_ZONE_LIGHT_PENETRATION_LEVEL_LOWER_BOUND)
-        if(measurement.get_depth()<z1Percent):
+        if(measurement.get_depth()<=z1Percent):
             self.add_benthic_measurement(measurement)
         else: 
             print "measurement not within photic zone"
@@ -1000,10 +1000,10 @@ class Pond(object):
         min_depth_given = min(depths_list)
         
         if(validated_depth>max_depth_given):            
-            print "depth is",validated_depth, "cannot interpolate outside the range of measurements given. setting to max."
+            print "depth is",validated_depth, "cannot interpolate outside the range of measurements given. setting to max depth = ", max_depth_given
             validated_depth= max_depth_given
         elif(min_depth_given<min_depth_given):
-            print "depth is",validated_depth, "cannot interpolate outside the range of measurements given. setting to min.."
+            print "depth is",validated_depth, "cannot interpolate outside the range of measurements given. setting to min depth = ", min_depth_given
             validated_depth= min_depth_given            
             
         
