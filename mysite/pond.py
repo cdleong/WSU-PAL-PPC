@@ -12,6 +12,7 @@ from mysite.benthic_photosynthesis_measurement import BenthicPhotosynthesisMeasu
 from mysite.bathymetric_pond_shape import BathymetricPondShape
 from scipy.interpolate import interp1d
 from scipy import interpolate
+from scipy.integrate import quad
 from mysite.phytoplankton_photosynthesis_measurement import PhytoPlanktonPhotosynthesisMeasurement
 
 
@@ -622,6 +623,137 @@ class Pond(object):
 
         return benthic_primary_production_answer    
     
+
+    ##############################
+    # BENTHIC PRIMARY PRODUCTIVITY
+    ##############################    
+    def calculateDailyWholeLakeBenthicPrimaryProductionPerMeterSquaredViaIntegration(self, depth_interval = DEFAULT_DEPTH_INTERVAL_FOR_CALCULATIONS, use_littoral_area=True):        
+        '''
+        !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        Almost everything else in this entire project works to make this method work.
+        #TODO: allow specification of littoral or surface area
+        #TODO: user-specified depth interval.
+        @return: Benthic Primary Production, mg C per meter squared, per day.
+        @rtype: float 
+        !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        '''
+        time_interval = self.get_time_interval()
+        length_of_day = self.get_length_of_day() #TODO: Fee normalized this around zero. Doesn't seem necessary, but might affect the periodic function. 
+ 
+ 
+
+        benthic_primary_production_answer = 0.0  # mg C per day
+        current_depth_interval = 0.0
+        previous_depth = 0.0
+        current_depth = 0.0
+        total_littoral_area=self.calculate_total_littoral_area()
+        total_surface_area = self.get_pond_shape().get_water_surface_area_at_depth(0.0)
+
+        depth_interval = Pond.DEFAULT_DEPTH_INTERVAL_FOR_CALCULATIONS #use the class value. 
+        #for each depth interval #TODO: integration over whole lake?
+        while current_depth<self.calculate_photic_zone_lower_bound():
+            bpprz = 0.0  # mg C* m^-2 *day    
+            
+            #depth interval calculation
+            previous_depth = current_depth
+            current_depth +=depth_interval
+            current_depth_interval = current_depth-previous_depth
+            
+
+
+            
+            area = self.get_pond_shape().get_sediment_surface_area_at_depth(current_depth, current_depth_interval)
+                        
+            ik_z = self.get_benthic_ik_at_depth(current_depth)
+            benthic_pmax_z = self.get_benthic_pmax_at_depth(current_depth)
+            
+            if(True==use_littoral_area):
+                f_area = area/total_littoral_area #TODO: these add up to 1.0, right?
+            else: 
+                f_area = area/total_surface_area
+
+            
+            # for every time interval                 
+            t = 0.0  # start of day
+            while t < length_of_day:
+                bpprzt = 0.0 
+                izt = self.calculate_light_at_depth_and_time(current_depth, t)
+                bpprzt = self.calculate_benthic_primary_productivity(izt, benthic_pmax_z, ik_z)
+                                
+                bpprz += bpprzt
+  
+                t += time_interval
+            
+            time_integrated_primary_production = quad(self.bpp_time_integrand, 0, length_of_day, args=(current_depth, benthic_pmax_z, ik_z))   
+            
+            bpprz = bpprz / (1 / time_interval)  # account for the fractional time interval. e.g. dividing by 1/0.25 is equiv to dividing by 4
+            bpprz = time_integrated_primary_production[0]
+#             print "time integrated bpprz is ", time_integrated_primary_production
+#             print "summation bpprz is ", bpprz
+            weighted_bpprz = bpprz * f_area  # normalizing
+            
+
+                    
+                
+            benthic_primary_production_answer += weighted_bpprz    
+                    
+        integrated_bpp = quad(self.bpp_depth_integrand, 0, self.calculate_photic_zone_lower_bound(),args=(True))
+        benthic_primary_production_answer = integrated_bpp[0]
+        return benthic_primary_production_answer        
+    
+    #It's not possible. sediment surface area at depth is inextricably tied to the idea of a depth interval.
+    def bpp_depth_integrand(self, current_depth, use_littoral_area):
+#         print "CURRENT DEPTH IS", current_depth
+        total_littoral_area=self.calculate_total_littoral_area()
+        total_surface_area = self.get_pond_shape().get_water_surface_area_at_depth(0.0)
+        length_of_day = self.get_length_of_day() #TODO: Fee normalized this around zero. Doesn't seem necessary, but might affect the periodic function.        
+        bpprz = 0.0  # mg C* m^-2 *day    
+         
+        #depth interval calculation
+        previous_depth = current_depth
+#         current_depth +=depth_interval
+#         current_depth_interval = current_depth-previous_depth
+         
+         
+         
+         
+        area = self.get_pond_shape().get_sediment_surface_area_at_depth(current_depth, 0.1) #use 0.1? 
+                     
+        ik_z = self.get_benthic_ik_at_depth(current_depth)
+        benthic_pmax_z = self.get_benthic_pmax_at_depth(current_depth)
+         
+        if(True==use_littoral_area):
+            f_area = area/total_littoral_area #TODO: these add up to 1.0, right?
+        else: 
+            f_area = area/total_surface_area
+         
+         
+
+         
+        time_integrated_primary_production = quad(self.bpp_time_integrand, 0, length_of_day, args=(current_depth, benthic_pmax_z, ik_z))   
+         
+        bpprz = time_integrated_primary_production[0]
+        #             print "time integrated bpprz is ", time_integrated_primary_production
+        #             print "summation bpprz is ", bpprz
+        weighted_bpprz = bpprz * f_area  # normalizing
+        return weighted_bpprz
+        
+        
+                
+                        
+        
+    
+    
+    def bpp_time_integrand(self, time, current_depth, benthic_pmax_z, ik_z):
+        bpprzt = 0.0 
+#         print "TIME IS", time
+        izt = self.calculate_light_at_depth_and_time(current_depth, time)
+        bpprzt = self.calculate_benthic_primary_productivity(izt, benthic_pmax_z, ik_z)
+                        
+        
+        return bpprzt        
+        
+    
     def get_benthic_pmax_at_depth(self, depth=0.0):
         '''
         Get Benthic Pmax At Depth
@@ -702,19 +834,16 @@ class Pond(object):
         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         '''
         
-        #TODO: validate interval
-        
+        #TODO: validate interval        
         time_interval = self.get_time_interval()
         length_of_day = self.get_length_of_day()  
  
  
 
         phyto_primary_production_answer = 0.0  # mg C per day
-        current_depth = 0.0
-#         total_littoral_area=self.calculate_total_littoral_area()
+        current_depth = 0.0 #lake surface
         photic_zone_lower_bound = self.calculate_photic_zone_lower_bound()
         photic_volume = self.get_pond_shape().get_volume_above_depth(photic_zone_lower_bound, depth_interval)
-#         print "photic volume is ", photic_volume
 
         #for each depth interval #TODO: integration over whole lake?
         while current_depth<self.calculate_photic_zone_lower_bound():
@@ -748,6 +877,8 @@ class Pond(object):
         
 #         print "phyto answer is ", phyto_primary_production_answer
         return phyto_primary_production_answer #essentially a weighted average.         
+    
+    
     
     def get_phyto_pmax_at_depth(self, depth):
         '''
@@ -869,10 +1000,14 @@ class Pond(object):
         Calculate Photic Zone Lower Bound
         This is actually redundant. It can be accomplished just by calling calculate_depth_of_specific_light_percentage with PHOTIC_ZONE_LIGHT_PENETRATION_LEVEL_LOWER_BOUND.
         That said, I might one day wish to decouple photic zone lower bound from calculate_depth_of_specific_light_percentage, so I'm leaving this.
+        NOTE: returns max depth if lower bound is deeper than max depth.
         @return: lower bound of the photic zone, in meters.
         @rtype: float
         '''
         lower_bound = self.calculate_depth_of_specific_light_percentage(self.PHOTIC_ZONE_LIGHT_PENETRATION_LEVEL_LOWER_BOUND)
+        max_depth = self.get_max_depth()
+        if(lower_bound>max_depth):
+            lower_bound = max_depth
         return lower_bound
         
             

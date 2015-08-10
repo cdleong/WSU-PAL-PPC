@@ -518,11 +518,13 @@ def main():
             
         print "**************************************************************************************" 
         bppr = p.calculateDailyWholeLakeBenthicPrimaryProductionPerMeterSquared(0.1)
+        bppr_integration = p.calculateDailyWholeLakeBenthicPrimaryProductionPerMeterSquaredViaIntegration(0.1)
         bppr_surface_area = p.calculateDailyWholeLakeBenthicPrimaryProductionPerMeterSquared(0.1, False)
         pppr = p.calculateDailyWholeLakePhytoplanktonPrimaryProductionPerMeterSquared(0.1)
         
         print "lake ID: ", pid, " DOY: ", doy
         print "bppr is ", str(bppr), " mg C per square meter of littoral area"
+        print "bppr using time-integration is ", str(bppr_integration), " mg C per square meter of littoral area"
         print "bppr is ", str(bppr_surface_area),  " mg C per square meter of lake surface area"
         print "pppr is ", str(pppr)
         littoral_area = p.calculate_total_littoral_area()+0.0
