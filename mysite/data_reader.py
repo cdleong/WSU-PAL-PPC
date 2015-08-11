@@ -40,7 +40,8 @@ class DataReader(object):
 #     filename = "Jul_08_data_template_example_with_benthic_light_proportions.xlsx" #"reasonable" values for everything, benthic data uses light penetration proportions calculated from the 10 cm individuals
 #     filename = "Aug_03_test_data.xls" #"Same as Jul_08_data_template_example_with_benthic_light_proportions, but added in BIGMU lake.
 #     filename = "Aug_03_test_data_bppr10percent_intervals.xls" #"Same as Aug_03_test_data, but reducing data points to 10-percent intervals.
-    filename = "Aug_03_test_data_bppr5measurements.xls" #"Same as Aug_03_test_data_bppr10percent_intervals.xls, but with bppr data points at the following light proportions: [1.00,0.5,0.25,0.1,0.01] 
+#     filename = "Aug_03_test_data_bppr5measurements.xls" #"Same as Aug_03_test_data_bppr10percent_intervals.xls, but with bppr data points at the following light proportions: [1.00,0.5,0.25,0.1,0.01]
+    filename = "Aug_03_test_data_pppr1995_day152_cryst.xls" #"Same as Aug_03_test_data_bppr5measurements.xls, but altered PPR data to test PPR calculations. test data taken from Phyte_90s.csv. Year=1995, DOY=152. Depth is max depth. Just assuming 1 layer. 
  
     
 
@@ -518,13 +519,11 @@ def main():
             
         print "**************************************************************************************" 
         bppr = p.calculateDailyWholeLakeBenthicPrimaryProductionPerMeterSquared(0.1)
-        bppr_integration = p.calculateDailyWholeLakeBenthicPrimaryProductionPerMeterSquaredViaIntegration(0.1)
         bppr_surface_area = p.calculateDailyWholeLakeBenthicPrimaryProductionPerMeterSquared(0.1, False)
         pppr = p.calculateDailyWholeLakePhytoplanktonPrimaryProductionPerMeterSquared(0.1)
         
         print "lake ID: ", pid, " DOY: ", doy
         print "bppr is ", str(bppr), " mg C per square meter of littoral area"
-        print "bppr using time-integration is ", str(bppr_integration), " mg C per square meter of littoral area"
         print "bppr is ", str(bppr_surface_area),  " mg C per square meter of lake surface area"
         print "pppr is ", str(pppr)
         littoral_area = p.calculate_total_littoral_area()+0.0
