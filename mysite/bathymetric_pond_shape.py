@@ -255,7 +255,7 @@ class BathymetricPondShape(PondShape):
         # areas[z0]*interval, which overestimates by error    :result is correctAnswer+error
         # areas[z1]*interval, which underestimates by error   :result is correctAnswer-error 
         # correct answer should be areas[z0]*interval -error or areas[z1]*interval +error
-        #    
+        #     
         ####################################################      
         
         if(depth_interval is None):
@@ -336,7 +336,7 @@ class BathymetricPondShape(PondShape):
         validated_depth = self.validate_depth(depth)
         sediment_area_at_depth = self.get_sediment_surface_area_at_depth(validated_depth, depth_interval)
         fractional_sediment_area = sediment_area_at_depth/total_sediment_area
-        print "sediment area at depth ", depth," is ", sediment_area_at_depth, ", which, with total sediment area ", total_sediment_area, " and depth interval of ", depth_interval, " gives fractional area of ", fractional_sediment_area
+#         print "sediment area at depth ", depth," is ", sediment_area_at_depth, ", which, with total sediment area ", total_sediment_area, " and depth interval of ", depth_interval, " gives fractional area of ", fractional_sediment_area
         return fractional_sediment_area
     
     
@@ -401,28 +401,33 @@ def main():
     max_depth = shape_instance.get_max_depth()
     half_max_depth = max_depth / 2
     
-    print "sediment area total above depth ", max_depth, " is ", shape_instance.get_sediment_area_above_depth(max_depth)
-    print "sediment area total above depth ", half_max_depth, " is ", shape_instance.get_sediment_area_above_depth(half_max_depth)
-    
-    print "total volume is", shape_instance.get_volume()
-    print "total volume above depth ", max_depth, " is ", shape_instance.get_volume_above_depth(max_depth)
-    print "total volume above depth ", half_max_depth, " is ", shape_instance.get_volume_above_depth(half_max_depth)
-    
-    print "mean depth is ", shape_instance.get_mean_depth()
+#     print "sediment area total above depth ", max_depth, " is ", shape_instance.get_sediment_area_above_depth(max_depth)
+#     print "sediment area total above depth ", half_max_depth, " is ", shape_instance.get_sediment_area_above_depth(half_max_depth)
+#     
+#     print "total volume is", shape_instance.get_volume()
+#     print "total volume above depth ", max_depth, " is ", shape_instance.get_volume_above_depth(max_depth)
+#     print "total volume above depth ", half_max_depth, " is ", shape_instance.get_volume_above_depth(half_max_depth)
+#     
+#     print "mean depth is ", shape_instance.get_mean_depth()
 
-    
+    #testing volume calculations:
+    vol_depth = 1
+    depth_interval = 1
+    print "volume at depth ",vol_depth," with dz = ", depth_interval, " is ", shape_instance.get_volume_at_depth(vol_depth, depth_interval)
+    print "volume above depth ",vol_depth," with dz = ", depth_interval, " is ", shape_instance.get_volume_above_depth(vol_depth, depth_interval)
+     
      
     depth = 0.0
     total_fraction = 0.0
     while (depth<=shape_instance.get_max_depth()):
-        print "water surface area at depth ", depth, " is ", shape_instance.get_water_surface_area_at_depth(depth) 
-        print "sediment surface area at depth ", depth, " with interval (in meters) of ", 1, " is: ", shape_instance.get_sediment_surface_area_at_depth(depth,1)
+#         print "water surface area at depth ", depth, " is ", shape_instance.get_water_surface_area_at_depth(depth) 
+#         print "sediment surface area at depth ", depth, " with interval (in meters) of ", 1, " is: ", shape_instance.get_sediment_surface_area_at_depth(depth,1)
         f_area = shape_instance.get_fractional_sediment_area_at_depth(depth, littoral_area)
-        print "fractional sediment area is ", f_area
-        print "current total fraction is ", total_fraction
+#         print "fractional sediment area is ", f_area
+#         print "current total fraction is ", total_fraction
         depth+=1
         total_fraction+=f_area
-    print "total fraction should add to 1, and is: ", total_fraction
+#     print "total fraction should add to 1, and is: ", total_fraction
      
     
 
