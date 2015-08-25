@@ -12,9 +12,9 @@ from mysite.benthic_photosynthesis_measurement import BenthicPhotosynthesisMeasu
 from mysite.bathymetric_pond_shape import BathymetricPondShape
 from scipy.interpolate import interp1d
 from scipy import interpolate
-from scipy.integrate import quad
 from mysite.phytoplankton_photosynthesis_measurement import PhytoPlanktonPhotosynthesisMeasurement
-
+from mysite.season_light import SeasonalLightEstimator
+import copy
 
 
 
@@ -50,6 +50,9 @@ class Pond(object):
     MAXIMUM_NUMBER_OF_THERMAL_LAYERS = 3
     
     DEFAULT_DEPTH_INTERVAL_FOR_CALCULATIONS = 0.1 #ten centimeters, 0.1 meters. Arbitrary.  
+    
+    DEFAULT_FREEZE_DAY = 349#December 15 #arbitrary default value, based on median from http://www.epa.gov/climatechange/pdfs/CI-snow-and-ice-2014.pdf
+    DEFAULT_THAW_DAY = 135 #May 15 #arbitrary default value, based on median from http://www.epa.gov/climatechange/pdfs/CI-snow-and-ice-2014.pdf    
     
     
     ###################################
@@ -625,17 +628,41 @@ class Pond(object):
         
                 
                         
+    def calculate_total_seasonal_benthic_primary_production(self, depth_interval = DEFAULT_DEPTH_INTERVAL_FOR_CALCULATIONS, use_littoral_area=True):
+        '''
+        Stub implementation
+        Future work: calculate this accurately
+        '''
+        print ""
+        seasonal_light_estimator = SeasonalLightEstimator(self.latitude)
+        season_start_day = self.DEFAULT_THAW_DAY
+        season_end_day = self.DEFAULT_FREEZE_DAY
+        pond_day = copy.deepcopy(self)
+        littoral_area = self.calculate_total_littoral_area()
+        surface_area = self.get_pond_shape().get_water_surface_area_at_depth(0) #TODO: more elegant.
+        day = season_start_day
+        tbpp = 0.0 #total benthic primary production
+        while day<season_end_day:
+            noon_surface_light = seasonal_light_estimator.calculate_noon_light(day)
+            length_of_day = seasonal_light_estimator.calculate_day_length(day)            
+            pond_day.set_noon_surface_light(noon_surface_light)
+            pond_day.set_length_of_day(length_of_day)
+            bppr= pond_day.calculateDailyWholeLakeBenthicPrimaryProductionPerMeterSquared(depth_interval, use_littoral_area)
+            print "bppr on day ", day, " is ", bppr
+            tbpp_day = 0.0
+            if(True==use_littoral_area):
+                tbpp_day=bppr*littoral_area
+            else:
+                tbpp_day=bppr*surface_area
+            tbpp+=tbpp_day
+            day = day+ 1
         
-    
-    
-    def bpp_time_integrand(self, time, current_depth, benthic_pmax_z, ik_z):
-        bpprzt = 0.0 
-#         print "TIME IS", time
-        izt = self.calculate_light_at_depth_and_time(current_depth, time)
-        bpprzt = self.calculate_benthic_primary_productivity(izt, benthic_pmax_z, ik_z)
-                        
+        return tbpp
         
-        return bpprzt        
+        
+        
+        
+        
         
     
     def get_benthic_pmax_at_depth(self, depth=0.0):
@@ -755,7 +782,7 @@ class Pond(object):
             # for every time interval                 
             t = 0.0  # start of day
             while t < length_of_day:
-                ppprzt = 0.0 
+                ppprzt = 0.0  
                 izt = self.calculate_light_at_depth_and_time(current_depth, t) #umol*m^-2*s^-1
                 ppprzt = self.calculate_phytoplankton_primary_productivity(izt, current_depth) #(mg/m^3/hr)
                                 
@@ -1036,10 +1063,10 @@ class Pond(object):
         min_depth_given = min(depths_list)
         
         if(validated_depth>max_depth_given):            
-            print "depth is",validated_depth, "cannot interpolate outside the range of measurements given. setting to max depth = ", max_depth_given
+#             print "depth is",validated_depth, "cannot interpolate outside the range of measurements given. setting to max depth = ", max_depth_given
             validated_depth= max_depth_given
         elif(min_depth_given<min_depth_given):
-            print "depth is",validated_depth, "cannot interpolate outside the range of measurements given. setting to min depth = ", min_depth_given
+#             print "depth is",validated_depth, "cannot interpolate outside the range of measurements given. setting to min depth = ", min_depth_given
             validated_depth= min_depth_given            
             
         
@@ -1048,11 +1075,11 @@ class Pond(object):
         y = values_list 
         f = interp1d(x, y)
         
-        #magic from # Uses http://docs.scipy.org/doc/scipy/reference/tutorial/interpolate.html
+        #magic from http://docs.scipy.org/doc/scipy/reference/tutorial/interpolate.html
         #SPLINES....!!!
-        tck = interpolate.splrep(x, y, s=0)
-        xnew = [validated_depth]
-        spline_interpolated = interpolate.splev(xnew, tck, der=0) #0th derivative
+#         tck = interpolate.splrep(x, y, s=0)
+#         xnew = [validated_depth]
+#         spline_interpolated = interpolate.splev(xnew, tck, der=0) #0th derivative
         linear_interpolated = f(validated_depth)         
         
         
@@ -1191,6 +1218,9 @@ def main():
     print "volume of photic zone is ", p.calculate_total_photic_volume()
     
     print "pppr is", p.calculateDailyWholeLakePhytoplanktonPrimaryProductionPerMeterSquared(0.1)
+    
+    total_seasonal_benthic_production = p.calculate_total_seasonal_benthic_primary_production()
+    print "total seasonal BPP is ", total_seasonal_benthic_production
 
 
 
