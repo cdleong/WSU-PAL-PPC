@@ -100,7 +100,7 @@ def indexView():
             bpprList =[]
             doyList =[]
             for pond in pondList:
-                bppr = pond.calculateDailyWholeLakeBenthicPrimaryProductionPerMeterSquared(0.25) #use quarter-hours
+                bppr = pond.calculateDailyWholeLakeBenthicPrimaryProductionPerMeterSquared()
                 bpprList.append(bppr)
                 doy =pond.getDayOfYear()
                 doyList.append(doy)
@@ -110,22 +110,8 @@ def indexView():
 
             return redirect(url_for("bpprtest",filename=filename))
     return """
-        <h2>Protoype built in Flask and Python. Click here to see a graph of light in a pond! </h2>
 
-
-
-<!--
-        <form method="POST" action="%s" id="form" onchange="check()">
-            Mean depth of pond (m): <input type="number" id="meanDepth" name="meanDepth" min="0" max = "500" step="0.1" value = "20.0" required/>
-            Maximum depth of pond (m): <input type="number" id="maxDepth" name="maxDepth" min="0" max = "500" step="0.1" value = "20.0" required/>
-            Phosphorus (mg/m^3): <input type="number" name="phosphorus" min="0" max = "2000" step="0.1" value = "100.0" required/>
-            <input type="submit" value="graph!">
-        </form>
--->
-
-        <p>[Removed for now]</p>
-
-        <h2>Prototype 2: Upload Data File</h2>
+        <h2>Prototype: Upload Data File</h2>
         <p>Download template file <a href="%s" download="example_data.xlsx">here</a></p>
         <form action="" method=post enctype=multipart/form-data>
           <p><input type=file name=file>
@@ -144,7 +130,7 @@ def indexView():
         }
         </script>
 
-        """ % (url_for('lightGraph'), TEMPLATE_FILE_ROUTE)
+        """ % (TEMPLATE_FILE_ROUTE)
 
 
 
@@ -199,7 +185,6 @@ def export_view():
     # Code for creating Excel data and
     # inserting into Flask response
     ##################################
-    workbook = xlwt.Workbook()
 
     #.... code here for adding worksheets and cells
     #Create a new workbook object
@@ -211,8 +196,8 @@ def export_view():
     #################
     #add values
     #################
-        #get inputs
-    inputFile="asdfasdf"
+    #get inputs
+    inputFile = ""
     try:
             inputFile = request.args.get('filename')
     except:
@@ -548,4 +533,5 @@ def dailyTPP():
     return response
 
 
-
+if __name__ == '__main__':
+    app.run()

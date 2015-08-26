@@ -225,16 +225,12 @@ class DataReader(object):
            self.BENTHIC_PHOTO_DATA_SHEET_NAME in sheet_names and 
            self.PHYTOPLANKTON_PHOTO_DATA_SHEET_NAME in sheet_names and
            self.SHAPE_DATA_SHEET_NAME in sheet_names):
-#             print "pond_data sheet detected"
             pond_data_workSheet = book.sheet_by_name(self.POND_DATA_SHEET_NAME)
-#             print "benthic photosynthesis data sheet detected"
             benthic_photo_data_workSheet = book.sheet_by_name(self.BENTHIC_PHOTO_DATA_SHEET_NAME)
-#             print "phytoplankton photosynthesis data sheet detected"
             phytoplankton_photo_data_sheet = book.sheet_by_name(self.PHYTOPLANKTON_PHOTO_DATA_SHEET_NAME)
-#             print "lake shape data sheet detected"
             shape_data_sheet = book.sheet_by_name(self.SHAPE_DATA_SHEET_NAME)
         else:
-#             print "Standard sheet names not detected. Attempting to read using sheet indices."
+            #Standard sheet names not detected. Attempting to read using sheet indices.
             pond_data_workSheet = book.sheet_by_index(self.POND_DATA_SHEET_INDEX)
             benthic_photo_data_workSheet = book.sheet_by_index(self.BENTHIC_PHOTO_DATA_SHEET_INDEX)
             phytoplankton_photo_data_sheet = book.sheet_by_name(self.PHYTOPLANKTON_PHOTO_DATA_SHEET_INDEX)
@@ -244,14 +240,10 @@ class DataReader(object):
         #Rows, Columns
         ##############
             
-        pond_data_workSheet_num_rows = pond_data_workSheet.nrows
-#         print "the number of rows in sheet " + pond_data_workSheet.name +  " is " + str(pond_data_workSheet_num_rows)        
+        pond_data_workSheet_num_rows = pond_data_workSheet.nrows 
         benthic_data_workSheet_num_rows = benthic_photo_data_workSheet.nrows
-#         print "the number of rows in sheet " + benthic_photo_data_workSheet.name + " is " + str(benthic_data_workSheet_num_rows)
         phytoplankton_photo_data_sheet_num_rows = phytoplankton_photo_data_sheet.nrows
-#         print "the number of rows in sheet " + phytoplankton_photo_data_sheet.name + " is " + str(phytoplankton_photo_data_sheet_num_rows)
         shape_data_sheet_num_rows = shape_data_sheet.nrows
-#         print "the number of rows in sheet " + shape_data_sheet.name + " is " + str(shape_data_sheet_num_rows)
         
         
         

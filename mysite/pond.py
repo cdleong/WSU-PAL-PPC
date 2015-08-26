@@ -78,7 +78,7 @@ class Pond(object):
     #latitude, for seasonal calculations. #TODO: Calculate based on Sudhakhar et al http://www.journal-ijeee.com/content/4/1/21
     latitude = 0.0 
     
-    # default intervals for calculations 
+    # default intervals for calculations is quarter-hours
     time_interval = 0.25
 
 
@@ -119,13 +119,6 @@ class Pond(object):
         self.set_phytoplankton_photosynthesis_measurements(phytoplankton_photosynthesis_measurements)
         self.set_latitude(lattitude)
         self.set_time_interval(time_interval)
-
-
-
-
-
-
-
 
 
 
