@@ -540,6 +540,15 @@ def main():
         tbpp = p.calculate_total_seasonal_benthic_primary_production()
         print "total seasonal benthic primary production (mgC) would be ",tbpp
         print "in kilograms of carbon, that would be ",tbpp/1000 
+        print "in tons of carbon, that would be", tbpp/(1000*1000)
+        print "in terms of milligrams of carbon per meter squared of littoral area that would be", tbpp/p.calculate_total_littoral_area()
+        
+        
+        tppp = p.calculate_total_seasonal_phytoplankton_primary_production() 
+        print "total seasonal benthic primary production (mgC) would be ",tppp
+        print "in kilograms of carbon, that would be ",tppp/1000 
+        print "in tons of carbon, that would be", tppp/(1000*1000)
+        print "in terms of milligrams of carbon per meter squared of littoral area that would be", tppp/p.calculate_total_littoral_area()        
 
                 
 

@@ -630,8 +630,8 @@ class Pond(object):
                         
     def calculate_total_seasonal_benthic_primary_production(self, depth_interval = DEFAULT_DEPTH_INTERVAL_FOR_CALCULATIONS, use_littoral_area=True):
         '''
-        Stub implementation
-        Future work: calculate this accurately
+        Incomplete implementation
+        Future work: calculate this accurately TODO: that.
         '''
         print ""
         seasonal_light_estimator = SeasonalLightEstimator(self.latitude)
@@ -641,23 +641,23 @@ class Pond(object):
         littoral_area = self.calculate_total_littoral_area()
         surface_area = self.get_pond_shape().get_water_surface_area_at_depth(0) #TODO: more elegant.
         day = season_start_day
-        tbpp = 0.0 #total benthic primary production
+        tppp = 0.0 #total benthic primary production
         while day<season_end_day:
             noon_surface_light = seasonal_light_estimator.calculate_noon_light(day)
             length_of_day = seasonal_light_estimator.calculate_day_length(day)            
             pond_day.set_noon_surface_light(noon_surface_light)
             pond_day.set_length_of_day(length_of_day)
             bppr= pond_day.calculateDailyWholeLakeBenthicPrimaryProductionPerMeterSquared(depth_interval, use_littoral_area)
-            print "bppr on day ", day, " is ", bppr
+#             print "bppr on day ", day, " is ", bppr
             tbpp_day = 0.0
             if(True==use_littoral_area):
                 tbpp_day=bppr*littoral_area
             else:
                 tbpp_day=bppr*surface_area
-            tbpp+=tbpp_day
+            tppp+=tbpp_day
             day = day+ 1
         
-        return tbpp
+        return tppp
         
         
         
@@ -801,7 +801,37 @@ class Pond(object):
         pppr_m2 =pppr_total/surface_area  #mgC/m^2/day 
         return pppr_m2 #mgC/m^2/day          
     
-    
+
+        
+                
+                        
+    def calculate_total_seasonal_phytoplankton_primary_production(self, depth_interval = DEFAULT_DEPTH_INTERVAL_FOR_CALCULATIONS):
+        '''
+        Incomplete implementation
+        Future work: calculate this accurately TODO: that.
+        '''
+        print ""
+        seasonal_light_estimator = SeasonalLightEstimator(self.latitude)
+        season_start_day = self.DEFAULT_THAW_DAY
+        season_end_day = self.DEFAULT_FREEZE_DAY
+        pond_day = copy.deepcopy(self)
+        surface_area = self.get_pond_shape().get_water_surface_area_at_depth(0) #TODO: more elegant.
+        day = season_start_day
+        tbpp = 0.0 #total benthic primary production
+        while day<season_end_day:
+            noon_surface_light = seasonal_light_estimator.calculate_noon_light(day)
+            length_of_day = seasonal_light_estimator.calculate_day_length(day)            
+            pond_day.set_noon_surface_light(noon_surface_light)
+            pond_day.set_length_of_day(length_of_day)
+            pppr= pond_day.calculateDailyWholeLakePhytoplanktonPrimaryProductionPerMeterSquared()
+#             print "pppr on day ", day, " is ", pppr
+            tbpp_day = 0.0
+
+            tbpp_day=pppr*surface_area
+            tbpp+=tbpp_day
+            day = day+ 1
+        
+        return tbpp    
     
     def get_phyto_pmax_at_depth(self, depth):
         '''
