@@ -83,6 +83,10 @@ class BathymetricPondShape(PondShape):
         validated_depth_interval = self.validate_depth_interval(depth_interval)
         max_depth = self.get_max_depth()
         total_area = self.get_sediment_area_above_depth(max_depth)
+        if(0==total_area):
+            #only possible if the sides are literally vertical. 
+            return max_depth
+#         print "calculating mean depth, max_depth is ", max_depth, " total_area is ", total_area
         
                 
         current_depth = validated_depth_interval  # no point starting at 0, since that's just gonna be zero anyway.
@@ -91,6 +95,7 @@ class BathymetricPondShape(PondShape):
             area_at_depth = self.get_sediment_surface_area_at_depth(current_depth) # there are this many square meters at this depth            
             weighted_total+=area_at_depth*current_depth 
             current_depth += validated_depth_interval
+        
         mean_depth  = weighted_total/total_area
         return mean_depth  
 
@@ -196,6 +201,8 @@ class BathymetricPondShape(PondShape):
         
         # it's _possible_ that the lake gets *wider* as it goes down. 
         sediment_surface_area = abs(sediment_surface_area)
+        
+#         print "calculating sediment surface area, upper_water_area is ", upper_water_area, " lower_water_area is ", lower_water_area 
           
         return sediment_surface_area
 
@@ -310,7 +317,7 @@ class BathymetricPondShape(PondShape):
             current_area = self.get_sediment_surface_area_at_depth(current_depth, validated_depth_interval)
             total_area += current_area 
             current_depth += validated_depth_interval
-#             print "current depth: ", current_depth, ". sediment area with interval ", validated_depth_interval , " is ", current_area
+#             print "Calculating sediment area above depth",validated_depth ,"current depth: ", current_depth, ". sediment area with interval ", validated_depth_interval , " is ", current_area
         
         return total_area 
     
