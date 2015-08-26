@@ -537,74 +537,19 @@ def main():
         
         
 
+        tbpp = p.calculate_total_seasonal_benthic_primary_production()
+        print "total seasonal benthic primary production (mgC) would be ",tbpp
+        print "in kilograms of carbon, that would be ",tbpp/1000 
+        print "in tons of carbon, that would be", tbpp/(1000*1000)
+        print "in terms of milligrams of carbon per meter squared of littoral area that would be", tbpp/p.calculate_total_littoral_area()
         
-#         
-#         
-#         
-#         
-#         current_depth = 0
-#         depth_interval = 0.1
-#         max_depth = p.get_max_depth()
-#         depths = []
-#         areas = []
-#         pmaxes = []
-#         iks = []
-#         proportions = []
-#         bp_measurements = p.get_benthic_photosynthesis_measurements()
-#         phyto_measurements = p.get_phytoplankton_photosynthesis_measurements()
-#         for measurement in bp_measurements:
-#             bpmax = measurement.get_pmax()
-#             ik = measurement.get_ik()
-#             current_depth = measurement.get_depth()
-#             area = p.pond_shape_object.get_water_surface_area_at_depth(current_depth)
-#             light_proportion = p.calculate_light_proportion_at_depth(current_depth)
-#             
-#             depths.append(current_depth)
-#             pmaxes.append(bpmax+0.0)
-#             iks.append(ik+0.0)
-#             areas.append(float(area))
-#             proportions.append(light_proportion)
-#             current_depth+=depth_interval    
-#                     
-#         p_depths = []
-#         p_pmaxes = []
-#         p_alphas = []
-#         p_betas = []
-#         
-#         test_operands=[0.25,0.5,1.0,2.0,4.0]
-#         old_pmax_values =[]
-#         
-#         pppr_values = []        
-#         
-#         
-#         for operand in test_operands:
-#             print "let's try that, but multiply every phyto pmax by ", operand
-#             old_measurements = []
-#             
-# 
-#             i = 0
-#             for measurement in p.phytoplankton_photosynthesis_measurements:
-#                 i+=1
-#                 old_measurement = copy.copy(measurement)
-# #                 print "bob: ",i 
-#                 pmax_original = measurement.get_pmax()
-#                 new_pmax = pmax_original*operand
-#                 measurement.set_pmax(new_pmax)
-#                 old_measurements.append(old_measurement)
-#                 
-#                 
-#                 
-#             
-#             pppr_value = p.calculateDailyWholeLakePhytoplanktonPrimaryProductionPerMeterSquared(0.1)
-#             pppr_values.append(pppr_value)
-#             print "set all the phyto photo measurements. New PPPR for lake ", p.get_lake_id()," operand ", operand , " is ", pppr_value
-#             
-#             #reset measurements
-#             p.set_phytoplankton_photosynthesis_measurements(old_measurements)
-# 
-#                 
-#         
-#         print "here's all the new pppr values for lake  ", p.get_lake_id(), ": ",pppr_values
+        
+        tppp = p.calculate_total_seasonal_phytoplankton_primary_production() 
+        print "total seasonal benthic primary production (mgC) would be ",tppp
+        print "in kilograms of carbon, that would be ",tppp/1000 
+        print "in tons of carbon, that would be", tppp/(1000*1000)
+        print "in terms of milligrams of carbon per meter squared of littoral area that would be", tppp/p.calculate_total_littoral_area()        
+
                 
 
             
