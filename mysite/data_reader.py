@@ -41,7 +41,8 @@ class DataReader(object):
 #     filename = "Aug_03_test_data.xls" #"Same as Jul_08_data_template_example_with_benthic_light_proportions, but added in BIGMU lake.
 #     filename = "Aug_03_test_data_bppr10percent_intervals.xls" #"Same as Aug_03_test_data, but reducing data points to 10-percent intervals.
 #     filename = "Aug_03_test_data_bppr5measurements.xls" #"Same as Aug_03_test_data_bppr10percent_intervals.xls, but with bppr data points at the following light proportions: [1.00,0.5,0.25,0.1,0.01]
-    filename = "Aug_03_test_data_pppr1995_day152_cryst.xls" #"Same as Aug_03_test_data_bppr5measurements.xls, but altered PPR data to test PPR calculations. test data taken from Phyte_90s.csv. Year=1995, DOY=152. Depth is max depth. Just assuming 1 layer. 
+#     filename = "Aug_03_test_data_pppr1995_day152_cryst.xls" #"Same as Aug_03_test_data_bppr5measurements.xls, but altered PPR data to test PPR calculations. test data taken from Phyte_90s.csv. Year=1995, DOY=152. Depth is max depth. Just assuming 1 layer.
+    filename = "Aug_26_test_data.xls" #"Same as Aug_03_test_data_bppr5measurements.xls, but altered PPR data to test PPR calculations. test data taken from Phyte_90s.csv. Year=1995, DOY=152. Depth is max depth. Just assuming 1 layer.  
  
     
 
@@ -529,18 +530,18 @@ def main():
         
         
 
-        tbpp = p.calculate_total_seasonal_benthic_primary_production()
-        print "total seasonal benthic primary production (mgC) would be ",tbpp
-        print "in kilograms of carbon, that would be ",tbpp/1000 
-        print "in tons of carbon, that would be", tbpp/(1000*1000)
-        print "in terms of milligrams of carbon per meter squared of littoral area that would be", tbpp/p.calculate_total_littoral_area()
-        
-        
-        tppp = p.calculate_total_seasonal_phytoplankton_primary_production() 
-        print "total seasonal benthic primary production (mgC) would be ",tppp
-        print "in kilograms of carbon, that would be ",tppp/1000 
-        print "in tons of carbon, that would be", tppp/(1000*1000)
-        print "in terms of milligrams of carbon per meter squared of littoral area that would be", tppp/p.calculate_total_littoral_area()        
+#         tbpp = p.calculate_total_seasonal_benthic_primary_production()
+#         print "total seasonal benthic primary production (mgC) would be ",tbpp
+#         print "in kilograms of carbon, that would be ",tbpp/1000 
+#         print "in tons of carbon, that would be", tbpp/(1000*1000)
+#         print "in terms of milligrams of carbon per meter squared of littoral area that would be", tbpp/p.calculate_total_littoral_area()
+#         
+#         
+#         tppp = p.calculate_total_seasonal_phytoplankton_primary_production() 
+#         print "total seasonal benthic primary production (mgC) would be ",tppp
+#         print "in kilograms of carbon, that would be ",tppp/1000 
+#         print "in tons of carbon, that would be", tppp/(1000*1000)
+#         print "in terms of milligrams of carbon per meter squared of littoral area that would be", tppp/p.calculate_total_littoral_area()        
 
                 
 

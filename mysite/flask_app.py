@@ -26,9 +26,9 @@ from werkzeug.datastructures import Headers #used for exporting files?
 
 #How to work with file uploads http://flask.pocoo.org/docs/0.10/patterns/fileuploads/
 # This is the path to the upload directory
-UPLOAD_FOLDER = '/tmp/'
+UPLOAD_FOLDER = 'tmp'
 ALLOWED_EXTENSIONS = set(['txt', 'xls', 'xlsx', 'csv'])
-TEMPLATE_FILE = 'template.xlsx'
+TEMPLATE_FILE = 'template.xls'
 TEMPLATE_FILE_ROUTE = '/'+TEMPLATE_FILE
 
 # Initialize the Flask application
@@ -53,7 +53,7 @@ def getBPPRList(filename=TEMPLATE_FILE):
         bppr = pond.calculateDailyWholeLakeBenthicPrimaryProductionPerMeterSquared() #uses quarter-hours by default
         bpprFloat = float("{0:.2f}".format(bppr)) #round to two decimal places
         bpprList.append(bpprFloat)
-        doy =pond.getDayOfYear()
+        doy =pond.get_day_of_year
         doyList.append(doy)
     return bpprList
 
@@ -102,7 +102,7 @@ def indexView():
             for pond in pondList:
                 bppr = pond.calculateDailyWholeLakeBenthicPrimaryProductionPerMeterSquared()
                 bpprList.append(bppr)
-                doy =pond.getDayOfYear()
+                doy =pond.get_day_of_year()
                 doyList.append(doy)
 
 
@@ -534,4 +534,4 @@ def dailyTPP():
 
 
 if __name__ == '__main__':
-    app.run()
+    app.run(debug=True)
