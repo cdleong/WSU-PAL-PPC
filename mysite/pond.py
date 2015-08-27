@@ -252,7 +252,7 @@ class Pond(object):
         @return: the day of on which measurements occurred.
         @rtype: int
         '''
-        return self.__day_of_year
+        return int(self.__day_of_year)
 
 
     def get_length_of_day(self):

@@ -1,11 +1,10 @@
 <html>
-  <head>
-    {% if title %}
-    <title>{{title}}</title>
-    {% else %}
-    <title>eggswithcheese</title>
-    {% endif %}
-  </head>
+	<head>
+		{% block head %}
+		<link rel="stylesheet" href="style.css" />
+		<title>{% block title %}{% endblock %} - My Webpage</title>
+		{% endblock %}
+	</head>
   <body>
     <div><a href="/index">Home</a></div>
     <hr>

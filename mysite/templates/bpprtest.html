@@ -1,14 +1,29 @@
 {% extends "base.html" %}
+
+{% block head %}
+    <title>Primary Production</title>
+{% endblock %}
 {% block content %}
 
-    <h1>BPPR from user data!</h1>
+    <h1>Primary Production from user data</h1>
     <p>filename:{{ request.args.get('filename') }}</p>
 
     <p>BPPR VALUES CALCULATED: </p>
     {#http://jinja.pocoo.org/docs/dev/templates/#list-of-control-structures#}
     <ul>
-    {% for bpprFloat in bppr(request.args.get('filename')) %}
-        <li>{{ bpprFloat|e }}</li>
+    {% for pond in ponds(request.args.get('filename')) %}
+        <li>
+		Day of Year:{{ pond.get_day_of_year()|e }}, 
+		Lake ID:{{ pond.get_lake_id()|e }}, 
+		<ul>
+			<li>
+				BPPR:{{ pond.calculateDailyWholeLakeBenthicPrimaryProductionPerMeterSquared()|e }} (mg C/m^2 littoral area/day)
+			</li>
+			<li>
+				PPPR:{{ pond.calculateDailyWholeLakePhytoplanktonPrimaryProductionPerMeterSquared()|e }} (mg C/m^2 surface area/day)
+			</li>
+		</ul>
+		</li>
     {% endfor %}
     </ul>
 

@@ -31,6 +31,8 @@ ALLOWED_EXTENSIONS = set(['txt', 'xls', 'xlsx', 'csv'])
 TEMPLATE_FILE = 'template.xls'
 TEMPLATE_FILE_ROUTE = '/'+TEMPLATE_FILE
 
+FIRST_DATA_ROW_FOR_EXPORT = 1
+
 # Initialize the Flask application
 app = Flask(__name__)
 
@@ -42,10 +44,12 @@ app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024 #arbitrary 16 megabyte uploa
 #app.debug=True
 
 
-def getBPPRList(filename=TEMPLATE_FILE):
-    reader = DataReader(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+def get_rounded_BPPR_list(filename=TEMPLATE_FILE):
+    '''
+    returns list of double values, rounded to two decimal places
+    '''
     # Check if the file is one of the allowed types/extensions
-    pondList = reader.read()
+    pondList = getPondList(filename)
     pond = pondList[0]
     bpprList =[]
     doyList =[]
@@ -53,9 +57,16 @@ def getBPPRList(filename=TEMPLATE_FILE):
         bppr = pond.calculateDailyWholeLakeBenthicPrimaryProductionPerMeterSquared() #uses quarter-hours by default
         bpprFloat = float("{0:.2f}".format(bppr)) #round to two decimal places
         bpprList.append(bpprFloat)
-        doy =pond.get_day_of_year
+        doy =pond.get_day_of_year()
         doyList.append(doy)
     return bpprList
+
+def getPondList(filename = TEMPLATE_FILE):
+    reader = DataReader(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+    # Check if the file is one of the allowed types/extensions
+    pondList = reader.read()
+    return pondList    
+    
 
 
 #used for making it possible to get numbers from python, and put them in HTML
@@ -65,12 +76,15 @@ def my_utility_processor():
     
     #returns a list of floats.
     def bppr(filename):
-        bpprList = getBPPRList(filename)
+        bpprList = get_rounded_BPPR_list(filename)
         return bpprList
+    
+    def ponds(filename):
+        pondList = getPondList(filename)
+        return pondList
 
 
-
-    return dict(bppr=bppr)
+    return dict(bppr=bppr, ponds=ponds)
 
 
 
@@ -83,17 +97,17 @@ def allowed_file(filename):
 @app.route('/', methods=['GET', 'POST'])
 @app.route('/index', methods=['GET', 'POST'])
 def indexView():
-    #http://runnable.com/UiPcaBXaxGNYAAAL/how-to-upload-a-file-to-the-server-in-flask-for-python
+    #http://runnable.com/UiPcaBXaxGNYAAAL/how-to-upload-a-uploaded_file-to-the-server-in-flask-for-python
     if request.method == 'POST': #true if the button "upload" is clicked
-         # Get the name of the uploaded file
-        file = request.files['file']
-        # Check if the file is one of the allowed types/extensions
-        if file and allowed_file(file.filename):
+        # Get the name of the uploaded uploaded_file
+        uploaded_file = request.files['uploaded_file']
+        # Check if the uploaded_file is one of the allowed types/extensions
+        if uploaded_file and allowed_file(uploaded_file.filename):
             # Make the filename safe, remove unsupported chars
-            filename = secure_filename(file.filename)
-            # Move the file form the temporal folder to
+            filename = secure_filename(uploaded_file.filename)
+            # Move the uploaded_file form the temporal folder to
             # the upload folder we setup
-            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            uploaded_file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
             reader = DataReader(os.path.join(app.config['UPLOAD_FOLDER'], filename))
 
             pondList = reader.read()
@@ -109,34 +123,14 @@ def indexView():
 
 
             return redirect(url_for("bpprtest",filename=filename))
-    return """
+    return render_template("home.html") 
 
-        <h2>Prototype: Upload Data File</h2>
-        <p>Download template file <a href="%s" download="example_data.xlsx">here</a></p>
-        <form action="" method=post enctype=multipart/form-data>
-          <p><input type=file name=file>
-             <input type=submit value=Upload>
-        </form>
-
-        <script language='javascript' type='text/javascript'>
-        function check() {
-            if (document.getElementById('maxDepth').value < document.getElementById('meanDepth').value) {
-                <!--document.getElementById('maxDepth').value=document.getElementById('meanDepth').value-->
-                document.getElementById('maxDepth').setCustomValidity('The max depth must be greater than or equal to the mean depth');
-            } else {
-                // input is valid -- reset the error message
-                document.getElementById('maxDepth').setCustomValidity('');
-           }
-        }
-        </script>
-
-        """ % (TEMPLATE_FILE_ROUTE)
 
 
 
 
 # This route is expecting a parameter containing the name
-# of a file. Then it will locate that file on the upload
+# of a uploaded_file. Then it will locate that uploaded_file on the upload
 # directory and show it on the browser, so if the user uploads
 # an image, that image is going to be show after the upload
 @app.route('/tmp/<filename>', methods=['GET', 'POST'])
@@ -203,13 +197,33 @@ def export_view():
     except:
         #redundant. TODO: better except
             inputFile = TEMPLATE_FILE
-    bpprList = getBPPRList(inputFile)
-    numRows = len(bpprList)
+    
+    lake_ID_column = 0
+    day_of_year_column = lake_ID_column+1
+    bppr_column = day_of_year_column+1
+    pppr_column = bppr_column+1
+    
+    pondlist = getPondList(inputFile)
+    lake_id_list = []
+    day_of_year_list = []
+    bpprList = []
+    ppprList = []
+    for pond in pondlist:
+        lake_id = pond.get_lake_id()
+        lake_id_list.append(lake_id)
+        day_of_year = pond.get_day_of_year()
+        day_of_year_list.append(day_of_year)
+        bppr = pond.calculateDailyWholeLakeBenthicPrimaryProductionPerMeterSquared()
+        bpprList.append(bppr)
+        pppr = pond.calculateDailyWholeLakePhytoplanktonPrimaryProductionPerMeterSquared()
+        ppprList.append(pppr)
 
-    for i in range(0, numRows):
-        row = i
-        bppr=bpprList[row]
-        worksheet.write(row,0,bppr)
+    
+    write_column_to_worksheet(worksheet, lake_ID_column, "Lake ID", lake_id_list)
+    write_column_to_worksheet(worksheet, day_of_year_column, "day of year", day_of_year_list)
+    write_column_to_worksheet(worksheet, bppr_column, "BPPR", bpprList)
+    write_column_to_worksheet(worksheet, pppr_column, "PPPR", ppprList)
+    
 
     # workbook.save('statistics.xls')
 
@@ -254,284 +268,28 @@ def export_view():
     #################################
     return response
 
+def write_column_to_worksheet(worksheet,column_number=0, column_header = "", values_list=[]):
+    '''
+    Prepends a column header and puts the data in values_list into worksheet at the specified column
+    '''
+    print "writing column to worksheet"
+    values_list.insert(0, column_header) #stick the column header at the front.
+    numRows = len(values_list)
+    
+    
+    for i in range(0, numRows):
+        row = i
+        column = column_number
+        value=values_list[row]
+        worksheet.write(row,column,value)
+    
+    
 
-
-
-
-
-
-###########################################################################
-#Used to call render the template that uh crap why are there two TODO: fix
-###########################################################################
-@app.route('/lightGraph', methods=['GET', 'POST'])
-@app.route('/lightGraph.html', methods=['GET', 'POST'])
-def lightGraph():
-    return render_template("lightGraph.html")
-
-
-@app.route('/dailyTPPGraph', methods=['GET', 'POST'])
-@app.route('/dailyTPPGraph.html', methods=['GET', 'POST'])
-def dailyTPPGraph():
-    return render_template("lightGraph.html")
-
-################################################################
-#it just makes a graph. A specific graph. TODO: take this out.
-################################################################
-@app.route('/pondlight.png', methods=['GET', 'POST'])
-def pondLight():
-
-    #default values
-    meanDepth = 20.0 #meters
-    maxDepth = 20.0 #meters
-    phosphorus = 100.0 #mg/m^3
-
-    #get inputs
-    try:
-        stringMeanDepth = request.args.get('meanDepth')
-        stringMaxDepth = request.args.get('maxDepth')
-        stringPhosphorus = request.args.get('phosphorus')
-        meanDepth = float(stringMeanDepth)
-        maxDepth = float(stringMaxDepth)
-        phosphorus = float(stringPhosphorus)
-    except:
-        #redundant. TODO: better except
-        meanDepth = 20.0 #meters
-        maxDepth = 20.0 #meters
-        phosphorus = 100.0 #mg/m^3
-
-
-    #validate inputs
-    #error checking
-    if(maxDepth<=0):
-        maxDepth = 20.0
-
-    if(meanDepth>maxDepth):
-        meanDepth=maxDepth
-
-    if(meanDepth<=0):
-        meanDepth=maxDepth
-
-    if(phosphorus<=0):
-        phosphorus=100.0
-
-
-    #setup pond object
-    pond = Pond(meanDepth,maxDepth)
-    pond.setBackgroundLightAtten(0.05)
-
-
-
-
-    #figures, subplots, other magic graphing stuff
-    fig = plt.figure()
-    ax = fig.add_subplot(1,1,1) #http://stackoverflow.com/questions/3584805/in-matplotlib-what-does-111-means-in-fig-add-subplot111
-
-    #setup y-axis
-    depths = np.linspace(0, maxDepth, 500) #500 points spaced from 0.0 to max depth
-    y = depths
-
-    #Setup x-axis
-    #plot the extreme (example) values
-    pond.setTotalPhos(500.0)
-    x1 =np.multiply((pond.lightAtDepthZAndTimeT(depths,6.0)/pond.lightAtDepthZAndTimeT(0.0,6.0)),100)
-    pond.setTotalPhos(3.0)
-    x2 =np.multiply((pond.lightAtDepthZAndTimeT(depths,6.0)/pond.lightAtDepthZAndTimeT(0.0,6.0)),100)
-
-
-
-
-
-
-
-
-
-    #set labels for graph legend
-    #fancy number formatting from http://stackoverflow.com/questions/21226868/superscript-in-python-plots
-    label1 = "500 $mg/m^3$"
-    label2 = "3.0 $mg/m^3$"
-
-
-    ax.plot(x1, y, 'k--', label= label1)
-    ax.plot(x2, y, 'k:', label= label2)
-
-
-    #try graphing user input.
-    try:
-        pond.setTotalPhos(phosphorus)
-        x3 = np.multiply((pond.lightAtDepthZAndTimeT(depths,6.0)/pond.lightAtDepthZAndTimeT(0.0,6.0)),100) #6.0 = halfway through 12-hour day = noon.
-        label3 = "%.1f $mg/m^3$" %phosphorus #fancy %f stuff learned from http://stackoverflow.com/questions/6649597/python-decimal-places-putting-floats-into-a-string
-        ax.plot(x3, y, 'r-', label= label3)
-
-    except:
-        label3 = "ERROR: invalid input?"
-
-
-
-    ax.set_xlabel('light percentage')
-
-    ax.set_xlim([1,100])
-
-    plt.grid(True)
-
-
-    plt.ylabel('depth (m)')
-
-    fig.gca().invert_yaxis() #make 0 be at the top, rather than the borrom
-
-#    plt.legend((l1, l2), ('Line 1', 'Line 2'), 'upper left')
-    legend = plt.legend(loc='lower right', shadow=True)
-    frame  = legend.get_frame()
-    frame.set_facecolor('0.90')
-
-    # Set the fontsize
-    for label in legend.get_texts():
-        label.set_fontsize('large')
-
-    for label in legend.get_lines():
-        label.set_linewidth(1.5)  # the legend line width
-
-
-    canvas = FigureCanvas(fig)
-    output = StringIO.StringIO()
-    canvas.print_png(output)
-    response = make_response(output.getvalue())
-    response.mimetype = 'image/png'
-    return response
-
-
-
-#############################
-#Makes a specific picture.
-#############################
-@app.route('/dailyTPP.png', methods=['GET', 'POST'])
-def dailyTPP():
-
-    #figures, subplots, other magic graphing stuff
-    fig = plt.figure()
-    ax = fig.add_subplot(1,1,1) #http://stackoverflow.com/questions/3584805/in-matplotlib-what-does-111-means-in-fig-add-subplot111
-
-
-    #default values
-    meanDepth = 20.0 #meters
-    maxDepth = 20.0 #meters
-    phosphorus = 100.0 #mg/m^3
-
-    #TODO:try to get user value of phosphorus.
-        #get inputs
-    try:
-        stringMeanDepth = request.args.get('meanDepth')
-        stringMaxDepth = request.args.get('maxDepth')
-        stringPhosphorus = request.args.get('phosphorus')
-        meanDepth = float(stringMeanDepth)
-        maxDepth = float(stringMaxDepth)
-        phosphorus = float(stringPhosphorus)
-    except:
-        #redundant. TODO: better except
-        meanDepth = 20.0 #meters
-        maxDepth = 20.0 #meters
-        phosphorus = 100.0 #mg/m^3
-
-    #input validation
-    if(maxDepth<=0):
-        maxDepth = 20.0
-
-    if(meanDepth>maxDepth):
-        meanDepth=maxDepth
-
-    if(meanDepth<=0):
-        meanDepth=maxDepth
-
-    if(phosphorus<=0):
-        phosphorus=100.0
-
-
-
-
-    exampleSmallPhosVal=3.0
-    exampleLargePhosVal=500.0
-    lightIntensityAtOnsetOfSaturation = 180.0
-
-
-
-
-
-
-    pond = Pond(meanDepth,maxDepth)
-
-
-
-
-    #setup y-axis
-    depths = np.linspace(0, maxDepth, 500) #500 points spaced from 0.0 to max depth
-    y = depths
-    print len(y)
-
-    #Setup x-axis
-    #plot the extreme (example) values
-    pond.setTotalPhos(exampleLargePhosVal)
-    x1 =pond.dailyPPatDepthZ(0.25,0.1, lightIntensityAtOnsetOfSaturation, depths) #deltaT, deltaZ, light intensity at onset of saturation, depths
-    pond.setTotalPhos(exampleSmallPhosVal)
-    x2 =pond.dailyPPatDepthZ(0.25,0.1, lightIntensityAtOnsetOfSaturation, depths) #deltaT, deltaZ, light intensity at onset of saturation, depths
-    pond.setTotalPhos(phosphorus)
-    x3 =pond.dailyPPatDepthZ(0.25,0.1, lightIntensityAtOnsetOfSaturation, depths) #deltaT, deltaZ, light intensity at onset of saturation, depths
-
-    print len(x1)
-
-    #set labels for graph legend
-    #fancy number formatting from http://stackoverflow.com/questions/21226868/superscript-in-python-plots
-    label1 = "%.1f $mg/m^3$" %exampleLargePhosVal #fancy %f stuff learned from http://stackoverflow.com/questions/6649597/python-decimal-places-putting-floats-into-a-string
-    label2 = "%.1f $mg/m^3$" %exampleSmallPhosVal
-    label3 = "%.1f $mg/m^3$" %phosphorus
-
-
-    #graph lines here
-    ax.plot(x1, y, 'k--', label= label1)
-    ax.plot(x2, y, 'k:', label= label2)
-    ax.plot(x3, y, 'r-', label= label3)
-
-
-
-
-
-
-
-
-
-
-    ax.set_xlabel('Daily Pelagic Primary Productivity (mg C*$m^{-3}*d^{-1}$) for different phosphorus levels')
-
-    #set x scale
-    allXValues = x1+x2+x3
-    maxValue=np.amax(allXValues)
-    ax.set_xlim([1,maxValue])
-
-    plt.grid(True)
-
-    plt.ylabel('depth (m)')
-
-    fig.gca().invert_yaxis() #make 0 be at the top, rather than the borrom
-
-    legend = plt.legend(loc='lower right', shadow=True)
-    frame  = legend.get_frame()
-    frame.set_facecolor('0.90')
-
-    # Set the fontsize
-    for label in legend.get_texts():
-        label.set_fontsize('large')
-
-    for label in legend.get_lines():
-        label.set_linewidth(1.5)  # the legend line width
-
-
-    #Source of sorcery: https://gist.github.com/liuyxpp/1250396
-    #figure to canvas, canvas to buffer, buffer to png, png to response. magic!
-    canvas = FigureCanvas(fig)
-    output = StringIO.StringIO()
-    canvas.print_png(output)
-    response = make_response(output.getvalue())
-    response.mimetype = 'image/png'
-    return response
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    debug_mode = False
+    if(debug_mode):
+        app.run(debug=True)
+    else:
+        app.run(host='0.0.0.0')
