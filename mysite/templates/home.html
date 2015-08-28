@@ -1,22 +1,12 @@
 	<title>Home</title>
         <h2>Prototype: Upload Data File</h2>
-        <p>Download template file <a href="%s" download="example_data.xlsx">here</a></p>
+        <p>Download template file <a href="{{route}}" download="example_data.xlsx">here</a></p>
         <form action="" method=post enctype=multipart/form-data>
           <p><input type=file name=uploaded_file>
              <input type=submit value=Upload>
         </form>
 
-        <script language='javascript' type='text/javascript'>
-        function check() {
-            if (document.getElementById('maxDepth').value < document.getElementById('meanDepth').value) {
-                <!--document.getElementById('maxDepth').value=document.getElementById('meanDepth').value-->
-                document.getElementById('maxDepth').setCustomValidity('The max depth must be greater than or equal to the mean depth');
-            } else {
-                // input is valid -- reset the error message
-                document.getElementById('maxDepth').setCustomValidity('');
-           }
-        }
-        </script>
+
 
 
 

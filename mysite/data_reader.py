@@ -42,8 +42,8 @@ class DataReader(object):
 #     filename = "Aug_03_test_data_bppr10percent_intervals.xls" #"Same as Aug_03_test_data, but reducing data points to 10-percent intervals.
 #     filename = "Aug_03_test_data_bppr5measurements.xls" #"Same as Aug_03_test_data_bppr10percent_intervals.xls, but with bppr data points at the following light proportions: [1.00,0.5,0.25,0.1,0.01]
 #     filename = "Aug_03_test_data_pppr1995_day152_cryst.xls" #"Same as Aug_03_test_data_bppr5measurements.xls, but altered PPR data to test PPR calculations. test data taken from Phyte_90s.csv. Year=1995, DOY=152. Depth is max depth. Just assuming 1 layer.
-    filename = "Aug_26_test_data.xls" #"Same as Aug_03_test_data_bppr5measurements.xls, but altered PPR data to test PPR calculations. test data taken from Phyte_90s.csv. Year=1995, DOY=152. Depth is max depth. Just assuming 1 layer.  
- 
+#     filename = "Aug_26_test_data.xls" #"Same as Aug_03_test_data_bppr5measurements.xls, but altered PPR data to test PPR calculations. test data taken from Phyte_90s.csv. Year=1995, DOY=152. Depth is max depth. Just assuming 1 layer.  
+    filename = "Aug_28_test_data.xls" #altering this to use the data from LTER_Plank_PI, which has everything except beta
     
 
     

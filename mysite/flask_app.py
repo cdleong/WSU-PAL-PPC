@@ -123,7 +123,8 @@ def indexView():
 
 
             return redirect(url_for("bpprtest",filename=filename))
-    return render_template("home.html") 
+    return render_template('home.html', route = TEMPLATE_FILE_ROUTE)
+
 
 
 
