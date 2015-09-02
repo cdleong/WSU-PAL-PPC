@@ -43,11 +43,20 @@ class DataReader(object):
 #     filename = "Aug_03_test_data_bppr5measurements.xls" #"Same as Aug_03_test_data_bppr10percent_intervals.xls, but with bppr data points at the following light proportions: [1.00,0.5,0.25,0.1,0.01]
 #     filename = "Aug_03_test_data_pppr1995_day152_cryst.xls" #"Same as Aug_03_test_data_bppr5measurements.xls, but altered PPR data to test PPR calculations. test data taken from Phyte_90s.csv. Year=1995, DOY=152. Depth is max depth. Just assuming 1 layer.
 #     filename = "Aug_26_test_data.xls" #"Same as Aug_03_test_data_bppr5measurements.xls, but altered PPR data to test PPR calculations. test data taken from Phyte_90s.csv. Year=1995, DOY=152. Depth is max depth. Just assuming 1 layer.  
-    filename = "Aug_28_test_data.xls" #altering this to use the data from LTER_Plank_PI, which has everything except beta
+#     filename = "Aug_28_test_data.xls" #altering this to use the data from LTER_Plank_PI, which has everything except beta
+    
     
 
-    
-    
+# Data    Method    Source
+# pmax,    copied directly    https://drive.google.com/open?id=1jxqTExiqx5Y3rqf8Q3UBus5Rjr5ETVLCUy08Stey4w4
+# alpha,    copied directly    https://drive.google.com/open?id=1jxqTExiqx5Y3rqf8Q3UBus5Rjr5ETVLCUy08Stey4w4
+# beta    copied directly    https://drive.google.com/open?id=1jxqTExiqx5Y3rqf8Q3UBus5Rjr5ETVLCUy08Stey4w4
+# stratum number    copied directly    https://drive.google.com/open?id=1jxqTExiqx5Y3rqf8Q3UBus5Rjr5ETVLCUy08Stey4w4
+# stratum depth    calculated from the daily average of pp_epi_nhw_m2/pp_epi_nhw_m3,pp_met_nhw_m2/pp_met_nhw_m3, and pp_hyp_nhw_m2/pp_hyp_nhw_m3 for the epilimnion, metalimnion, and hypolimnion respectively    https://lter.limnology.wisc.edu/dataset/north-temperate-lakes-lter-primary-production-trout-lake-area-1986-2007
+# light extinction coefficient    copied directly    https://lter.limnology.wisc.edu/dataset/north-temperate-lakes-lter-light-extinction-trout-lake-area-1981-current
+# pppr        https://lter.limnology.wisc.edu/dataset/north-temperate-lakes-lter-primary-production-trout-lake-area-1986-2007    
+    filename = "Sep_2_test_data.xlsx" #just used for testing phyto. Data from multiple sources.     
+
     
     
 

@@ -782,8 +782,11 @@ class Pond(object):
                 ppprz += ppprzt
   
                 t += time_interval
+#             print "pprz is ", ppprz
             ppprz = ppprz / (1 / time_interval)  # (mgC/m^3/hr)*hr = mgC/m^3. Account for the fractional time interval. e.g. dividing by 1/0.25 is equiv to dividing by 4
-            ppprz = ppprz*volume #(mgC/m^3) *m^3 = total in this volume, mgC. 
+#             print "ppprz / (1 / time_interval)  is " , ppprz
+            ppprz = ppprz*depth_interval #mgC*m^-3 *m = mgC/m^2 in this interval
+#             print "ppprz*depth_interval is ", ppprz
             #OK, now we have ppprz in this volume. Let's weight using the fractional volume
 #             weighted_pppr_z = ppprz * f_volume #mg/m^3  #production rate multiplied by the fraction of production rate across all volumes.           
                 
@@ -791,7 +794,8 @@ class Pond(object):
             pppr_total += ppprz #mgC            
         
         
-        pppr_m2 =pppr_total/surface_area  #mgC/m^2/day 
+#         pppr_m2 =pppr_total/surface_area  #mgC/m^2/day
+        pppr_m2 =pppr_total  #mgC/m^2/day  
         return pppr_m2 #mgC/m^2/day          
     
 

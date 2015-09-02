@@ -284,13 +284,26 @@ def write_column_to_worksheet(worksheet,column_number=0, column_header = "", val
         value=values_list[row]
         worksheet.write(row,column,value)
     
-    
+
+@app.errorhandler(413)
+def request_entity_too_large(error):
+    return 'File Too Large'  
+
+@app.errorhandler(404)
+def pageNotFound(error):
+    return "page not found"
 
 
 
 if __name__ == '__main__':
     debug_mode = False
-    if(debug_mode):
+    i_am_sure_i_want_to_let_people_execute_arbitrary_code = "no" #"yes" for yes.
+    i_want_an_externally_visible_site = True
+    if(debug_mode and "yes"==i_am_sure_i_want_to_let_people_execute_arbitrary_code):
+        print "running in debug mode"
         app.run(debug=True)
-    else:
+        print "stopped running app"
+    elif(i_want_an_externally_visible_site):
         app.run(host='0.0.0.0')
+    else:
+        app.run()
