@@ -65,20 +65,20 @@ def getPondList(filename = TEMPLATE_FILE):
     reader = DataReader(os.path.join(app.config['UPLOAD_FOLDER'], filename))
     # Check if the file is one of the allowed types/extensions
     pondList = reader.read()
-    return pondList    
-    
+    return pondList
+
 
 
 #used for making it possible to get numbers from python, and put them in HTML
 #Got this from http://blog.bouni.de/blog/2013/04/24/call-functions-out-of-jinjs2-templates/
 @app.context_processor
 def my_utility_processor():
-    
+
     #returns a list of floats.
     def bppr(filename):
         bpprList = get_rounded_BPPR_list(filename)
         return bpprList
-    
+
     def ponds(filename):
         pondList = getPondList(filename)
         return pondList
@@ -198,12 +198,12 @@ def export_view():
     except:
         #redundant. TODO: better except
             inputFile = TEMPLATE_FILE
-    
+
     lake_ID_column = 0
     day_of_year_column = lake_ID_column+1
     bppr_column = day_of_year_column+1
     pppr_column = bppr_column+1
-    
+
     pondlist = getPondList(inputFile)
     lake_id_list = []
     day_of_year_list = []
@@ -219,12 +219,12 @@ def export_view():
         pppr = pond.calculateDailyWholeLakePhytoplanktonPrimaryProductionPerMeterSquared()
         ppprList.append(pppr)
 
-    
+
     write_column_to_worksheet(worksheet, lake_ID_column, "Lake ID", lake_id_list)
     write_column_to_worksheet(worksheet, day_of_year_column, "day of year", day_of_year_list)
     write_column_to_worksheet(worksheet, bppr_column, "BPPR", bpprList)
     write_column_to_worksheet(worksheet, pppr_column, "PPPR", ppprList)
-    
+
 
     # workbook.save('statistics.xls')
 
@@ -276,18 +276,18 @@ def write_column_to_worksheet(worksheet,column_number=0, column_header = "", val
     print "writing column to worksheet"
     values_list.insert(0, column_header) #stick the column header at the front.
     numRows = len(values_list)
-    
-    
+
+
     for i in range(0, numRows):
         row = i
         column = column_number
         value=values_list[row]
         worksheet.write(row,column,value)
-    
+
 
 @app.errorhandler(413)
 def request_entity_too_large(error):
-    return 'File Too Large'  
+    return 'File Too Large'
 
 @app.errorhandler(404)
 def pageNotFound(error):

@@ -3,7 +3,7 @@ Created on Jun 17, 2015
 
 @author: cdleong
 '''
-from mysite.photosynthesis_measurement import PhotosynthesisMeasurement
+from photosynthesis_measurement import PhotosynthesisMeasurement
 
 class BenthicPhotosynthesisMeasurement(PhotosynthesisMeasurement):
     '''
@@ -11,27 +11,27 @@ class BenthicPhotosynthesisMeasurement(PhotosynthesisMeasurement):
     '''
     MAX_VALID_IK = 10 #Arbitrary value one order of magnitude greater than typical. According to Kalff's Limnology, page 333, Ik typically falls between 0.14 and 0.72
     MIN_VALID_IK = 0.01 #Arbitrary value one order of magnitude less than typical. According to Kalff's Limnology, page 333, Ik typically falls between 0.14 and 0.72
-    
+
     ik=0.0 #accor
-    
+
     def __init__(self, depth, pmax, ik):
         super(BenthicPhotosynthesisMeasurement, self).__init__(depth, pmax)
         self.set_ik(ik)
 
     #GETTERS
-    
+
     def get_depth(self):
         return PhotosynthesisMeasurement.get_depth(self)
 
 
     def get_pmax(self):
         return PhotosynthesisMeasurement.get_pmax(self)
-    
+
     def get_ik(self):
         return self.__ik
-    
+
     #SETTERS
-    
+
     def set_depth(self, value):
         #TODO: validate
         return PhotosynthesisMeasurement.set_depth(self, value)
@@ -39,7 +39,7 @@ class BenthicPhotosynthesisMeasurement(PhotosynthesisMeasurement):
 
     def set_pmax(self, value):
         #TODO: validate
-        return PhotosynthesisMeasurement.set_pmax(self, value)    
+        return PhotosynthesisMeasurement.set_pmax(self, value)
 
 
     def set_ik(self, value):
@@ -69,8 +69,8 @@ def main():
     print "depth is", bpm.get_depth()
     print "benthic pmax is ", bpm.get_pmax()
     print "ik is ", bpm.get_ik()
-    
+
 
 
 if __name__ == "__main__":
-    main()        
+    main()
