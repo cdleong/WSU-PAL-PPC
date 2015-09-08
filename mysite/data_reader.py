@@ -379,7 +379,7 @@ class DataReader(object):
             #values
             row_doy_value = row[self.dayOfYearIndex].value
             row_lakeID_value = row[self.lakeIDIndex].value
-            print "light penetration proportion is", row[self.benthic_light_penetration_proportion_index].value
+            # print "light penetration proportion is", row[self.benthic_light_penetration_proportion_index].value
             row_light_penetration_proportion_value = float(row[self.benthic_light_penetration_proportion_index].value)
             row_pmax_value = float(row[self.benthic_pmax_index].value)
             row_ik_value = float(row[self.benthic_ik_index].value)

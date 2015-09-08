@@ -777,25 +777,28 @@ class Pond(object):
             while t < length_of_day:
                 ppprzt = 0.0
                 izt = self.calculate_light_at_depth_and_time(current_depth, t) #umol*m^-2*s^-1
-                ppprzt = self.calculate_phytoplankton_primary_productivity(izt, current_depth) #(mg/m^3/hr)
+                ppprzt = self.calculate_phytoplankton_primary_productivity(izt, current_depth)*time_interval #(mg*m^-3*hr^-1)*hr = mg*m^-3
 
-                ppprz += ppprzt
+                ppprzt=ppprzt*volume #mg
 
+                # print "at depth ", current_depth, " time ", t ,"pprzt is ", ppprzt, " and f_vol is ", f_volume
+                ppprz+=ppprzt #mg
                 t += time_interval
-#             print "pprz is ", ppprz
-            ppprz = ppprz / (1 / time_interval)  # (mgC/m^3/hr)*hr = mgC/m^3. Account for the fractional time interval. e.g. dividing by 1/0.25 is equiv to dividing by 4
-#             print "ppprz / (1 / time_interval)  is " , ppprz
-            ppprz = ppprz*depth_interval #mgC*m^-3 *m = mgC/m^2 in this interval
-#             print "ppprz*depth_interval is ", ppprz
+            print "at depth ", current_depth,"pprz is ", ppprz
+            time_interval_correction_factor = (1 / time_interval) #(hr/hr) Account for the fractional time interval. e.g. dividing by 1/0.25 is equiv to dividing by 4
+            ppprz = ppprz / time_interval_correction_factor  # (mgC*m^-3)
+            # weighted_pppr_z = ppprz * f_volume #mgC*m^-3  #production rate multiplied by the fraction of production rate across all volumes.
+            # ppprz = ppprz*depth_interval #mgC*m^-3 *m = mgC*m^-2 in this interval
+            # print "ppprz*depth_interval is ", ppprz
             #OK, now we have ppprz in this volume. Let's weight using the fractional volume
-#             weighted_pppr_z = ppprz * f_volume #mg/m^3  #production rate multiplied by the fraction of production rate across all volumes.
+            # weighted_pppr_z = ppprz * f_volume #mg/m^3  #production rate multiplied by the fraction of production rate across all volumes.
 
-#             pppr_total += weighted_pppr_z #mg/m^3
+            # pppr_total += weighted_pppr_z #mg/m^3
             pppr_total += ppprz #mgC
 
 
-#         pppr_m2 =pppr_total/surface_area  #mgC/m^2/day
-        pppr_m2 =pppr_total  #mgC/m^2/day
+        pppr_m2 =pppr_total/surface_area  #mgC/m^2/day
+        # pppr_m2 =pppr_total  #mgC/m^2/day
         return pppr_m2 #mgC/m^2/day
 
 
@@ -841,6 +844,7 @@ class Pond(object):
         measurement = self.get_phytoplankton_photosynthesis_measurement_at_depth(validated_depth)
         if(measurement is not None):
             pmax = measurement.get_pmax()
+        # print "pmax at depth ", depth, " is ", pmax
         return pmax
 
     def get_phyto_alpha_at_depth(self, depth):
@@ -875,26 +879,28 @@ class Pond(object):
         Calculate Phytoplankton Primary Productivity
         @param izt: light at depth z, time t (umol*m^-2*s^-1)
         @param depth: depth (m)
-        @return
+        @return ppr_z (mg*m^-3*hr^-1)
         '''
-        ppr = 0.0
+        ppr_z = 0.0
 
         phyto_photo_measurement_z = self.get_phytoplankton_photosynthesis_measurement_at_depth(depth)
         if(phyto_photo_measurement_z is not None):
 
 
-            phyto_pmax = phyto_photo_measurement_z.get_pmax() #mg C per m^3 per hour (mgC/m^3/hr)
-            phyto_alpha = phyto_photo_measurement_z.get_phyto_alpha() #(mgC/m^3/hr)/(umol/m^2/s^1)
-            phyto_beta = phyto_photo_measurement_z.get_phyto_beta() #(mg/m^3/hr)/(umol/m^2/s^1)
+            phyto_pmax = phyto_photo_measurement_z.get_pmax() #mg C per m^3 per hour (mg*m^-3*hr^-1)
+            phyto_alpha = phyto_photo_measurement_z.get_phyto_alpha() #(mg*m^-3*hr^-1)/(umol*m^-2*s^-1)
+            phyto_beta = phyto_photo_measurement_z.get_phyto_beta() #(mg*m^-3*hr^-1)/(umol*m^-2*s^-1)
+
+            # print "pmax at depth ", depth, " is ", phyto_pmax
 
             #P-I curve equation derived from Jassby/Platt, and specifically from http://web.pdx.edu/~rueterj/courses/esr473/notes/pvsi.htm
             #that website, of course, got it from "Photoinhibition of photosynthesis in natural assemblages of marine phytoplankton" By Platt, T., C.L. Gallegos and W.G. Harrison 1979.
-            interim_value = 1-mat.exp(-phyto_alpha*izt/phyto_pmax)#[(mg/m^3/hr)/(umol/m^2/s^1) * (umol/m^2/s^1) = (mg/m^3/hr)
-            other_interim_value = mat.exp(-phyto_beta*izt/phyto_pmax) #(mg/m^3/hr), same as above
-            ppr=phyto_pmax = phyto_pmax*interim_value*other_interim_value #(mg/m^3/hr)
+            interim_value = 1-mat.exp(-phyto_alpha*izt/phyto_pmax)#[(mg*m^-3*hr^-1)/(umol*m^-2*s^-1) * (umol*m^-2*s^-1) = (mg*m^-3*hr^-1)
+            other_interim_value = mat.exp(-phyto_beta*izt/phyto_pmax) #(mg*m^-3*hr^-1), same as above
+            ppr_z=phyto_pmax = phyto_pmax*interim_value*other_interim_value #(mg*m^-3*hr^-1)
 
 
-        return ppr
+        return ppr_z #(mg*m^-3*hr^-1)
 
 
 

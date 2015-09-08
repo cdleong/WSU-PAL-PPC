@@ -26,7 +26,7 @@ from werkzeug.datastructures import Headers #used for exporting files?
 
 #How to work with file uploads http://flask.pocoo.org/docs/0.10/patterns/fileuploads/
 # This is the path to the upload directory
-UPLOAD_FOLDER = 'tmp'
+UPLOAD_FOLDER = '/tmp/'
 ALLOWED_EXTENSIONS = set(['txt', 'xls', 'xlsx', 'csv'])
 TEMPLATE_FILE = 'template.xls'
 TEMPLATE_FILE_ROUTE = '/'+TEMPLATE_FILE
