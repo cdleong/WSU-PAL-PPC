@@ -805,33 +805,6 @@ class Pond(object):
 
 
 
-    def calculate_total_seasonal_phytoplankton_primary_production(self, depth_interval = DEFAULT_DEPTH_INTERVAL_FOR_CALCULATIONS):
-        '''
-        Incomplete implementation
-        Future work: calculate this accurately TODO: that.
-        '''
-        print ""
-        seasonal_light_estimator = SeasonalLightEstimator(self.latitude)
-        season_start_day = self.DEFAULT_THAW_DAY
-        season_end_day = self.DEFAULT_FREEZE_DAY
-        pond_day = copy.deepcopy(self)
-        surface_area = self.get_pond_shape().get_water_surface_area_at_depth(0) #TODO: more elegant.
-        day = season_start_day
-        tbpp = 0.0 #total benthic primary production
-        while day<season_end_day:
-            noon_surface_light = seasonal_light_estimator.calculate_noon_light(day)
-            length_of_day = seasonal_light_estimator.calculate_day_length(day)
-            pond_day.set_noon_surface_light(noon_surface_light)
-            pond_day.set_length_of_day(length_of_day)
-            pppr= pond_day.calculateDailyWholeLakePhytoplanktonPrimaryProductionPerMeterSquared()
-#             print "pppr on day ", day, " is ", pppr
-            tbpp_day = 0.0
-
-            tbpp_day=pppr*surface_area
-            tbpp+=tbpp_day
-            day = day+ 1
-
-        return tbpp
 
     def get_phyto_pmax_at_depth(self, depth):
         '''
@@ -911,7 +884,7 @@ class Pond(object):
         @rtype:
         '''
         #find the shallowest layer_measurement that's deeper than this depth.
-        #example: layers are at 5, 10, 15. Depth given is
+        #example: layers are at 5, 10, 15. Depth given is 5.5, then use measurement for second layer.
         measurement =None
         reverse_sorted_measurements = self.get_phyto_measurements_sorted_by_depth(True) #sort reversed by depth.
         for layer_measurement in reverse_sorted_measurements:
