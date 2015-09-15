@@ -502,16 +502,7 @@ def main():
         relative_depths = [1.0, 0.8,0.5,0.25,0.1,0.01]
         relative_depth_meters = []
 
-        #testing phyto stuff
-        #US sparkling lake
-#         us_spark_p_m1 = PhytoPlanktonPhotosynthesisMeasurement(1, 5, 4.113867544, 0.05, 0.01) #US sparkling lake
-#         us_spark_p_m2 = PhytoPlanktonPhotosynthesisMeasurement(2, 10, 2.636765965,0.0412667109,0)
-#         us_spark_p_m3 = PhytoPlanktonPhotosynthesisMeasurement(3, 15, 4.959339837, 0.1646230769,0)
-#
-#         us_cryst_p_m1 = PhytoPlanktonPhotosynthesisMeasurement(1, 5.25, 4.113867544, 0.05, 0.01) #US sparkling lake
-#         us_cryst_p_m2 = PhytoPlanktonPhotosynthesisMeasurement(2, 11, 4.113867544, 0.05, 0.01) #US sparkling lake
-#         us_cryst_p_m3 = PhytoPlanktonPhotosynthesisMeasurement(3, 18.4, 4.113867544, 0.05, 0.01) #US sparkling lake
-#
+        
 
 
 
@@ -520,21 +511,32 @@ def main():
         print ""
 
         print "**************************************************************************************"
-        bppr = p.calculateDailyWholeLakeBenthicPrimaryProductionPerMeterSquared(0.1)
-        bppr_surface_area = p.calculateDailyWholeLakeBenthicPrimaryProductionPerMeterSquared(0.1, False)
-        pppr = p.calculateDailyWholeLakePhytoplanktonPrimaryProductionPerMeterSquared(0.1)
+#         bppr = p.calculateDailyWholeLakeBenthicPrimaryProductionPerMeterSquared(0.1)
+#         bppr_surface_area = p.calculateDailyWholeLakeBenthicPrimaryProductionPerMeterSquared(0.1, False)
+#         pppr = p.calculateDailyWholeLakePhytoplanktonPrimaryProductionPerMeterSquared(0.1)
+        
+        layer_depths = p.get_thermal_layer_depths()
+        epi_lower_bound = layer_depths[0]
 
         print "lake ID: ", pid, " DOY: ", doy
-        print "bppr is ", str(bppr), " mg C per square meter of littoral area"
-        print "bppr is ", str(bppr_surface_area),  " mg C per square meter of lake surface area"
-        print "pppr is ", str(pppr)
+#         print "bppr is ", str(bppr), " mg C per square meter of littoral area"
+#         print "bppr is ", str(bppr_surface_area),  " mg C per square meter of lake surface area"
+#         print "pppr is ", str(pppr)
         littoral_area = p.calculate_total_littoral_area()+0.0
         surface_area = p.get_pond_shape().get_water_surface_area_at_depth(0)
         print "the percentage of 1% light is ", p.calculate_depth_of_specific_light_percentage(0.01)
         print "the total littoral zone is: ", littoral_area
         print "the surface area is: ",  surface_area
         print "max depth is: ", shape.get_max_depth()
-        print "number of bpp measurements is:", len(bppmeasurements)
+        print "thermal layer depths are: ", layer_depths
+        print "epilimnion lower bound is ", epi_lower_bound
+        
+        
+        
+        pp_epi = p.calculate_primary_production_rate_in_layer(0, epi_lower_bound)
+        print "pp_epi is ", pp_epi
+            
+        
 
 
 
@@ -567,6 +569,9 @@ def main():
 
     print "done with all the ponds"
     sys.exit()
+    
+    
+            
 
 if __name__ == "__main__":
     main()
