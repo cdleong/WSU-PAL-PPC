@@ -55,7 +55,8 @@ class DataReader(object):
 # stratum depth    calculated from the daily average of pp_epi_nhw_m2/pp_epi_nhw_m3,pp_met_nhw_m2/pp_met_nhw_m3, and pp_hyp_nhw_m2/pp_hyp_nhw_m3 for the epilimnion, metalimnion, and hypolimnion respectively    https://lter.limnology.wisc.edu/dataset/north-temperate-lakes-lter-primary-production-trout-lake-area-1986-2007
 # light extinction coefficient    copied directly    https://lter.limnology.wisc.edu/dataset/north-temperate-lakes-lter-light-extinction-trout-lake-area-1981-current
 # pppr        https://lter.limnology.wisc.edu/dataset/north-temperate-lakes-lter-primary-production-trout-lake-area-1986-2007
-    filename = "Sep_5_test_data.xlsx" #just used for testing phyto. Data from multiple sources.
+#     filename = "Sep_5_test_data.xlsx" #just used for testing phyto. Data from multiple sources.
+    filename = "Sep_17_test_data.xls" #just used for testing phyto. Data from multiple sources. Messing with values.
 
 
 
@@ -503,7 +504,8 @@ def main():
         relative_depth_meters = []
 
         
-
+        if(doy != 178): #TODO: remove this hack used for testing
+           continue #skip to next lake
 
 
         print ""
@@ -517,6 +519,8 @@ def main():
         
         layer_depths = p.get_thermal_layer_depths()
         epi_lower_bound = layer_depths[0]
+        met_lower_bound = layer_depths[1]
+        hyp_lower_bound = layer_depths[2]
 
         print "lake ID: ", pid, " DOY: ", doy
 #         print "bppr is ", str(bppr), " mg C per square meter of littoral area"
@@ -534,7 +538,11 @@ def main():
         
         
         pp_epi = p.calculate_primary_production_rate_in_layer(0, epi_lower_bound)
+        pp_met = p.calculate_primary_production_rate_in_layer(epi_lower_bound, met_lower_bound)
+        pp_hyp = p.calculate_primary_production_rate_in_layer(met_lower_bound, hyp_lower_bound)
         print "pp_epi is ", pp_epi
+        print "pp_met is", pp_met
+        print "pp_hyp is", pp_hyp
             
         
 

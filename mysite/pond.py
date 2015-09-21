@@ -784,12 +784,15 @@ class Pond(object):
         time_interval_correction_factor = (1 / time_interval) #(hr/hr) Account for the fractional time interval. e.g. dividing by 1/0.25 is equiv to dividing by 4
         
 
-        print "surface area is", surface_area
+#         print "surface area is", surface_area
         pp_list = []
+        surface_light_list = []
         t = 0.0  # start of day
         pp_layer_total = 0.0
         while t <= length_of_day:
-
+            
+            surface_light = self.calculate_light_at_depth_and_time(0.0, t)
+            
             z = layer_upper_bound
             pp_layer_at_time = 0.0 
             
@@ -801,10 +804,10 @@ class Pond(object):
                 pp_mg_m3 = ppprzt*1 #mgC*m^-3*hr^-1 * 1 hour = mgC*m^-3
                 pp_mg = pp_mg_m3*f_volume #mgC*m^-3
                 
-#                 if(8==t):
-#                     
+#                 if(0.5==t):
 #                     print "ppprzt at time ", t, " depth ", z, " is ", ppprzt
-#                     print "interval volume is", interval_volume
+#                     print "interval volume is ", interval_volume
+#                     print "fractional volume is ", f_volume
 #                     print "light is ", izt
 #                     print "pp_mg is ", pp_mg
 #                     print "pp_mg / surface area is ", pp_mg/surface_area
@@ -812,16 +815,18 @@ class Pond(object):
                 pp_layer_at_time +=pp_mg                                
                 z+=depth_interval
             
-            print "pp_layer_at_time at time ", t, " is ", pp_layer_at_time, " and surface_light was ",self.calculate_light_at_depth_and_time(0, t)
+#             print "pp_layer_at_time at time ", t," upper bound ", layer_upper_bound, "lower bound", layer_lower_bound, " is ", pp_layer_at_time, " and surface_light was ",self.calculate_light_at_depth_and_time(0, t)
             if(t%0.5==0):
                 print "time is", t, " appending! "
+                surface_light_list.append(surface_light)
                 pp_list.append(pp_layer_at_time)
             pp_layer_total+=pp_layer_at_time*time_interval_correction_factor              
 
             t += time_interval
         
-        print "pp_at_time_t list", pp_list
-        print "pp_layer_total is ",pp_layer_total         
+        print "pp_at_time_t list ", pp_list
+        print "surface light list: ", surface_light_list
+#         print "pp_layer_total is ",pp_layer_total         
         pp_layer_m2 = pp_layer_total/surface_area
         return pp_layer_m2 #mgC/m^2/day
 
@@ -880,9 +885,6 @@ class Pond(object):
         '''
         ppr_z = 0.0
         
-        if(testing):
-            print "TESTING"
-
         phyto_photo_measurement_z = self.get_phytoplankton_photosynthesis_measurement_at_depth(depth)
         if(phyto_photo_measurement_z is not None):
 
