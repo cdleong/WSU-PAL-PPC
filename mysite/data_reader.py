@@ -178,21 +178,6 @@ class DataReader(object):
     #reads all the pond data from the excel file.
 
 
-    def get_wanted_depths(self, pond):
-        '''
-        GET WANTED DEPTHS
-        Used for testing purposes. The original pprinputs file had benthic photosynthesis measurements organized by depth rather than light penetration.
-        @param param: a pond object.
-        @return:
-        @rtype:
-        '''
-        pond.calculate_depth_of_specific_light_percentage()
-        wanted_depths = pond.calculate_depths_of_specific_light_percentages(self.light_penetration_levels)
-        wanted_depths_rounded = []
-        for depth in wanted_depths:
-            rounded_depth = int((depth*10**1))/10.0**1 #truncate to 1 decimal place
-            wanted_depths_rounded.append(rounded_depth)
-        return wanted_depths_rounded
 
 
 
@@ -504,7 +489,7 @@ def main():
         relative_depth_meters = []
 
         
-        if(doy != 178): #TODO: remove this hack used for testing
+        if(doy != 163): #TODO: remove this hack used for testing
            continue #skip to next lake
 
 
@@ -518,9 +503,12 @@ def main():
 #         pppr = p.calculateDailyWholeLakePhytoplanktonPrimaryProductionPerMeterSquared(0.1)
         
         layer_depths = p.get_thermal_layer_depths()
-        epi_lower_bound = layer_depths[0]
-        met_lower_bound = layer_depths[1]
-        hyp_lower_bound = layer_depths[2]
+        if(3==len(layer_depths)):
+            epi_lower_bound = layer_depths[0]
+            met_lower_bound = layer_depths[1]
+            hyp_lower_bound = layer_depths[2]
+        elif(1==len(layer_depths)):
+            epi_lower_bound = layer_depths[0]
 
         print "lake ID: ", pid, " DOY: ", doy
 #         print "bppr is ", str(bppr), " mg C per square meter of littoral area"
@@ -536,13 +524,24 @@ def main():
         print "epilimnion lower bound is ", epi_lower_bound
         
         
+        pp_epi=0.0
+        pp_met=0.0
+        pp_hyp=0.0
+        pp_whole_lake = 0.0
         
-        pp_epi = p.calculate_primary_production_rate_in_layer(0, epi_lower_bound)
-        pp_met = p.calculate_primary_production_rate_in_layer(epi_lower_bound, met_lower_bound)
-        pp_hyp = p.calculate_primary_production_rate_in_layer(met_lower_bound, hyp_lower_bound)
+        
+        pp_epi = p.calculate_primary_production_rate_in_interval(0, epi_lower_bound)
+        if(3==len(layer_depths)):
+            pp_met = p.calculate_primary_production_rate_in_interval(epi_lower_bound, met_lower_bound)
+            pp_hyp = p.calculate_primary_production_rate_in_interval(met_lower_bound, hyp_lower_bound)
+            pp_whole_lake = p.calculateDailyWholeLakePhytoplanktonPrimaryProductionPerMeterSquared()
         print "pp_epi is ", pp_epi
         print "pp_met is", pp_met
         print "pp_hyp is", pp_hyp
+        
+        print "sum is ", pp_epi+pp_met+pp_hyp
+        
+        print "whole-lake is: ", pp_whole_lake
             
         
 
