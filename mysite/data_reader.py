@@ -379,7 +379,6 @@ class DataReader(object):
             else:
                 #create PhotoSynthesisMeasurement object using values specific to that benthic_measurement/row
                 row_depth_value = pond.calculate_depth_of_specific_light_percentage(row_light_penetration_proportion_value) #convert from light proportions to depth in meters.
-#                 row_depth_value = row_light_penetration_proportion_value #Read the depths directly. TODO: delete this. Used for testing only.
 
 
 #                 print "proportion is ", row_light_penetration_proportion_value, " depth is ", row_depth_value
@@ -488,8 +487,8 @@ def main():
         relative_depths = [1.0, 0.8,0.5,0.25,0.1,0.01]
         relative_depth_meters = []
 
-        
-        if(doy != 163): #TODO: remove this hack used for testing
+
+        if(doy != 151): #TODO: remove this hack used for testing
            continue #skip to next lake
 
 
@@ -501,7 +500,7 @@ def main():
 #         bppr = p.calculateDailyWholeLakeBenthicPrimaryProductionPerMeterSquared(0.1)
 #         bppr_surface_area = p.calculateDailyWholeLakeBenthicPrimaryProductionPerMeterSquared(0.1, False)
 #         pppr = p.calculateDailyWholeLakePhytoplanktonPrimaryProductionPerMeterSquared(0.1)
-        
+
         layer_depths = p.get_thermal_layer_depths()
         if(3==len(layer_depths)):
             epi_lower_bound = layer_depths[0]
@@ -522,28 +521,45 @@ def main():
         print "max depth is: ", shape.get_max_depth()
         print "thermal layer depths are: ", layer_depths
         print "epilimnion lower bound is ", epi_lower_bound
-        
-        
+
+
+        print "VOLUMES!!!!"
+        depth_interval_small = 0.1
+        z = 0.0
+        max_depth = shape.get_max_depth()
+        while z <max_depth:
+            volume = shape.get_volume_at_depth(z, 1.0) #m^3
+
+
+            total_volume = shape.get_volume_above_depth(max_depth, 0.01)
+            fractional_volume = volume/total_volume
+            print volume
+            # print fractional_volume
+            # print "volume at depth", nice_round_depth, " is ", volume
+            z+=depth_interval_small
+
+
+
         pp_epi=0.0
         pp_met=0.0
         pp_hyp=0.0
         pp_whole_lake = 0.0
-        
-        
-        pp_epi = p.calculate_primary_production_rate_in_interval(0, epi_lower_bound)
+
+
+        # pp_epi = p.calculate_primary_production_rate_in_interval(0, epi_lower_bound)
         if(3==len(layer_depths)):
             pp_met = p.calculate_primary_production_rate_in_interval(epi_lower_bound, met_lower_bound)
-            pp_hyp = p.calculate_primary_production_rate_in_interval(met_lower_bound, hyp_lower_bound)
-            pp_whole_lake = p.calculateDailyWholeLakePhytoplanktonPrimaryProductionPerMeterSquared()
+            # pp_hyp = p.calculate_primary_production_rate_in_interval(met_lower_bound, hyp_lower_bound)
+            # pp_whole_lake = p.calculateDailyWholeLakePhytoplanktonPrimaryProductionPerMeterSquared()
         print "pp_epi is ", pp_epi
         print "pp_met is", pp_met
         print "pp_hyp is", pp_hyp
-        
+
         print "sum is ", pp_epi+pp_met+pp_hyp
-        
+
         print "whole-lake is: ", pp_whole_lake
-            
-        
+
+
 
 
 
@@ -576,9 +592,9 @@ def main():
 
     print "done with all the ponds"
     sys.exit()
-    
-    
-            
+
+
+
 
 if __name__ == "__main__":
     main()

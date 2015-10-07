@@ -209,7 +209,7 @@ class BathymetricPondShape(PondShape):
 
 
 
-    def get_volume_above_depth(self, depth=0.0, depth_interval=None):
+    def get_volume_above_depth(self, depth=0.0, depth_interval=1):
         '''
         Get Volume Above Depth
         O(number of depth intervals*O(get_volume_at_depth()))
@@ -218,8 +218,6 @@ class BathymetricPondShape(PondShape):
         @rtype: float
 
         '''
-        if(depth_interval is None): #user didn't specify for calculations.
-            depth_interval = 1 #1 meter intervals. Good enough, probably
 
 
         validated_depth = self.validate_depth(depth)
@@ -237,7 +235,7 @@ class BathymetricPondShape(PondShape):
         return total_volume
 
 
-    def get_volume_at_depth(self, depth=0.0, depth_interval = None):
+    def get_volume_at_depth(self, depth=0.0, depth_interval = 1):
         '''
         given a depth, gives the volume of the shape with a lower surface at area and upper surface at area-validated_depth_interval
         @param depth: depth in meters to calculate at. depth should between 0 and max_depth. It'll be set to one of those if not so.
@@ -265,13 +263,12 @@ class BathymetricPondShape(PondShape):
         #
         ####################################################
 
-        if(depth_interval is None):
-            depth_interval = depth
 
         validated_depth = self.validate_depth(depth)
         validated_depth_interval = self.validate_depth_interval(depth_interval)
         lower_edge_depth = validated_depth
         upper_edge_depth = self.validate_depth(validated_depth - validated_depth_interval)
+
 
 
         #validate the depths of the two

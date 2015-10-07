@@ -406,7 +406,6 @@ class Pond(object):
         Validates the value
         '''
         if(isinstance(pond_shape_object, PondShape)):
-            print "setting pond shape."
             self.pond_shape_object = pond_shape_object
         else:
             raise Exception("cannot set pond shape. Invalid type")
@@ -706,9 +705,9 @@ class Pond(object):
 #         #TODO: validate interval
 #         time_interval = self.get_time_interval() #hours
 #         length_of_day = self.get_length_of_day()
-# 
-# 
-# 
+#
+#
+#
 #         pppr_total = 0.0  # mg C per day
 #         current_depth = 0.0 #lake surface
 #         photic_zone_lower_bound = self.calculate_photic_zone_lower_bound()
@@ -718,34 +717,34 @@ class Pond(object):
 #         total_volume = self.get_pond_shape().get_volume_above_depth(max_depth, depth_interval)
 #         surface_area = self.get_pond_shape().get_water_surface_area_at_depth(0)
 #         depth_ratio = mean_depth/max_depth
-# 
-# 
-# 
+#
+#
+#
 #         #for each depth interval #TODO: integration over whole lake?
 #         while current_depth<self.calculate_photic_zone_lower_bound():
 #             current_depth+=depth_interval
 #             ppprz = 0.0  # mg C* m^-3 *day
-# 
-# 
+#
+#
 #             #fractional volume
-# 
+#
 #             volume = self.get_pond_shape().get_volume_at_depth(current_depth, depth_interval) #m^3
-# 
+#
 #             f_volume = volume/photic_volume #unitless ratio
-# 
-# 
-# 
-# 
-# 
+#
+#
+#
+#
+#
 #             # for every time interval
 #             t = 0.0  # start of day
 #             while t < length_of_day:
 #                 ppprzt = 0.0
 #                 izt = self.calculate_light_at_depth_and_time(current_depth, t) #umol*m^-2*s^-1
 #                 ppprzt = self.calculate_phytoplankton_primary_productivity(izt, current_depth)*time_interval #(mg*m^-3*hr^-1)*hr = mg*m^-3
-# 
+#
 #                 ppprzt=ppprzt*volume #mg
-# 
+#
 #                 ppprz+=ppprzt #mg
 #                 t += time_interval
 #             time_interval_correction_factor = (1 / time_interval) #(hr/hr) Account for the fractional time interval. e.g. dividing by 1/0.25 is equiv to dividing by 4
@@ -755,14 +754,16 @@ class Pond(object):
 #             # print "ppprz*depth_interval is ", ppprz
 #             #OK, now we have ppprz in this volume. Let's weight using the fractional volume
 #             # weighted_pppr_z = ppprz * f_volume #mg/m^3  #production rate multiplied by the fraction of production rate across all volumes.
-# 
+#
 #             # pppr_total += weighted_pppr_z #mg/m^3
 #             pppr_total += ppprz #mgC
-# 
-# 
+#
+#
 #         pppr_m2 =pppr_total/surface_area  #mgC/m^2/day
 #         # pppr_m2 =pppr_total  #mgC/m^2/day
-        
+
+        #TODO: check whether this works. Does it add the three together correctly?
+        #TODO: validation. So much. Validation.
         upper_bound = 0
         lower_bound = self.calculate_photic_zone_lower_bound()
         print "lower bound is: ", lower_bound
@@ -772,68 +773,81 @@ class Pond(object):
 
     def calculate_primary_production_rate_in_interval(self, layer_upper_bound, layer_lower_bound, depth_interval = DEFAULT_DEPTH_INTERVAL_FOR_CALCULATIONS):
         '''
-        testing purposes. Give it a layer, and it'll calculate PPPR in that layer. Theoretically 
+        testing purposes. Give it a layer, and it'll calculate PPPR in that layer. Theoretically
         '''
 
         #TODO: validate interval
         time_interval = self.get_time_interval() #hours
         length_of_day = self.get_length_of_day()
-        
-        photic_zone_lower_bound = self.calculate_photic_zone_lower_bound()  
+
+        photic_zone_lower_bound = self.calculate_photic_zone_lower_bound()
         photic_volume = self.get_pond_shape().get_volume_above_depth(photic_zone_lower_bound, depth_interval)
         max_depth = self.get_pond_shape().get_max_depth()
         mean_depth = self.get_pond_shape().get_mean_depth()
         total_volume = self.get_pond_shape().get_volume_above_depth(max_depth, depth_interval)
         surface_area = self.get_pond_shape().get_water_surface_area_at_depth(0)
-        layer_depth = layer_lower_bound-layer_upper_bound #deeper is bigger magnitude, so instead of upper-lower we do lower - upper 
+        layer_depth = layer_lower_bound-layer_upper_bound #deeper is bigger magnitude, so instead of upper-lower we do lower - upper
         depth_ratio = mean_depth/max_depth
         time_interval_correction_factor = (1 / time_interval) #(hr/hr) Account for the fractional time interval. e.g. dividing by 1/0.25 is equiv to dividing by 4
-        
+
 
 #         print "surface area is", surface_area
+        #TODO:remove this test code.
         pp_list = []
         surface_light_list = []
         depth_list = []
         light_at_depth_list = []
+        volume_at_depth_list = []
+        f_volume_at_depth_list = []
+
+
         t = 0.0  # start of day
         pp_layer_total = 0.0
-        
+
         while t <= length_of_day:
-            
+
             surface_light = self.calculate_light_at_depth_and_time(0.0, t)
-            
+
             z = layer_upper_bound
-            pp_layer_t = 0.0 
-            
+            pp_layer_t = 0.0
+
             while z<=layer_lower_bound:
-                
+
                 izt = self.calculate_light_at_depth_and_time(z, t) #umol*m^-2*s^-1
-                if(8==t):
-                    depth_list.append(z)
-                    light_at_depth_list.append(izt)
                 interval_volume = self.get_pond_shape().get_volume_at_depth(z, depth_interval) #m^3
                 f_volume = interval_volume/total_volume
                 ppprzt = self.calculate_phytoplankton_primary_productivity(izt, z) #mgC*m^-3*hr^-1, or mgC per meter cubed per hour
                 ppr_z_t_m3 = ppprzt*1 #mgC*m^-3*hr^-1 * 1 hour = mgC*m^-3
                 ppr_z_t_hw = ppr_z_t_m3*f_volume #mgC*m^-3
-                pp_layer_t +=ppr_z_t_hw                                
+
+                #TODO: remove this test code.
+                if(8==t):
+                #     self.calculate_phytoplankton_primary_productivity(izt, z, True)
+
+                    light_at_depth_list.append(izt)
+                    depth_list.append(z)
+                    # volume_at_z = self.get_pond_shape().get_volume_at_depth(z, 1.0) #m^3
+                    # volume_at_depth_list.append(volume_at_z)
+
+                pp_layer_t +=ppr_z_t_hw
                 z+=depth_interval
-            
+
 #             print "pp_layer_t at time ", t," upper bound ", layer_upper_bound, "lower bound", layer_lower_bound, " is ", pp_layer_t, " and surface_light was ",self.calculate_light_at_depth_and_time(0, t)
             if(t%0.5==0):
-                print "time is", t, " appending! "
+                # print "time is", t, " appending! "
                 surface_light_list.append(surface_light)
                 pp_list.append(pp_layer_t)
-            pp_layer_total+=pp_layer_t*time_interval_correction_factor              
+            pp_layer_total+=pp_layer_t*time_interval_correction_factor
 
             t += time_interval
-        
+
         print "pp_at_time_t list ", pp_list
         print "surface light list: ", surface_light_list
-        print "depth list", depth_list
         print "light at time eight, different depths", light_at_depth_list
         print "layer depth is", layer_depth
-#         print "pp_layer_total is ",pp_layer_total         
+        print "depth list", depth_list
+        print len(volume_at_depth_list)
+#         print "pp_layer_total is ",pp_layer_total
         pp_layer_m2 = pp_layer_total*layer_depth
         return pp_layer_m2 #mgC/m^2/day
 
@@ -891,7 +905,7 @@ class Pond(object):
         @return ppr_z (mg*m^-3*hr^-1)
         '''
         ppr_z = 0.0
-        
+
         phyto_photo_measurement_z = self.get_phytoplankton_photosynthesis_measurement_at_depth(depth)
         if(phyto_photo_measurement_z is not None):
 
@@ -907,14 +921,19 @@ class Pond(object):
             interim_value = 1-mat.exp(-phyto_alpha*izt/phyto_pmax)#[(mg*m^-3*hr^-1)/(umol*m^-2*s^-1) * (umol*m^-2*s^-1) = (mg*m^-3*hr^-1)
             other_interim_value = mat.exp(-phyto_beta*izt/phyto_pmax) #(mg*m^-3*hr^-1), same as above
             ppr_z=phyto_pmax*interim_value*other_interim_value #(mg*m^-3*hr^-1)
-            if(testing):
-                print "izt is ", izt
-                print "alpha is ", phyto_alpha
-                print "beta is ", phyto_beta
-                print "pmax is ", phyto_pmax
-                print "bob is ", interim_value
-                print "sally is ", other_interim_value
-                print "bob*pmax*sally is ppr, which is", ppr_z
+            # if(testing):
+                # print depth
+                # print izt
+                # print phyto_alpha
+                # print phyto_beta
+                # print interim_value
+                # print other_interim_value
+                # print ppr_z
+                # print "izt is ", izt, "alpha is ", phyto_alpha, "beta is ", phyto_beta
+                # print "pmax is ",print phyto_pmax
+                # print "bob is ", interim_value
+                # print "sally is ", other_interim_value
+                # print "bob*pmax*sally is ppr, which is", ppr_z
 
         return ppr_z #(mg*m^-3*hr^-1)
 
@@ -943,7 +962,7 @@ class Pond(object):
         for layer_measurement in reverse_sorted_measurements:
             layer_depth_list.append(layer_measurement.get_depth())
         return layer_depth_list
-            
+
 
     def get_phyto_measurements_sorted_by_depth(self, reverse= False):
         '''
