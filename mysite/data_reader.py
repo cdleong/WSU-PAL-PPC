@@ -56,7 +56,8 @@ class DataReader(object):
 # light extinction coefficient    copied directly    https://lter.limnology.wisc.edu/dataset/north-temperate-lakes-lter-light-extinction-trout-lake-area-1981-current
 # pppr        https://lter.limnology.wisc.edu/dataset/north-temperate-lakes-lter-primary-production-trout-lake-area-1986-2007
 #     filename = "Sep_5_test_data.xlsx" #just used for testing phyto. Data from multiple sources.
-    filename = "Sep_17_test_data.xls" #just used for testing phyto. Data from multiple sources. Messing with values.
+#     filename = "Sep_17_test_data.xls" #just used for testing phyto. Data from multiple sources. Messing with values.
+    filename = "Oct_12_test_data.xls" #just used for testing phyto. Data from multiple sources. Messing with values.
 
 
 
@@ -287,7 +288,8 @@ class DataReader(object):
             row_lakeID_value = row[self.lakeIDIndex].value
             row_kd_value = float(row[self.kd_index].value)
             row_noonlight_value = float(row[self.noon_surface_light_index].value)
-            row_latitude_value = float(row[self.latitude_index].value)
+#             row_latitude_value = float(row[self.latitude_index].value)
+            row_latitude_value = 3.14 #TODO: get rid of latitude entirely
             row_lod_value = float(row[self.length_of_day_index].value)
 
 
@@ -376,6 +378,7 @@ class DataReader(object):
                                                  i.get_day_of_year()==row_doy_value)),None) #source: http://stackoverflow.com/questions/7125467/find-object-in-list-that-has-attribute-equal-to-some-value-that-meets-any-condi
             if pond is None: #something is terribly wrong
                 raise FormatError("Something went wrong. Benthic Measurement with DOY "+str(row_doy_value) + " and Lake ID " + row_lakeID_value + " does not match to any Pond.")
+                #TODO: handle this better.
             else:
                 #create PhotoSynthesisMeasurement object using values specific to that benthic_measurement/row
                 row_depth_value = pond.calculate_depth_of_specific_light_percentage(row_light_penetration_proportion_value) #convert from light proportions to depth in meters.
@@ -489,7 +492,7 @@ def main():
         relative_depth_meters = []
 
         
-        if(doy != 163): #TODO: remove this hack used for testing
+        if(doy != 233): #TODO: remove this hack used for testing
            continue #skip to next lake
 
 
@@ -528,12 +531,12 @@ def main():
         pp_met=0.0
         pp_hyp=0.0
         pp_whole_lake = 0.0
+        use_photoinhibition = True
         
-        
-        pp_epi = p.calculate_primary_production_rate_in_interval(0, epi_lower_bound)
+        pp_epi = p.calculate_primary_production_rate_in_interval(0, epi_lower_bound,p.DEFAULT_DEPTH_INTERVAL_FOR_CALCULATIONS, use_photoinhibition)
         if(3==len(layer_depths)):
-            pp_met = p.calculate_primary_production_rate_in_interval(epi_lower_bound, met_lower_bound)
-            pp_hyp = p.calculate_primary_production_rate_in_interval(met_lower_bound, hyp_lower_bound)
+            pp_met = p.calculate_primary_production_rate_in_interval(epi_lower_bound, met_lower_bound,p.DEFAULT_DEPTH_INTERVAL_FOR_CALCULATIONS, use_photoinhibition)
+            pp_hyp = p.calculate_primary_production_rate_in_interval(met_lower_bound, hyp_lower_bound,p.DEFAULT_DEPTH_INTERVAL_FOR_CALCULATIONS, use_photoinhibition)
             pp_whole_lake = p.calculateDailyWholeLakePhytoplanktonPrimaryProductionPerMeterSquared()
         print "pp_epi is ", pp_epi
         print "pp_met is", pp_met

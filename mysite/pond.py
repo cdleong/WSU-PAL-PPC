@@ -30,29 +30,29 @@ class Pond(object):
     ###################################
     # CONSTANTS
     ###################################
-    MINIMUM_VALID_DAY = 0 #New Year's Day
-    MAXIMUM_VALID_DAY = 366 #New Year's Eve in a leap year.
+    MINIMUM_VALID_DAY = 0  # New Year's Day
+    MAXIMUM_VALID_DAY = 366  # New Year's Eve in a leap year.
 
     MINIMUM_LENGTH_OF_DAY = 0.0  # north of the arctic circle and south of the antarctic one, this is possible during winter.
     MAXIMUM_LENGTH_OF_DAY = 24.0003  # north of the arctic circle and south of the antarctic one, this is possible during summer, if there's a leap second
 
-    MINIMUM_NOON_SURFACE_LIGHT = 0.0 #Total darkness. TODO: will this cause divide-by-zero errors?
+    MINIMUM_NOON_SURFACE_LIGHT = 0.0  # Total darkness. TODO: will this cause divide-by-zero errors?
     MAXIMUM_NOON_SURFACE_LIGHT = 1000000.0  # normally it's in the range of ~1000-2000. A 1000x increase, I'm pretty sure, would sterilize the lake. And probably the Earth. According to http://autogrow.com/general-info/light-measurement, the highest it generally gets on Earth is 2000. Don't wanna exclude nuclear weapons going off over lakes, though, you know?
 
 
-    MINIMUM_LIGHT_ATTENUATION_COEFFICIENT = 0.0 #totally, perfectly clear. Units in inverse meters. M^-1 #TODO: will this cause divide-by-zero errors?
-    MAXIMUM_LIGHT_ATTENUATION_COEFFICIENT = 100  #Close enough to totally opaque to make no practical difference. At this level, light goes from 100% at depth 0 to 0.005% at 10 centimeters. No meaningful photosynthesis is likely to be going on in this lake.
+    MINIMUM_LIGHT_ATTENUATION_COEFFICIENT = 0.0  # totally, perfectly clear. Units in inverse meters. M^-1 #TODO: will this cause divide-by-zero errors?
+    MAXIMUM_LIGHT_ATTENUATION_COEFFICIENT = 100  # Close enough to totally opaque to make no practical difference. At this level, light goes from 100% at depth 0 to 0.005% at 10 centimeters. No meaningful photosynthesis is likely to be going on in this lake.
 
-    PHOTIC_ZONE_LIGHT_PENETRATION_LEVEL_LOWER_BOUND = 0.01 #1% light penetration is the definition of the photic zone from various sources, including Vadeboncoeur 2008, and http://limnology.wisc.edu/courses/zoo316/REVIEW%20OF%20A%20FEW%20MAJOR%20CONCEPTS.html
+    PHOTIC_ZONE_LIGHT_PENETRATION_LEVEL_LOWER_BOUND = 0.01  # 1% light penetration is the definition of the photic zone from various sources, including Vadeboncoeur 2008, and http://limnology.wisc.edu/courses/zoo316/REVIEW%20OF%20A%20FEW%20MAJOR%20CONCEPTS.html
 
-    MAXIMUM_LAKE_ID_LENGTH = 140 #value picked arbitrarily during specification process. I chose it because I had Twitter on the mind. Possibly too long. 50 characters would give us enough characters for "Lake Chargoggagoggmanchaoggagoggchaubunaguhgamaugg", the longest lake name in the world...
+    MAXIMUM_LAKE_ID_LENGTH = 140  # value picked arbitrarily during specification process. I chose it because I had Twitter on the mind. Possibly too long. 50 characters would give us enough characters for "Lake Chargoggagoggmanchaoggagoggchaubunaguhgamaugg", the longest lake name in the world...
 
     MAXIMUM_NUMBER_OF_THERMAL_LAYERS = 3
 
-    DEFAULT_DEPTH_INTERVAL_FOR_CALCULATIONS = 0.1 #ten centimeters, 0.1 meters. Arbitrary.
+    DEFAULT_DEPTH_INTERVAL_FOR_CALCULATIONS = 0.1  # ten centimeters, 0.1 meters. Arbitrary.
 
-    DEFAULT_FREEZE_DAY = 349#December 15 #arbitrary default value, based on median from http://www.epa.gov/climatechange/pdfs/CI-snow-and-ice-2014.pdf
-    DEFAULT_THAW_DAY = 135 #May 15 #arbitrary default value, based on median from http://www.epa.gov/climatechange/pdfs/CI-snow-and-ice-2014.pdf
+    DEFAULT_FREEZE_DAY = 349  # December 15 #arbitrary default value, based on median from http://www.epa.gov/climatechange/pdfs/CI-snow-and-ice-2014.pdf
+    DEFAULT_THAW_DAY = 135  # May 15 #arbitrary default value, based on median from http://www.epa.gov/climatechange/pdfs/CI-snow-and-ice-2014.pdf
 
 
     ###################################
@@ -78,7 +78,7 @@ class Pond(object):
     # phytoplankton photosynthesis data list #TODO: everything to do with this
     phytoplankton_photosynthesis_measurements = []
 
-    #latitude, for seasonal calculations. #TODO: Calculate based on Sudhakhar et al http://www.journal-ijeee.com/content/4/1/21
+    # latitude, for seasonal calculations. #TODO: Calculate based on Sudhakhar et al http://www.journal-ijeee.com/content/4/1/21
     latitude = 0.0
 
     # default intervals for calculations is quarter-hours
@@ -99,7 +99,7 @@ class Pond(object):
                  pond_shape_object=PondShape(),
                  benthic_photosynthesis_measurements=[],
                  phytoplankton_photosynthesis_measurements=[],
-                 lattitude = 0.0,
+                 lattitude=0.0,
                  time_interval=0.25):
         '''
         CONSTRUCTOR
@@ -217,11 +217,11 @@ class Pond(object):
 
 
     def validate_time(self, time):
-        validated_time =time
+        validated_time = time
         length_of_day = self.get_length_of_day()
-        if(time>length_of_day):
-            validated_time =length_of_day
-        elif(time<0.0):
+        if(time > length_of_day):
+            validated_time = length_of_day
+        elif(time < 0.0):
             validated_time = 0.0
 
 
@@ -431,7 +431,7 @@ class Pond(object):
         '''
         # TODO: use a dict to ensure 3 unique layers.
         all_valid = self.validate_types_of_all_items_in_list(values, PhytoPlanktonPhotosynthesisMeasurement)
-        length_valid = len(values)<=self.MAXIMUM_NUMBER_OF_THERMAL_LAYERS
+        length_valid = len(values) <= self.MAXIMUM_NUMBER_OF_THERMAL_LAYERS
 
         if(not all_valid):
             raise Exception("ERROR: all values in phytoplankton_photosynthesis_measurements must be of type PhytoPlanktonPhotosynthesisMeasurement")
@@ -507,7 +507,7 @@ class Pond(object):
 
     def add_benthic_measurement_if_photic(self, measurement):
         z1Percent = self.calculate_depth_of_specific_light_percentage(self.PHOTIC_ZONE_LIGHT_PENETRATION_LEVEL_LOWER_BOUND)
-        if(measurement.get_depth()<=z1Percent):
+        if(measurement.get_depth() <= z1Percent):
             self.add_benthic_measurement(measurement)
         else:
             print "measurement not within photic zone"
@@ -515,10 +515,10 @@ class Pond(object):
 
     def add_phytoplankton_measurement(self, measurement=PhytoPlanktonPhotosynthesisMeasurement):
         if(isinstance(measurement, PhytoPlanktonPhotosynthesisMeasurement)):
-            if(len(self.phytoplankton_photosynthesis_measurements)>0):
-                existing_measurement = next((i for i in self.phytoplankton_photosynthesis_measurements if (i.get_thermal_layer()==measurement.get_thermal_layer())),None) #source: http://stackoverflow.com/questions/7125467/find-object-in-list-that-has-attribute-equal-to-some-value-that-meets-any-condi
+            if(len(self.phytoplankton_photosynthesis_measurements) > 0):
+                existing_measurement = next((i for i in self.phytoplankton_photosynthesis_measurements if (i.get_thermal_layer() == measurement.get_thermal_layer())), None)  # source: http://stackoverflow.com/questions/7125467/find-object-in-list-that-has-attribute-equal-to-some-value-that-meets-any-condi
                 if(existing_measurement is not None):
-                    index = measurement.get_thermal_layer()-1
+                    index = measurement.get_thermal_layer() - 1
                     self.phytoplankton_photosynthesis_measurements.remove(existing_measurement)
                     self.phytoplankton_photosynthesis_measurements.insert(index, measurement)
 
@@ -539,20 +539,20 @@ class Pond(object):
 
     ############################################
     ############################################
-    ## SCIENCE FUNCTIONS
-    ## This section is where the science occurs.
+    # # SCIENCE FUNCTIONS
+    # # This section is where the science occurs.
     ############################################
     ############################################
 
 
     ###########################################################
-    #BENTHIC PHOTO METHODS
+    # BENTHIC PHOTO METHODS
     ###########################################################
 
     ##############################
     # BENTHIC PRIMARY PRODUCTIVITY
     ##############################
-    def calculateDailyWholeLakeBenthicPrimaryProductionPerMeterSquared(self, depth_interval = DEFAULT_DEPTH_INTERVAL_FOR_CALCULATIONS, use_littoral_area=True):
+    def calculateDailyWholeLakeBenthicPrimaryProductionPerMeterSquared(self, depth_interval=DEFAULT_DEPTH_INTERVAL_FOR_CALCULATIONS, use_littoral_area=True):
         '''
         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         Almost everything else in this entire project works to make this method work.
@@ -563,7 +563,7 @@ class Pond(object):
         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         '''
         time_interval = self.get_time_interval()
-        length_of_day = self.get_length_of_day() #TODO: Fee normalized this around zero. Doesn't seem necessary, but might affect the periodic function.
+        length_of_day = self.get_length_of_day()  # TODO: Fee normalized this around zero. Doesn't seem necessary, but might affect the periodic function.
 
 
 
@@ -571,17 +571,17 @@ class Pond(object):
         current_depth_interval = 0.0
         previous_depth = 0.0
         current_depth = 0.0
-        total_littoral_area=self.calculate_total_littoral_area()
+        total_littoral_area = self.calculate_total_littoral_area()
         total_surface_area = self.get_pond_shape().get_water_surface_area_at_depth(0.0)
 
-        #for each depth interval #TODO: integration over whole lake?
-        while current_depth<self.calculate_photic_zone_lower_bound():
+        # for each depth interval #TODO: integration over whole lake?
+        while current_depth < self.calculate_photic_zone_lower_bound():
             bpprz = 0.0  # mg C* m^-2 *day
 
-            #depth interval calculation
+            # depth interval calculation
             previous_depth = current_depth
-            current_depth +=depth_interval
-            current_depth_interval = current_depth-previous_depth
+            current_depth += depth_interval
+            current_depth_interval = current_depth - previous_depth
 
 
 
@@ -591,10 +591,10 @@ class Pond(object):
             ik_z = self.get_benthic_ik_at_depth(current_depth)
             benthic_pmax_z = self.get_benthic_pmax_at_depth(current_depth)
 
-            if(True==use_littoral_area):
-                f_area = area/total_littoral_area #TODO: these add up to 1.0, right?
+            if(True == use_littoral_area):
+                f_area = area / total_littoral_area  # TODO: these add up to 1.0, right?
             else:
-                f_area = area/total_surface_area
+                f_area = area / total_surface_area
 
 
             # for every time interval
@@ -629,8 +629,8 @@ class Pond(object):
         @return:
         @rtype:
         '''
-        #if depth is lower than the depth of 1% light, pmax approaches zero.
-        if(self.check_if_depth_in_photic_zone(depth)==False):
+        # if depth is lower than the depth of 1% light, pmax approaches zero.
+        if(self.check_if_depth_in_photic_zone(depth) == False):
             return 0
 
 
@@ -681,17 +681,17 @@ class Pond(object):
         @return: sorted benthic measurements
         @rtype: list of BenthicPhotosynthesisMeasurement objects.
         '''
-        #http://stackoverflow.com/questions/403421/how-to-sort-a-list-of-objects-in-python-based-on-an-attribute-of-the-objects
+        # http://stackoverflow.com/questions/403421/how-to-sort-a-list-of-objects-in-python-based-on-an-attribute-of-the-objects
         unsorted_measurements = self.get_benthic_photosynthesis_measurements()
         sorted_measurements = sorted(unsorted_measurements, key=lambda x: x.get_depth(), reverse=False)
         return sorted_measurements
 
     ###########################################################
-    #PHYTO PHOTO METHODS
+    # PHYTO PHOTO METHODS
     ###########################################################
 
 
-    def calculateDailyWholeLakePhytoplanktonPrimaryProductionPerMeterSquared(self, depth_interval = DEFAULT_DEPTH_INTERVAL_FOR_CALCULATIONS):
+    def calculateDailyWholeLakePhytoplanktonPrimaryProductionPerMeterSquared(self, depth_interval=DEFAULT_DEPTH_INTERVAL_FOR_CALCULATIONS):
         '''
         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         Calculate Daily Whole-lake Phytoplankton Primary Production
@@ -767,16 +767,16 @@ class Pond(object):
         lower_bound = self.calculate_photic_zone_lower_bound()
         print "lower bound is: ", lower_bound
         pppr_m2 = self.calculate_primary_production_rate_in_interval(upper_bound, lower_bound, depth_interval)
-        return pppr_m2 #mgC/m^2/day
+        return pppr_m2  # mgC/m^2/day
 
 
-    def calculate_primary_production_rate_in_interval(self, layer_upper_bound, layer_lower_bound, depth_interval = DEFAULT_DEPTH_INTERVAL_FOR_CALCULATIONS):
+    def calculate_primary_production_rate_in_interval(self, layer_upper_bound, layer_lower_bound, depth_interval=DEFAULT_DEPTH_INTERVAL_FOR_CALCULATIONS, use_photoinhibition=True):
         '''
         testing purposes. Give it a layer, and it'll calculate PPPR in that layer. Theoretically 
         '''
 
-        #TODO: validate interval
-        time_interval = self.get_time_interval() #hours
+        # TODO: validate interval
+        time_interval = self.get_time_interval()  # hours
         length_of_day = self.get_length_of_day()
         
         photic_zone_lower_bound = self.calculate_photic_zone_lower_bound()  
@@ -785,9 +785,9 @@ class Pond(object):
         mean_depth = self.get_pond_shape().get_mean_depth()
         total_volume = self.get_pond_shape().get_volume_above_depth(max_depth, depth_interval)
         surface_area = self.get_pond_shape().get_water_surface_area_at_depth(0)
-        layer_depth = layer_lower_bound-layer_upper_bound #deeper is bigger magnitude, so instead of upper-lower we do lower - upper 
-        depth_ratio = mean_depth/max_depth
-        time_interval_correction_factor = (1 / time_interval) #(hr/hr) Account for the fractional time interval. e.g. dividing by 1/0.25 is equiv to dividing by 4
+        layer_depth = layer_lower_bound - layer_upper_bound  # deeper is bigger magnitude, so instead of upper-lower we do lower - upper 
+        depth_ratio = mean_depth / max_depth
+        time_interval_correction_factor = (1 / time_interval)  # (hr/hr) Account for the fractional time interval. e.g. dividing by 1/0.25 is equiv to dividing by 4
         
 
 #         print "surface area is", surface_area
@@ -805,26 +805,26 @@ class Pond(object):
             z = layer_upper_bound
             pp_layer_t = 0.0 
             
-            while z<=layer_lower_bound:
+            while z <= layer_lower_bound:
                 
-                izt = self.calculate_light_at_depth_and_time(z, t) #umol*m^-2*s^-1
-                if(8==t):
+                izt = self.calculate_light_at_depth_and_time(z, t)  # umol*m^-2*s^-1
+                if(8 == t):
                     depth_list.append(z)
                     light_at_depth_list.append(izt)
-                interval_volume = self.get_pond_shape().get_volume_at_depth(z, depth_interval) #m^3
-                f_volume = interval_volume/total_volume
-                ppprzt = self.calculate_phytoplankton_primary_productivity(izt, z) #mgC*m^-3*hr^-1, or mgC per meter cubed per hour
-                ppr_z_t_m3 = ppprzt*1 #mgC*m^-3*hr^-1 * 1 hour = mgC*m^-3
-                ppr_z_t_hw = ppr_z_t_m3*f_volume #mgC*m^-3
-                pp_layer_t +=ppr_z_t_hw                                
-                z+=depth_interval
+                interval_volume = self.get_pond_shape().get_volume_at_depth(z, depth_interval)  # m^3
+                f_volume = interval_volume / total_volume
+                ppprzt = self.calculate_phytoplankton_primary_productivity(izt, z, use_photoinhibition)  # mgC*m^-3*hr^-1, or mgC per meter cubed per hour
+                ppr_z_t_m3 = ppprzt * 1  # mgC*m^-3*hr^-1 * 1 hour = mgC*m^-3
+                ppr_z_t_hw = ppr_z_t_m3 * f_volume  # mgC*m^-3
+                pp_layer_t += ppr_z_t_hw                                
+                z += depth_interval
             
 #             print "pp_layer_t at time ", t," upper bound ", layer_upper_bound, "lower bound", layer_lower_bound, " is ", pp_layer_t, " and surface_light was ",self.calculate_light_at_depth_and_time(0, t)
-            if(t%0.5==0):
-                print "time is", t, " appending! "
+            if(t % 0.5 == 0):
+#                 print "time is", t, " appending! "
                 surface_light_list.append(surface_light)
                 pp_list.append(pp_layer_t)
-            pp_layer_total+=pp_layer_t*time_interval_correction_factor              
+            pp_layer_total += pp_layer_t * time_interval_correction_factor              
 
             t += time_interval
         
@@ -834,8 +834,8 @@ class Pond(object):
         print "light at time eight, different depths", light_at_depth_list
         print "layer depth is", layer_depth
 #         print "pp_layer_total is ",pp_layer_total         
-        pp_layer_m2 = pp_layer_total*layer_depth
-        return pp_layer_m2 #mgC/m^2/day
+        pp_layer_m2 = pp_layer_total * layer_depth
+        return pp_layer_m2  # mgC/m^2/day
 
 
 
@@ -862,7 +862,7 @@ class Pond(object):
         @rtype:
         '''
         validated_depth = self.validate_depth(depth)
-        phyto_alpha = 0.0 #TODO: safer value?
+        phyto_alpha = 0.0  # TODO: safer value?
         measurement = self.get_phytoplankton_photosynthesis_measurement_at_depth(validated_depth)
         if(measurement is not None):
             phyto_alpha = measurement.get_phyto_alpha()
@@ -875,7 +875,7 @@ class Pond(object):
         @rtype:
         '''
         validated_depth = self.validate_depth(depth)
-        phyto_beta = 0.0 #TODO: safer value?
+        phyto_beta = 0.0  # TODO: safer value?
         measurement = self.get_phytoplankton_photosynthesis_measurement_at_depth(validated_depth)
         if(measurement is not None):
             phyto_beta = measurement.get_phyto_beta()
@@ -883,7 +883,7 @@ class Pond(object):
 
 
 
-    def calculate_phytoplankton_primary_productivity(self, izt, depth, testing=False):
+    def calculate_phytoplankton_primary_productivity(self, izt, depth, use_photoinhibition=True, testing=False):
         '''
         Calculate Phytoplankton Primary Productivity
         @param izt: light at depth z, time t (umol*m^-2*s^-1)
@@ -896,27 +896,33 @@ class Pond(object):
         if(phyto_photo_measurement_z is not None):
 
 
-            phyto_pmax = self.get_phyto_pmax_at_depth(depth) #mg C per m^3 per hour (mg*m^-3*hr^-1)
-            phyto_alpha = self.get_phyto_alpha_at_depth(depth) #(mg*m^-3*hr^-1)/(umol*m^-2*s^-1)
-            phyto_beta = self.get_phyto_beta_at_depth(depth) #(mg*m^-3*hr^-1)/(umol*m^-2*s^-1)
+            phyto_pmax = self.get_phyto_pmax_at_depth(depth)  # mg C per m^3 per hour (mg*m^-3*hr^-1)
+            phyto_alpha = self.get_phyto_alpha_at_depth(depth)  # (mg*m^-3*hr^-1)/(umol*m^-2*s^-1)
+            phyto_beta = self.get_phyto_beta_at_depth(depth)  # (mg*m^-3*hr^-1)/(umol*m^-2*s^-1)
 
             # print "pmax at depth ", depth, " is ", phyto_pmax
+            if(use_photoinhibition):
+                # P-I CURVE EQUATION WITH PHOTOINHIBITION  P = Pmax*(1-exp(-alpha*I/Pmax))*exp(-beta*I/Pmax)
+                # P-I curve equation derived from Jassby/Platt, and specifically from http://web.pdx.edu/~rueterj/courses/esr473/notes/pvsi.htm
+                # that website, of course, got it from "Photoinhibition of photosynthesis in natural assemblages of marine phytoplankton" By Platt, T., C.L. Gallegos and W.G. Harrison 1979.
+                interim_value = 1 - mat.exp(-phyto_alpha * izt / phyto_pmax)  # [(mg*m^-3*hr^-1)/(umol*m^-2*s^-1) * (umol*m^-2*s^-1) = (mg*m^-3*hr^-1)
+                other_interim_value = mat.exp(-phyto_beta * izt / phyto_pmax)  # (mg*m^-3*hr^-1), same as above
+                ppr_z = phyto_pmax * interim_value * other_interim_value  # (mg*m^-3*hr^-1)
+                if(testing):
+                    print "izt is ", izt
+                    print "alpha is ", phyto_alpha
+                    print "beta is ", phyto_beta
+                    print "pmax is ", phyto_pmax
+                    print "bob is ", interim_value
+                    print "sally is ", other_interim_value
+                    print "bob*pmax*sally is ppr, which is", ppr_z
+                
+            else: 
+                # P-I CURVE EQUATION WITH NO PHOTOINHIBITION. P = Pmax* tanh(alpha*I/Pmax)
+                ppr_z = phyto_pmax * mat.tanh(phyto_alpha * izt / phyto_pmax) 
+                
 
-            #P-I curve equation derived from Jassby/Platt, and specifically from http://web.pdx.edu/~rueterj/courses/esr473/notes/pvsi.htm
-            #that website, of course, got it from "Photoinhibition of photosynthesis in natural assemblages of marine phytoplankton" By Platt, T., C.L. Gallegos and W.G. Harrison 1979.
-            interim_value = 1-mat.exp(-phyto_alpha*izt/phyto_pmax)#[(mg*m^-3*hr^-1)/(umol*m^-2*s^-1) * (umol*m^-2*s^-1) = (mg*m^-3*hr^-1)
-            other_interim_value = mat.exp(-phyto_beta*izt/phyto_pmax) #(mg*m^-3*hr^-1), same as above
-            ppr_z=phyto_pmax*interim_value*other_interim_value #(mg*m^-3*hr^-1)
-            if(testing):
-                print "izt is ", izt
-                print "alpha is ", phyto_alpha
-                print "beta is ", phyto_beta
-                print "pmax is ", phyto_pmax
-                print "bob is ", interim_value
-                print "sally is ", other_interim_value
-                print "bob*pmax*sally is ppr, which is", ppr_z
-
-        return ppr_z #(mg*m^-3*hr^-1)
+        return ppr_z  # (mg*m^-3*hr^-1)
 
 
 
@@ -926,32 +932,32 @@ class Pond(object):
         @return: shallowest layer measurement deeper than specified depth, or None if not found.
         @rtype:
         '''
-        #find the shallowest layer_measurement that's deeper than this depth.
-        #example: layers are at 5, 10, 15. Depth given is 5.5, then use measurement for second layer.
-        measurement =None
-        reverse_sorted_measurements = self.get_phyto_measurements_sorted_by_depth(True) #sort reversed by depth.
+        # find the shallowest layer_measurement that's deeper than this depth.
+        # example: layers are at 5, 10, 15. Depth given is 5.5, then use measurement for second layer.
+        measurement = None
+        reverse_sorted_measurements = self.get_phyto_measurements_sorted_by_depth(True)  # sort reversed by depth.
         for layer_measurement in reverse_sorted_measurements:
-            if (layer_measurement.get_depth()>depth):
-                #the bottom of said thermal layer is deeper than the depth we want.
+            if (layer_measurement.get_depth() > depth):
+                # the bottom of said thermal layer is deeper than the depth we want.
                 measurement = layer_measurement
         return measurement
 
 
     def get_thermal_layer_depths(self):
         layer_depth_list = []
-        reverse_sorted_measurements = self.get_phyto_measurements_sorted_by_depth(False) #sort reversed by depth.
+        reverse_sorted_measurements = self.get_phyto_measurements_sorted_by_depth(False)  # sort reversed by depth.
         for layer_measurement in reverse_sorted_measurements:
             layer_depth_list.append(layer_measurement.get_depth())
         return layer_depth_list
             
 
-    def get_phyto_measurements_sorted_by_depth(self, reverse= False):
+    def get_phyto_measurements_sorted_by_depth(self, reverse=False):
         '''
         Sort
         @return: sorted benthic measurements
         @rtype: list of BenthicPhotosynthesisMeasurement objects.
         '''
-        #http://stackoverflow.com/questions/403421/how-to-sort-a-list-of-objects-in-python-based-on-an-attribute-of-the-objects
+        # http://stackoverflow.com/questions/403421/how-to-sort-a-list-of-objects-in-python-based-on-an-attribute-of-the-objects
         thing = reverse
         unsorted_measurements = self.get_phytoplankton_photosynthesis_measurements()
         sorted_measurements = sorted(unsorted_measurements, key=lambda x: x.get_depth(), reverse=thing)
@@ -959,7 +965,7 @@ class Pond(object):
 
 
     ###########################################################
-    #OTHER SCIENCE METHODS
+    # OTHER SCIENCE METHODS
     ###########################################################
     def check_if_depth_in_photic_zone(self, depth):
         '''
@@ -970,7 +976,7 @@ class Pond(object):
         '''
         in_zone = True
         photic_zone_lower_bound = self.calculate_photic_zone_lower_bound()
-        if(depth<0 or depth>photic_zone_lower_bound):
+        if(depth < 0 or depth > photic_zone_lower_bound):
             in_zone = False
         else:
             in_zone = True
@@ -988,7 +994,7 @@ class Pond(object):
         '''
         lower_bound = self.calculate_depth_of_specific_light_percentage(self.PHOTIC_ZONE_LIGHT_PENETRATION_LEVEL_LOWER_BOUND)
         max_depth = self.get_max_depth()
-        if(lower_bound>max_depth):
+        if(lower_bound > max_depth):
             lower_bound = max_depth
         return lower_bound
 
@@ -1071,7 +1077,7 @@ class Pond(object):
         length_of_day = self.get_length_of_day()
         surface_light_at_t = noonlight * np.sin(np.pi * validated_time / length_of_day)
         light_attenuation_coefficient = self.get_light_attenuation_coefficient()
-        light_at_z_and_t = surface_light_at_t* np.exp(-light_attenuation_coefficient * validated_depth)
+        light_at_z_and_t = surface_light_at_t * np.exp(-light_attenuation_coefficient * validated_depth)
         return light_at_z_and_t
 
 
@@ -1120,12 +1126,12 @@ class Pond(object):
         max_depth_given = max(depths_list)
         min_depth_given = min(depths_list)
 
-        if(validated_depth>max_depth_given):
+        if(validated_depth > max_depth_given):
 #             print "depth is",validated_depth, "cannot interpolate outside the range of measurements given. setting to max depth = ", max_depth_given
-            validated_depth= max_depth_given
-        elif(min_depth_given<min_depth_given):
+            validated_depth = max_depth_given
+        elif(min_depth_given < min_depth_given):
 #             print "depth is",validated_depth, "cannot interpolate outside the range of measurements given. setting to min depth = ", min_depth_given
-            validated_depth= min_depth_given
+            validated_depth = min_depth_given
 
 
         # get interpolation function
@@ -1133,7 +1139,7 @@ class Pond(object):
         y = values_list
         f = interp1d(x, y)
 
-        #magic from http://docs.scipy.org/doc/scipy/reference/tutorial/interpolate.html
+        # magic from http://docs.scipy.org/doc/scipy/reference/tutorial/interpolate.html
         #SPLINES....!!!
 #         tck = interpolate.splrep(x, y, s=0)
 #         xnew = [validated_depth]
@@ -1172,7 +1178,7 @@ class Pond(object):
 
 
 ############################################################################
-#TESTING SECTION
+# TESTING SECTION
 ###########################################################################
 
 
@@ -1201,10 +1207,10 @@ def main():
     measurement_list = [m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13]
     areas = {0:100, 5:100, 10:100, 13.3:100, 13.4:0.1}
 
-    p_m1 = PhytoPlanktonPhotosynthesisMeasurement(1, 5, 4.113867544, 0.05, 0.01) #US sparkling lake
-    p_m2 = PhytoPlanktonPhotosynthesisMeasurement(2, 10, 2.636765965,0.0412667109,0)
-    p_m3 = PhytoPlanktonPhotosynthesisMeasurement(3, 15, 4.959339837, 0.1646230769,0)
-    p_measurement_list= {p_m1, p_m2, p_m3}
+    p_m1 = PhytoPlanktonPhotosynthesisMeasurement(1, 5, 4.113867544, 0.05, 0.01)  # US sparkling lake
+    p_m2 = PhytoPlanktonPhotosynthesisMeasurement(2, 10, 2.636765965, 0.0412667109, 0)
+    p_m3 = PhytoPlanktonPhotosynthesisMeasurement(3, 15, 4.959339837, 0.1646230769, 0)
+    p_measurement_list = {p_m1, p_m2, p_m3}
 
     pond_shape_instance = BathymetricPondShape(areas)
 
@@ -1233,7 +1239,7 @@ def main():
     littoral_area = p.calculate_total_littoral_area()
     print "littoral area is (should be ~40): ", littoral_area
 
-    depth=5
+    depth = 5
     depth_interval = depth
     sediment_area = p.pond_shape_object.get_sediment_surface_area_at_depth(depth, depth_interval)
 
@@ -1245,8 +1251,8 @@ def main():
     print "f_area, same parameters. Should be 25/40 = 0.625: ", f_area1
 
 
-    depth=13.4
-    depth_interval = 13.4-5
+    depth = 13.4
+    depth_interval = 13.4 - 5
     sediment_area = p.pond_shape_object.get_sediment_surface_area_at_depth(depth, depth_interval)
 
 
@@ -1255,7 +1261,7 @@ def main():
 
     print "f_area, same parameters. Should be 15/40 = 0.375: ", f_area2
 
-    print "f_area1+f_area2: ", f_area1+f_area2
+    print "f_area1+f_area2: ", f_area1 + f_area2
 
 
 
