@@ -406,7 +406,7 @@ class Pond(object):
         Validates the value
         '''
         if(isinstance(pond_shape_object, PondShape)):
-            print "setting pond shape."
+            print "setting pond shape for pond ", self.get_lake_id(), " day ", self.get_day_of_year()
             self.pond_shape_object = pond_shape_object
         else:
             raise Exception("cannot set pond shape. Invalid type")
@@ -520,7 +520,10 @@ class Pond(object):
                 if(existing_measurement is not None):
                     index = measurement.get_thermal_layer() - 1
                     self.phytoplankton_photosynthesis_measurements.remove(existing_measurement)
-                    self.phytoplankton_photosynthesis_measurements.insert(index, measurement)
+                    try:
+                        self.phytoplankton_photosynthesis_measurements.insert(index, measurement)
+                    except TypeError:
+                        print "index is ", index, " and measurement is ", measurement, " for pond ", self.get_lake_id(), " day ", self.get_day_of_year()
 
 
             self.phytoplankton_photosynthesis_measurements.append(measurement)

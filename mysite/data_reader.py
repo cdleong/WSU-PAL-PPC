@@ -57,7 +57,8 @@ class DataReader(object):
 # pppr        https://lter.limnology.wisc.edu/dataset/north-temperate-lakes-lter-primary-production-trout-lake-area-1986-2007
 #     filename = "Sep_5_test_data.xlsx" #just used for testing phyto. Data from multiple sources.
 #     filename = "Sep_17_test_data.xls" #just used for testing phyto. Data from multiple sources. Messing with values.
-    filename = "Oct_12_test_data.xls" #just used for testing phyto. Data from multiple sources. Messing with values.
+#     filename = "Oct_12_test_data.xls" #just used for testing phyto. Data from multiple sources. Messing with values. "Testing round 2.0"
+    filename = "Oct_16_test_data.xls" #just used for testing phyto. Combining Testing 1.0 (Sep 17) with Testing 2.0 (Oct 12)
 
 
 
@@ -492,7 +493,7 @@ def main():
         relative_depth_meters = []
 
         
-        if(doy != 233): #TODO: remove this hack used for testing
+        if(doy != 151): #TODO: remove this hack used for testing
            continue #skip to next lake
 
 
@@ -531,7 +532,7 @@ def main():
         pp_met=0.0
         pp_hyp=0.0
         pp_whole_lake = 0.0
-        use_photoinhibition = True
+        use_photoinhibition = False
         
         pp_epi = p.calculate_primary_production_rate_in_interval(0, epi_lower_bound,p.DEFAULT_DEPTH_INTERVAL_FOR_CALCULATIONS, use_photoinhibition)
         if(3==len(layer_depths)):
