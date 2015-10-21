@@ -493,9 +493,9 @@ def main():
         relative_depth_meters = []
 
         
-        if(doy != 151): #TODO: remove this hack used for testing
+        if(doy != 165): #TODO: remove this hack used for testing
            continue #skip to next lake
-
+        use_photoinhibition = True        
 
         print ""
         print ""
@@ -532,7 +532,7 @@ def main():
         pp_met=0.0
         pp_hyp=0.0
         pp_whole_lake = 0.0
-        use_photoinhibition = False
+        
         
         pp_epi = p.calculate_primary_production_rate_in_interval(0, epi_lower_bound,p.DEFAULT_DEPTH_INTERVAL_FOR_CALCULATIONS, use_photoinhibition)
         if(3==len(layer_depths)):
