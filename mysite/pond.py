@@ -11,10 +11,8 @@ from pond_shape import PondShape
 from benthic_photosynthesis_measurement import BenthicPhotosynthesisMeasurement
 from bathymetric_pond_shape import BathymetricPondShape
 from scipy.interpolate import interp1d
-from scipy import interpolate
 from phytoplankton_photosynthesis_measurement import PhytoPlanktonPhotosynthesisMeasurement
-from season_light import SeasonalLightEstimator
-import copy
+
 
 
 
@@ -47,7 +45,7 @@ class Pond(object):
 
     MAXIMUM_LAKE_ID_LENGTH = 140  # value picked arbitrarily during specification process. I chose it because I had Twitter on the mind. Possibly too long. 50 characters would give us enough characters for "Lake Chargoggagoggmanchaoggagoggchaubunaguhgamaugg", the longest lake name in the world...
 
-    MAXIMUM_NUMBER_OF_THERMAL_LAYERS = 3
+    MAXIMUM_NUMBER_OF_THERMAL_LAYERS = 3 #epilimnion, hypolimnion, metalimnion
 
     DEFAULT_DEPTH_INTERVAL_FOR_CALCULATIONS = 0.1  # ten centimeters, 0.1 meters. Arbitrary.
 
@@ -707,74 +705,38 @@ class Pond(object):
         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         '''
 
-#         #TODO: validate interval
-#         time_interval = self.get_time_interval() #hours
-#         length_of_day = self.get_length_of_day()
-# 
-# 
-# 
-#         pppr_total = 0.0  # mg C per day
-#         current_depth = 0.0 #lake surface
-#         photic_zone_lower_bound = self.calculate_photic_zone_lower_bound()
-#         photic_volume = self.get_pond_shape().get_volume_above_depth(photic_zone_lower_bound, depth_interval)
-#         max_depth = self.get_pond_shape().get_max_depth()
-#         mean_depth = self.get_pond_shape().get_mean_depth()
-#         total_volume = self.get_pond_shape().get_volume_above_depth(max_depth, depth_interval)
-#         surface_area = self.get_pond_shape().get_water_surface_area_at_depth(0)
-#         depth_ratio = mean_depth/max_depth
-# 
-# 
-# 
-#         #for each depth interval #TODO: integration over whole lake?
-#         while current_depth<self.calculate_photic_zone_lower_bound():
-#             current_depth+=depth_interval
-#             ppprz = 0.0  # mg C* m^-3 *day
-# 
-# 
-#             #fractional volume
-# 
-#             volume = self.get_pond_shape().get_volume_at_depth(current_depth, depth_interval) #m^3
-# 
-#             f_volume = volume/photic_volume #unitless ratio
-# 
-# 
-# 
-# 
-# 
-#             # for every time interval
-#             t = 0.0  # start of day
-#             while t < length_of_day:
-#                 ppprzt = 0.0
-#                 izt = self.calculate_light_at_depth_and_time(current_depth, t) #umol*m^-2*s^-1
-#                 ppprzt = self.calculate_phytoplankton_primary_productivity(izt, current_depth)*time_interval #(mg*m^-3*hr^-1)*hr = mg*m^-3
-# 
-#                 ppprzt=ppprzt*volume #mg
-# 
-#                 ppprz+=ppprzt #mg
-#                 t += time_interval
-#             time_interval_correction_factor = (1 / time_interval) #(hr/hr) Account for the fractional time interval. e.g. dividing by 1/0.25 is equiv to dividing by 4
-#             ppprz = ppprz / time_interval_correction_factor  # (mgC*m^-3)
-#             # weighted_pppr_z = ppprz * f_volume #mgC*m^-3  #production rate multiplied by the fraction of production rate across all volumes.
-#             # ppprz = ppprz*depth_interval #mgC*m^-3 *m = mgC*m^-2 in this interval
-#             # print "ppprz*depth_interval is ", ppprz
-#             #OK, now we have ppprz in this volume. Let's weight using the fractional volume
-#             # weighted_pppr_z = ppprz * f_volume #mg/m^3  #production rate multiplied by the fraction of production rate across all volumes.
-# 
-#             # pppr_total += weighted_pppr_z #mg/m^3
-#             pppr_total += ppprz #mgC
-# 
-# 
-#         pppr_m2 =pppr_total/surface_area  #mgC/m^2/day
-#         # pppr_m2 =pppr_total  #mgC/m^2/day
         
-        upper_bound = 0
-        lower_bound = self.calculate_photic_zone_lower_bound()
-        print "lower bound is: ", lower_bound
-        pppr_m2 = self.calculate_primary_production_rate_in_interval(upper_bound, lower_bound, depth_interval)
+        layer_upper_bound = 0
+        layer_lower_bound = self.calculate_photic_zone_lower_bound()
+        print "lower bound is: ", layer_lower_bound
+        pppr_m2 = self.calculate_phytoplankton_primary_production_rate_in_interval(layer_upper_bound, layer_lower_bound, depth_interval)
+        
+        layer_depths = self.get_layer_depths()
+        layer_upper_bound = 0.0
+        layer_lower_bound =0.0
+        use_photoinhibition = True
+        layer_pp_list = []
+        
+        
+        for layer_depth in layer_depths:
+            layer_lower_bound = layer_depth
+            if(0==self.get_phyto_beta_at_depth(layer_lower_bound)):
+                use_photoinhibition = False
+            else: 
+                use_photoinhibition = True
+            
+            layer_pp = self.calculate_phytoplankton_primary_production_rate_in_interval(layer_upper_bound, layer_lower_bound, depth_interval, use_photoinhibition)
+            layer_pp_list.append(layer_pp)
+            
+            
+
+            
+        
+        
         return pppr_m2  # mgC/m^2/day
 
 
-    def calculate_primary_production_rate_in_interval(self, layer_upper_bound, layer_lower_bound, depth_interval=DEFAULT_DEPTH_INTERVAL_FOR_CALCULATIONS, use_photoinhibition=True):
+    def calculate_phytoplankton_primary_production_rate_in_interval(self, layer_upper_bound, layer_lower_bound, depth_interval=DEFAULT_DEPTH_INTERVAL_FOR_CALCULATIONS, use_photoinhibition=True):
         '''
         testing purposes. Give it a layer, and it'll calculate PPPR in that layer. Theoretically 
         '''
@@ -782,29 +744,21 @@ class Pond(object):
         # TODO: validate interval
         time_interval = self.get_time_interval()  # hours
         length_of_day = self.get_length_of_day()
-        
-        photic_zone_lower_bound = self.calculate_photic_zone_lower_bound()  
-        photic_volume = self.get_pond_shape().get_volume_above_depth(photic_zone_lower_bound, depth_interval)
+          
         max_depth = self.get_pond_shape().get_max_depth()
-        mean_depth = self.get_pond_shape().get_mean_depth()
         total_volume = self.get_pond_shape().get_volume_above_depth(max_depth, depth_interval)
-        surface_area = self.get_pond_shape().get_water_surface_area_at_depth(0)
         layer_depth = layer_lower_bound - layer_upper_bound  # deeper is bigger magnitude, so instead of upper-lower we do lower - upper 
-        depth_ratio = mean_depth / max_depth
         time_interval_correction_factor = (1 / time_interval)  # (hr/hr) Account for the fractional time interval. e.g. dividing by 1/0.25 is equiv to dividing by 4
         
 
 #         print "surface area is", surface_area
         pp_list = []
-        surface_light_list = []
         depth_list = []
-        light_at_depth_list = []
         t = 0.0  # start of day
         pp_layer_total = 0.0
         
         while t <= length_of_day:
             
-            surface_light = self.calculate_light_at_depth_and_time(0.0, t)
             
             z = layer_upper_bound
             pp_layer_t = 0.0 
@@ -812,9 +766,6 @@ class Pond(object):
             while z <= layer_lower_bound:
                 
                 izt = self.calculate_light_at_depth_and_time(z, t)  # umol*m^-2*s^-1
-                if(8 == t):
-                    depth_list.append(z)
-                    light_at_depth_list.append(izt)
                 interval_volume = self.get_pond_shape().get_volume_at_depth(z, depth_interval)  # m^3
                 f_volume = interval_volume / total_volume
                 ppprzt = self.calculate_phytoplankton_primary_productivity(izt, z, use_photoinhibition)  # mgC*m^-3*hr^-1, or mgC per meter cubed per hour
@@ -823,19 +774,13 @@ class Pond(object):
                 pp_layer_t += ppr_z_t_hw                                
                 z += depth_interval
             
-#             print "pp_layer_t at time ", t," upper bound ", layer_upper_bound, "lower bound", layer_lower_bound, " is ", pp_layer_t, " and surface_light was ",self.calculate_light_at_depth_and_time(0, t)
-            if(t % 0.5 == 0):
-#                 print "time is", t, " appending! "
-                surface_light_list.append(surface_light)
-                pp_list.append(pp_layer_t)
+
             pp_layer_total += pp_layer_t * time_interval_correction_factor              
 
             t += time_interval
         
         print "pp_at_time_t list ", pp_list
-        print "surface light list: ", surface_light_list
         print "depth list", depth_list
-        print "light at time eight, different depths", light_at_depth_list
         print "layer depth is", layer_depth
 #         print "pp_layer_total is ",pp_layer_total         
         pp_layer_m2 = pp_layer_total * layer_depth
@@ -948,6 +893,11 @@ class Pond(object):
 
 
     def get_thermal_layer_depths(self):
+        '''
+        Sorts and returns the depths of the thermal layers. 
+        @return: sorted list of thermal layer depths, from shallowest to deepest.
+        @rtype: [] list 
+        '''
         layer_depth_list = []
         reverse_sorted_measurements = self.get_phyto_measurements_sorted_by_depth(False)  # sort reversed by depth.
         for layer_measurement in reverse_sorted_measurements:

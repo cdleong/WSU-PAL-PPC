@@ -15,7 +15,6 @@ class PhotosynthesisMeasurement(object):
     ##########
     depth = 0.0
     pmax = 0.0
-#     alpha = 0.0    #TODO: maybe add this in?
         
 
     def __init__(self, depth=0.0, pmax=0.0):

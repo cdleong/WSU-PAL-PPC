@@ -534,10 +534,10 @@ def main():
         pp_whole_lake = 0.0
         
         
-        pp_epi = p.calculate_primary_production_rate_in_interval(0, epi_lower_bound,p.DEFAULT_DEPTH_INTERVAL_FOR_CALCULATIONS, use_photoinhibition)
+        pp_epi = p.calculate_phytoplankton_primary_production_rate_in_interval(0, epi_lower_bound,p.DEFAULT_DEPTH_INTERVAL_FOR_CALCULATIONS, use_photoinhibition)
         if(3==len(layer_depths)):
-            pp_met = p.calculate_primary_production_rate_in_interval(epi_lower_bound, met_lower_bound,p.DEFAULT_DEPTH_INTERVAL_FOR_CALCULATIONS, use_photoinhibition)
-            pp_hyp = p.calculate_primary_production_rate_in_interval(met_lower_bound, hyp_lower_bound,p.DEFAULT_DEPTH_INTERVAL_FOR_CALCULATIONS, use_photoinhibition)
+            pp_met = p.calculate_phytoplankton_primary_production_rate_in_interval(epi_lower_bound, met_lower_bound,p.DEFAULT_DEPTH_INTERVAL_FOR_CALCULATIONS, use_photoinhibition)
+            pp_hyp = p.calculate_phytoplankton_primary_production_rate_in_interval(met_lower_bound, hyp_lower_bound,p.DEFAULT_DEPTH_INTERVAL_FOR_CALCULATIONS, use_photoinhibition)
             pp_whole_lake = p.calculateDailyWholeLakePhytoplanktonPrimaryProductionPerMeterSquared()
         print "pp_epi is ", pp_epi
         print "pp_met is", pp_met

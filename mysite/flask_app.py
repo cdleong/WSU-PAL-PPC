@@ -196,8 +196,8 @@ def export_view():
     try:
             inputFile = request.args.get('filename')
     except:
-        #redundant. TODO: better except
-            inputFile = TEMPLATE_FILE
+        
+            inputFile = TEMPLATE_FILE #set to default/template.
 
     lake_ID_column = 0
     day_of_year_column = lake_ID_column+1
