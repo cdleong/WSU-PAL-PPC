@@ -495,7 +495,7 @@ def main():
         
         if(doy != 165): #TODO: remove this hack used for testing
            continue #skip to next lake
-        use_photoinhibition = True        
+        use_photoinhibition = False        
 
         print ""
         print ""
@@ -534,11 +534,15 @@ def main():
         pp_whole_lake = 0.0
         
         
+        print "epi lower bound: ", epi_lower_bound
+        print "met lower bound: ", met_lower_bound
+        print "hyp lower bound: ", hyp_lower_bound
+        
         pp_epi = p.calculate_phytoplankton_primary_production_rate_in_interval(0, epi_lower_bound,p.DEFAULT_DEPTH_INTERVAL_FOR_CALCULATIONS, use_photoinhibition)
         if(3==len(layer_depths)):
             pp_met = p.calculate_phytoplankton_primary_production_rate_in_interval(epi_lower_bound, met_lower_bound,p.DEFAULT_DEPTH_INTERVAL_FOR_CALCULATIONS, use_photoinhibition)
             pp_hyp = p.calculate_phytoplankton_primary_production_rate_in_interval(met_lower_bound, hyp_lower_bound,p.DEFAULT_DEPTH_INTERVAL_FOR_CALCULATIONS, use_photoinhibition)
-            pp_whole_lake = p.calculateDailyWholeLakePhytoplanktonPrimaryProductionPerMeterSquared()
+            pp_whole_lake = p.calculateDailyWholeLakePhytoplanktonPrimaryProductionPerMeterSquared(p.DEFAULT_DEPTH_INTERVAL_FOR_CALCULATIONS)
         print "pp_epi is ", pp_epi
         print "pp_met is", pp_met
         print "pp_hyp is", pp_hyp
