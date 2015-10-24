@@ -152,8 +152,7 @@ class DataReader(object):
         try:
             book = xlrd.open_workbook(self.filename)
         except:
-            print "error in read method. xlrd.open_workbook gave an Exception."
-            raise
+            raise Exception("error in read method. xlrd.open_workbook gave an Exception with filename: ", self.filename)
 
         return self.readPondListFromFile(book)
 
@@ -169,8 +168,7 @@ class DataReader(object):
         try:
             book =  xlrd.open_workbook(file_contents=inputfile)
         except IOError:
-            print "Error in readFile. xlrd.open_workbook(file_contents=inputfile) gave exception"
-            raise
+            raise Exception ("Error in readFile. xlrd.open_workbook(file_contents=inputfile) gave exception with inputfile", inputfile)
 
 
         return self.readPondListFromFile(book)
