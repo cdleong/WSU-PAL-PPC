@@ -253,7 +253,7 @@ class Pond(object):
         @rtype: float
         '''
         #TODO: fix this. only made it float so I could fix a temporary issue with the test data.
-        return float(self.__day_of_year)
+        return int(self.__day_of_year)
 
 
     def get_length_of_day(self):
@@ -754,7 +754,7 @@ class Pond(object):
                 use_photoinhibition = True
                 print "beta not zero. Using photoinhibition"  
         else:
-            print "use_photoinhibition was passed in from above: ", use_photoinhibition      
+            print "use_photoinhibition was passed in from above. The value was: ", use_photoinhibition      
 
         # TODO: validate interval
         time_interval = self.get_time_interval()  # hours
