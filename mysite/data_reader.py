@@ -243,22 +243,22 @@ class DataReader(object):
 
 
         curr_row = self.DEFAULT_COLUMN_HEADINGS_ROW
-        columnnames = pond_data_workSheet.row(curr_row)
+#         columnnames = pond_data_workSheet.row(curr_row)
 #         print "the column names in sheet \"" + pond_data_workSheet.name +  "\" are "
 #         print columnnames
 
         curr_row = self.DEFAULT_COLUMN_HEADINGS_ROW
-        columnnames = benthic_photo_data_workSheet.row(curr_row)
+#         columnnames = benthic_photo_data_workSheet.row(curr_row)
 #         print "the column names in sheet \"" + benthic_photo_data_workSheet.name +  "\" are "
 #         print columnnames
 
         curr_row = self.DEFAULT_COLUMN_HEADINGS_ROW
-        columnnames = phytoplankton_photo_data_sheet.row(curr_row)
+#         columnnames = phytoplankton_photo_data_sheet.row(curr_row)
 #         print "the column names in sheet \"" + phytoplankton_photo_data_sheet.name +  "\" are "
 #         print columnnames
 
         curr_row = self.DEFAULT_COLUMN_HEADINGS_ROW
-        columnnames = shape_data_sheet.row(curr_row)
+#         columnnames = shape_data_sheet.row(curr_row)
 #         print "the column names in sheet \"" + shape_data_sheet.name +  "\" are "
 #         print columnnames
 
@@ -276,14 +276,17 @@ class DataReader(object):
         #Make Pond objects from pond_data sheet
         ################################################
         sheet = pond_data_workSheet
-        num_rows  = pond_data_workSheet_num_rows
+        num_rows  = pond_data_workSheet_num_rows #TODO: read until blank space encountered might be better. 
         curr_row = self.DEFAULT_FIRST_DATA_ROW #start at 1. row 0 is column headings
+        print "reading pond data. num_rows is: ", num_rows
         while curr_row<num_rows:
             row = sheet.row(curr_row)
+            print "current row is: ", curr_row
 
             #values
             try:
                 row_doy_value = row[self.dayOfYearIndex].value
+                print "row day: ", row_doy_value
                 row_lakeID_value = row[self.lakeIDIndex].value
                 row_kd_value = float(row[self.kd_index].value)
                 row_noonlight_value = float(row[self.noon_surface_light_index].value)
@@ -302,6 +305,8 @@ class DataReader(object):
 #                 print "creating pond with lake ID = ", row_lakeID_value, " , and DOY = ", row_doy_value
                 emptyShape = BathymetricPondShape({}) #initialize with empty dict
                 pond = Pond(row_lakeID_value, row_doy_value, row_lod_value, row_noonlight_value, row_kd_value, emptyShape, [], [], row_latitude_value, self.DEFAULT_TIME_INTERVAL)
+                if(pond.get_day_of_year() == 0):
+                    print "this shouldn't happen. pond day of year is ", 0
                 pondList.append(pond)
             curr_row+=1
 
@@ -314,23 +319,25 @@ class DataReader(object):
 
 
 
-        ############
-        #Shape data
-        ############
+        #################################
+        #Shape data from shape_data sheet
+        #################################
 
 
         sheet = shape_data_sheet
         num_rows = shape_data_sheet_num_rows
         curr_row = self.DEFAULT_FIRST_DATA_ROW #start at 1. row 0 is column headings
+        print "reading shape data. num_rows is: ", num_rows
         while curr_row<num_rows:
             row = sheet.row(curr_row)
+
 
 
             #values
             row_lakeID_value = row[self.shape_ID_index].value
             row_depth_value = float(row[self.shape_depth_index].value)
             row_area_value = float(row[self.shape_area_index].value)
-
+            print "current row is: ", curr_row, "lake ID is: ", row_lakeID_value            
 
             row_dict = {row_depth_value:row_area_value}
             row_shape = BathymetricPondShape(row_dict)
@@ -343,12 +350,11 @@ class DataReader(object):
             for pond in pondList:
                 if(pond.get_lake_id()==row_lakeID_value):
                     pond.update_shape(row_shape)                #add to Pond
-
+            
             #increment while loop to next row
             curr_row+=1
 
 #         print "added shape data"
-
 
 
 
@@ -395,7 +401,6 @@ class DataReader(object):
         ###############
         #Phyto data
         ###############
-
         sheet = phytoplankton_photo_data_sheet
         num_rows = phytoplankton_photo_data_sheet_num_rows
         curr_row = self.DEFAULT_FIRST_DATA_ROW #start at 1. row 0 is column headings
@@ -475,7 +480,7 @@ def main():
     reader = DataReader(filename)
     pondList = reader.read()
 
-    p = Pond()
+#     p = Pond()
     for p in pondList:
         shape = p.get_pond_shape()
         bppmeasurements_sorted = p.get_benthic_measurements_sorted_by_depth()
