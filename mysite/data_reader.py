@@ -103,9 +103,6 @@ class DataReader(object):
     dayOfYearIndex = 0 #"DOY"
     lakeIDIndex = 1 #"Lake_ID"
 
-
-
-
     #indices for Pond vars in pond_data worksheet
     kd_index = 2 #index of light attenuation coefficient kd
     noon_surface_light_index = 3 #"midday.mean.par"
@@ -155,6 +152,7 @@ class DataReader(object):
         try:
             book = xlrd.open_workbook(self.filename)
         except:
+            print "error in read method. xlrd.open_workbook gave an Exception."
             raise
 
         return self.readPondListFromFile(book)
@@ -171,6 +169,7 @@ class DataReader(object):
         try:
             book =  xlrd.open_workbook(file_contents=inputfile)
         except IOError:
+            print "Error in readFile. xlrd.open_workbook(file_contents=inputfile) gave exception"
             raise
 
 
@@ -285,14 +284,16 @@ class DataReader(object):
             row = sheet.row(curr_row)
 
             #values
-            row_doy_value = row[self.dayOfYearIndex].value
-            row_lakeID_value = row[self.lakeIDIndex].value
-            row_kd_value = float(row[self.kd_index].value)
-            row_noonlight_value = float(row[self.noon_surface_light_index].value)
-#             row_latitude_value = float(row[self.latitude_index].value)
-            row_latitude_value = 3.14 #TODO: get rid of latitude entirely
-            row_lod_value = float(row[self.length_of_day_index].value)
-
+            try:
+                row_doy_value = row[self.dayOfYearIndex].value
+                row_lakeID_value = row[self.lakeIDIndex].value
+                row_kd_value = float(row[self.kd_index].value)
+                row_noonlight_value = float(row[self.noon_surface_light_index].value)
+    #             row_latitude_value = float(row[self.latitude_index].value)
+                row_latitude_value = 3.14 #TODO: get rid of latitude entirely
+                row_lod_value = float(row[self.length_of_day_index].value)
+            except:
+                print "Error: couldn't read values properly."
 
 
 
