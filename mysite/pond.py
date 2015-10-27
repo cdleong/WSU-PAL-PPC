@@ -4,7 +4,7 @@ Created on Thu Jun 05 09:38:17 2014
 
 @author: cdleong
 """
-
+import traceback
 import math as mat
 import numpy as np
 from pond_shape import PondShape
@@ -592,9 +592,12 @@ class Pond(object):
 
             area = self.get_pond_shape().get_sediment_surface_area_at_depth(current_depth, current_depth_interval)
 
-            ik_z = self.get_benthic_ik_at_depth(current_depth)
-            benthic_pmax_z = self.get_benthic_pmax_at_depth(current_depth)
-
+            try:
+                ik_z = self.get_benthic_ik_at_depth(current_depth)
+                benthic_pmax_z = self.get_benthic_pmax_at_depth(current_depth)
+            except: 
+                raise
+            
             if(True == use_littoral_area):
                 f_area = area / total_littoral_area  # TODO: these add up to 1.0, right?
             else:
@@ -665,9 +668,11 @@ class Pond(object):
             values_list.append(ik_value)
             depths_list.append(depth_value)
 
-
-        ik_at_depth = self.interpolate_values_at_depth(validated_depth, depths_list, values_list)
-
+        try:
+            ik_at_depth = self.interpolate_values_at_depth(validated_depth, depths_list, values_list)
+        except:
+            raise
+            
         return ik_at_depth
 
     def calculate_benthic_primary_productivity(self, light_at_time_and_depth, benthic_pmax_z, benthic_ik_z):
@@ -1135,6 +1140,13 @@ class Pond(object):
         # get interpolation function
         x = depths_list
         y = values_list
+
+        if(len(x)<2):
+            traceback.print_exc()
+            error_message = 'Cannot interpolate at depth ', depth,', because there are not enough data points!'
+            error_message = str(error_message)
+            print error_message
+            raise Exception(error_message)      
         f = interp1d(x, y)
 
         # magic from http://docs.scipy.org/doc/scipy/reference/tutorial/interpolate.html

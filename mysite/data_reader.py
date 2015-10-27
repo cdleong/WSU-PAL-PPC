@@ -58,7 +58,8 @@ class DataReader(object):
 #     filename = "Sep_5_test_data.xlsx" #just used for testing phyto. Data from multiple sources.
 #     filename = "Sep_17_test_data.xls" #just used for testing phyto. Data from multiple sources. Messing with values.
 #     filename = "Oct_12_test_data.xls" #just used for testing phyto. Data from multiple sources. Messing with values. "Testing round 2.0"
-    filename = "Oct_16_test_data.xls" #just used for testing phyto. Combining Testing 1.0 (Sep 17) with Testing 2.0 (Oct 12)
+#     filename = "Oct_16_test_data.xls" #just used for testing phyto. Combining Testing 1.0 (Sep 17) with Testing 2.0 (Oct 12)
+    filename = "example_data.xls" #Removed everything but one lake from Oct 16_test_data.
 
 
 
@@ -193,8 +194,6 @@ class DataReader(object):
         @return:
         @rtype:
         '''
-
-
 
         ##############
         #Worksheets
@@ -354,7 +353,7 @@ class DataReader(object):
             #increment while loop to next row
             curr_row+=1
 
-#         print "added shape data"
+        print "added shape data"
 
 
 
@@ -398,6 +397,8 @@ class DataReader(object):
 
             curr_row+=1
         #end of while loop
+        print "added benthic data"
+        
         ###############
         #Phyto data
         ###############
@@ -434,7 +435,8 @@ class DataReader(object):
                 #add to Pond
 
             curr_row+=1
-#         print "out of while loop. size of pond list is: ", len(pondList)
+        print "added phyte data"
+        print "Size of pond list is: ", len(pondList)
 
 
 

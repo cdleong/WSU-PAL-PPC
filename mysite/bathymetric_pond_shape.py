@@ -24,7 +24,7 @@ class BathymetricPondShape(PondShape):
     
 
     # dict tutorial here: http://www.tutorialspoint.com/python/python_dictionary.htm
-    water_surface_areas = {}  # water surface water_surface_areas.
+    water_surface_areas = {}  #Dictionary. Keys are depth values in meters, values are the surface area at that depth.
     #June 22 edit: depth intervals are now independent for every calculcation.
 
 
@@ -138,13 +138,20 @@ class BathymetricPondShape(PondShape):
         #TODO: errors if given stuff outside proper range.
         
         validated_depth = self.validate_depth(depth)
+        
 
         # get interpolation function
         x = self.water_surface_areas.keys()
-        y = self.water_surface_areas.values()
+        y = self.water_surface_areas.values()        
+        if(len(x)<2):
+            error_message = "Cannot interpolate to determine water surface area at depth ", depth,", because there are not enough depth/area pairs."
+            print error_message
+            raise Exception(str(error_message))
+        
         f = interp1d(x, y)
         
         #interpolate
+        
         water_surface_area_at_depth = f(validated_depth)
 
 

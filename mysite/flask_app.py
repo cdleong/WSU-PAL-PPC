@@ -1,3 +1,5 @@
+import tempfile
+import traceback
 from flask import Flask, request, url_for, make_response, render_template, redirect, send_from_directory, Response
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from werkzeug.utils import secure_filename
@@ -26,10 +28,16 @@ from werkzeug.datastructures import Headers #used for exporting files?
 
 #How to work with file uploads http://flask.pocoo.org/docs/0.10/patterns/fileuploads/
 # This is the path to the upload directory
-UPLOAD_FOLDER = '/tmp/'
+# UPLOAD_FOLDER = '/tmp/'
+UPLOAD_FOLDER = 'tmp' #note: I think that windows/linux differences cause trouble here. 
+# UPLOAD_FOLDER = 'tempfile.mkdtemp()'
 ALLOWED_EXTENSIONS = set(['txt', 'xls', 'xlsx', 'csv'])
 TEMPLATE_FILE = 'template.xls'
 TEMPLATE_FILE_ROUTE = '/'+TEMPLATE_FILE
+EXAMPLE_FILE = 'example_data.xls'
+EXAMPLE_FILE_ROUTE = '/'+EXAMPLE_FILE
+INTERNAL_SERVER_ERROR_TEMPLATE_FILE = "500.html"
+INTERNAL_SERVER_ERROR_TEMPLATE_ROUTE = '/'+INTERNAL_SERVER_ERROR_TEMPLATE_FILE
 
 FIRST_DATA_ROW_FOR_EXPORT = 1
 
@@ -48,6 +56,7 @@ def get_rounded_BPPR_list(filename=TEMPLATE_FILE):
     '''
     returns list of double values, rounded to two decimal places
     '''
+    print "running get_rounded_BPPR_list"
     # Check if the file is one of the allowed types/extensions
     pondList = getPondList(filename)
     pond = pondList[0]
@@ -62,7 +71,15 @@ def get_rounded_BPPR_list(filename=TEMPLATE_FILE):
     return bpprList
 
 def getPondList(filename = TEMPLATE_FILE):
-    reader = DataReader(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+    '''
+    '''
+    print "running getPondList method"
+    try: 
+        reader = DataReader(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+    except Exception as e:
+        print "error in getPondList"
+        print str(e)
+        return render_template(INTERNAL_SERVER_ERROR_TEMPLATE_ROUTE, error = str(e))        
     # Check if the file is one of the allowed types/extensions
     pondList = reader.read()
     return pondList
@@ -76,10 +93,12 @@ def my_utility_processor():
 
     #returns a list of floats.
     def bppr(filename):
+        print "running bppr method"
         bpprList = get_rounded_BPPR_list(filename)
         return bpprList
 
     def ponds(filename):
+        print "running ponds method"
         pondList = getPondList(filename)
         return pondList
 
@@ -105,25 +124,18 @@ def indexView():
         if uploaded_file and allowed_file(uploaded_file.filename):
             # Make the filename safe, remove unsupported chars
             filename = secure_filename(uploaded_file.filename)
-            # Move the uploaded_file form the temporal folder to
+            # Move the uploaded_file from  the temporal folder to
             # the upload folder we setup
             uploaded_file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-            reader = DataReader(os.path.join(app.config['UPLOAD_FOLDER'], filename))
 
-            pondList = reader.read()
-            bpprList =[]
-            doyList =[]
-            for pond in pondList:
-                bppr = pond.calculateDailyWholeLakeBenthicPrimaryProductionPerMeterSquared()
-                bpprList.append(bppr)
-                doy =pond.get_day_of_year()
-                doyList.append(doy)
 
 
 
 
             return redirect(url_for("bpprtest",filename=filename))
-    return render_template('home.html', route = TEMPLATE_FILE_ROUTE)
+    return render_template('home.html', 
+                           template_file_route = TEMPLATE_FILE_ROUTE,
+                           example_file_route = EXAMPLE_FILE_ROUTE)
 
 
 
@@ -133,11 +145,17 @@ def indexView():
 # This route is expecting a parameter containing the name
 # of a uploaded_file. Then it will locate that uploaded_file on the upload
 # directory and show it on the browser, so if the user uploads
-# an image, that image is going to be show after the upload
+# an image, that image is going to be shown after the upload
 @app.route('/tmp/<filename>', methods=['GET', 'POST'])
 def uploaded_file(filename):
+    print "running uploaded_file"
     return send_from_directory(app.config['UPLOAD_FOLDER'],
                               filename)
+#     try:
+#         return send_from_directory(app.config['UPLOAD_FOLDER'],
+#                               filename)
+#     except Exception as e:
+#         return render_template(INTERNAL_SERVER_ERROR_TEMPLATE_ROUTE, error = str(e))        
 
 ################################################################################################################################
 # used to offer template file
@@ -145,8 +163,26 @@ def uploaded_file(filename):
 ################################################################################################################################
 @app.route(TEMPLATE_FILE_ROUTE, methods=['GET', 'POST'])
 def template():
-    return app.send_static_file(TEMPLATE_FILE)
+    print "running template method"
+    try:
+        return app.send_static_file(TEMPLATE_FILE)
+    except Exception as e:
+        print str(e)
+        return render_template(INTERNAL_SERVER_ERROR_TEMPLATE_ROUTE, error = str(e))    
 
+
+################################################################################################################################
+# used to offer template file
+#http://stackoverflow.com/questions/20646822/how-to-serve-static-files-in-flask
+################################################################################################################################
+@app.route(EXAMPLE_FILE_ROUTE, methods=['GET', 'POST'])
+def example_file_view():
+    print "running example_file_view method"
+    try:
+        return app.send_static_file(EXAMPLE_FILE)
+    except Exception as e:
+        print str(e)
+        return render_template(INTERNAL_SERVER_ERROR_TEMPLATE_ROUTE, error = str(e))    
 
 ################################################################
 #renders the bpprtest template.
@@ -154,7 +190,12 @@ def template():
 @app.route('/bpprtest', methods=['GET', 'POST'])
 @app.route('/bpprtest.html', methods=['GET', 'POST'])
 def bpprtest():
-    return render_template("bpprtest.html")
+    print "running bpprtest method"
+    try:
+        return render_template("bpprtest.html")
+    except Exception as e:
+        print str(e)
+        return render_template(INTERNAL_SERVER_ERROR_TEMPLATE_ROUTE, error = str(e))
 
 
 
@@ -168,6 +209,7 @@ def bpprtest():
 ################################################################################################################################
 @app.route('/export')
 def export_view():
+    print "running export_view method"
     #########################
     # Code for creating Flask
     # response
@@ -195,9 +237,9 @@ def export_view():
     inputFile = ""
     try:
             inputFile = request.args.get('filename')
-    except:
-        
-            inputFile = TEMPLATE_FILE #set to default/template.
+    except Exception as e:
+        print str(e)
+        return render_template(INTERNAL_SERVER_ERROR_TEMPLATE_ROUTE, error = str(e))
 
     lake_ID_column = 0
     day_of_year_column = lake_ID_column+1
@@ -291,11 +333,18 @@ def request_entity_too_large(error):
 
 @app.errorhandler(404)
 def pageNotFound(error):
-    return "page not found"
+    return "Page not found"
+
+@app.errorhandler(500)
+def internalServerError(internal_exception):
+    traceback.print_exc()
+    print str(internal_exception)
+    return render_template(INTERNAL_SERVER_ERROR_TEMPLATE_ROUTE, error = str(internal_exception))
 
 
 
 if __name__ == '__main__':
+    print "upload folder is ", UPLOAD_FOLDER
     debug_mode = False
     i_am_sure_i_want_to_let_people_execute_arbitrary_code = "no" #"yes" for yes.
     i_want_an_externally_visible_site = True
