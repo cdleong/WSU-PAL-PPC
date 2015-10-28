@@ -1,3 +1,5 @@
+import os
+import shutil
 import tempfile
 import traceback
 from flask import Flask, request, url_for, make_response, render_template, redirect, send_from_directory, Response
@@ -19,6 +21,7 @@ from data_reader import DataReader
 import xlwt #excel writing
 import mimetypes
 from werkzeug.datastructures import Headers #used for exporting files?
+from flask.ctx import after_this_request
 
 
 ##############################################################
@@ -28,6 +31,7 @@ from werkzeug.datastructures import Headers #used for exporting files?
 
 #How to work with file uploads http://flask.pocoo.org/docs/0.10/patterns/fileuploads/
 # This is the path to the upload directory
+
 UPLOAD_FOLDER = '/tmp/' #this one works on Linux.
 # UPLOAD_FOLDER = 'tmp' #this one works on Windows.
 # UPLOAD_FOLDER = 'tempfile.mkdtemp()'
@@ -133,6 +137,7 @@ def indexView():
 
 
             return redirect(url_for("bpprtest",filename=filename))
+
     return render_template('home.html',
                            template_file_route = TEMPLATE_FILE_ROUTE,
                            example_file_route = EXAMPLE_FILE_ROUTE)
@@ -191,11 +196,27 @@ def example_file_view():
 @app.route('/bpprtest.html', methods=['GET', 'POST'])
 def bpprtest():
     print "running bpprtest method"
+
+
+#     @after_this_request
+#     def cleanup(response):
+#         print "******************"
+#         print "cleanup routine stub"
+#         print "******************"
+#
+#         #deletes all the contents of the folder nicely, which makes downloading the data afterwards impossible.
+#         dirPath = UPLOAD_FOLDER
+#         fileList = os.listdir(dirPath)
+#         for fileName in fileList:
+#             os.remove(os.path.join(app.config['UPLOAD_FOLDER'], fileName))
+#         shutil.rmtree(UPLOAD_FOLDER+"/") #should delete contents of upload folder, but deletes the whole folder.
+#         return response
     try:
         return render_template("bpprtest.html")
     except Exception as e:
         print str(e)
         return render_template(INTERNAL_SERVER_ERROR_TEMPLATE_ROUTE, error = str(e))
+
 
 
 
