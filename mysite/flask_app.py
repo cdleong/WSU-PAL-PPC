@@ -31,10 +31,11 @@ from flask.ctx import after_this_request
 
 #How to work with file uploads http://flask.pocoo.org/docs/0.10/patterns/fileuploads/
 # This is the path to the upload directory
-# UPLOAD_FOLDER = '/tmp/'
-# UPLOAD_FOLDER = 'tmp' #note: I think that windows/linux differences cause trouble here. 
-UPLOAD_FOLDER = tempfile.mkdtemp()
-ALLOWED_EXTENSIONS = set(['txt', 'xls', 'xlsx', 'csv'])
+
+UPLOAD_FOLDER = '/tmp/' #this one works on Linux.
+# UPLOAD_FOLDER = 'tmp' #this one works on Windows.
+# UPLOAD_FOLDER = 'tempfile.mkdtemp()'
+ALLOWED_EXTENSIONS = set(['xls', 'xlsx', 'csv'])
 TEMPLATE_FILE = 'template.xls'
 TEMPLATE_FILE_ROUTE = '/'+TEMPLATE_FILE
 EXAMPLE_FILE = 'example_data.xls'
@@ -77,12 +78,12 @@ def getPondList(filename = TEMPLATE_FILE):
     '''
     '''
     print "running getPondList method"
-    try: 
+    try:
         reader = DataReader(os.path.join(app.config['UPLOAD_FOLDER'], filename))
     except Exception as e:
         print "error in getPondList"
         print str(e)
-        return render_template(INTERNAL_SERVER_ERROR_TEMPLATE_ROUTE, error = str(e))        
+        return render_template(INTERNAL_SERVER_ERROR_TEMPLATE_ROUTE, error = str(e))
     # Check if the file is one of the allowed types/extensions
     pondList = reader.read()
     return pondList
@@ -136,6 +137,7 @@ def indexView():
 
 
             return redirect(url_for("bpprtest",filename=filename))
+
         else:
             error_message = "Apologies, that file extension is not allowed. Please try one of the allowed extensions."
             return render_template(render_template('home_with_error.html', 
@@ -143,6 +145,7 @@ def indexView():
                            example_file_route = EXAMPLE_FILE_ROUTE, error_message)
 )
     return render_template('home.html', 
+
                            template_file_route = TEMPLATE_FILE_ROUTE,
                            example_file_route = EXAMPLE_FILE_ROUTE)
 
@@ -164,7 +167,7 @@ def uploaded_file(filename):
 #         return send_from_directory(app.config['UPLOAD_FOLDER'],
 #                               filename)
 #     except Exception as e:
-#         return render_template(INTERNAL_SERVER_ERROR_TEMPLATE_ROUTE, error = str(e))        
+#         return render_template(INTERNAL_SERVER_ERROR_TEMPLATE_ROUTE, error = str(e))
 
 ################################################################################################################################
 # used to offer template file
@@ -177,7 +180,7 @@ def template():
         return app.send_static_file(TEMPLATE_FILE)
     except Exception as e:
         print str(e)
-        return render_template(INTERNAL_SERVER_ERROR_TEMPLATE_ROUTE, error = str(e))    
+        return render_template(INTERNAL_SERVER_ERROR_TEMPLATE_ROUTE, error = str(e))
 
 
 ################################################################################################################################
@@ -191,7 +194,7 @@ def example_file_view():
         return app.send_static_file(EXAMPLE_FILE)
     except Exception as e:
         print str(e)
-        return render_template(INTERNAL_SERVER_ERROR_TEMPLATE_ROUTE, error = str(e))    
+        return render_template(INTERNAL_SERVER_ERROR_TEMPLATE_ROUTE, error = str(e))
 
 ################################################################
 #renders the bpprtest template.
@@ -200,14 +203,14 @@ def example_file_view():
 @app.route('/bpprtest.html', methods=['GET', 'POST'])
 def bpprtest():
     print "running bpprtest method"
-    
-    
+
+
 #     @after_this_request
 #     def cleanup(response):
 #         print "******************"
 #         print "cleanup routine stub"
-#         print "******************"    
-#         
+#         print "******************"
+#
 #         #deletes all the contents of the folder nicely, which makes downloading the data afterwards impossible.
 #         dirPath = UPLOAD_FOLDER
 #         fileList = os.listdir(dirPath)
