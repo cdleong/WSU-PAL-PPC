@@ -209,7 +209,7 @@ def bpprtest():
 #         for fileName in fileList:
 #             os.remove(os.path.join(app.config['UPLOAD_FOLDER'], fileName))
 #         shutil.rmtree(UPLOAD_FOLDER+"/") #should delete contents of upload folder, but deletes the whole folder.
-        return response
+#         return response
     try:
         return render_template("bpprtest.html")
     except Exception as e:
