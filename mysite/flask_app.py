@@ -140,14 +140,9 @@ def indexView():
 
         else:
             error_message = "Apologies, that file extension is not allowed. Please try one of the allowed extensions."
-            return render_template(render_template('home_with_error.html', 
-                           template_file_route = TEMPLATE_FILE_ROUTE,
-                           example_file_route = EXAMPLE_FILE_ROUTE, error_message)
-)
-    return render_template('home.html', 
+            return render_template('home_with_error.html', template_file_route = TEMPLATE_FILE_ROUTE, example_file_route = EXAMPLE_FILE_ROUTE,error_message=error_message)
 
-                           template_file_route = TEMPLATE_FILE_ROUTE,
-                           example_file_route = EXAMPLE_FILE_ROUTE)
+    return render_template('home.html', template_file_route = TEMPLATE_FILE_ROUTE, example_file_route = EXAMPLE_FILE_ROUTE)
 
 
 
