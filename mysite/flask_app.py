@@ -2,26 +2,23 @@ import os
 import shutil
 import tempfile
 import traceback
-from flask import Flask, request, url_for, make_response, render_template, redirect, send_from_directory, Response
+from flask import Flask, request, url_for, make_response, render_template, redirect, send_from_directory, Response, session
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from werkzeug.utils import secure_filename
 
 import StringIO
-import numpy as np
-import matplotlib.pyplot as plt
-import os
+import uuid
 
 
 
 
-from pond import Pond
 from data_reader import DataReader
 
 #used for the excel output.
 import xlwt #excel writing
 import mimetypes
 from werkzeug.datastructures import Headers #used for exporting files?
-from flask.ctx import after_this_request
+from fileinput import filename
 
 
 ##############################################################
@@ -32,9 +29,9 @@ from flask.ctx import after_this_request
 #How to work with file uploads http://flask.pocoo.org/docs/0.10/patterns/fileuploads/
 # This is the path to the upload directory
 
-UPLOAD_FOLDER = '/tmp/' #this one works on Linux.
+# UPLOAD_FOLDER = '/tmp/' #this one works on Linux.
 # UPLOAD_FOLDER = 'tmp' #this one works on Windows.
-# UPLOAD_FOLDER = 'tempfile.mkdtemp()'
+UPLOAD_FOLDER = tempfile.mkdtemp() #this works on either, and doesn't seem to need Admin rights
 ALLOWED_EXTENSIONS = set(['xls', 'xlsx', 'csv'])
 TEMPLATE_FILE = 'template.xls'
 TEMPLATE_FILE_ROUTE = '/'+TEMPLATE_FILE
@@ -48,12 +45,13 @@ FIRST_DATA_ROW_FOR_EXPORT = 1
 # Initialize the Flask application
 app = Flask(__name__)
 
-app.secret_key = 'This is really unique and secret'
+random_number = os.urandom(24)
+app.secret_key = random_number
 
 # These are the extension that we are accepting to be uploaded
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024 #arbitrary 16 megabyte upload limit
-#app.debug=True
+
 
 
 def get_rounded_BPPR_list(filename=TEMPLATE_FILE):
@@ -120,6 +118,11 @@ def allowed_file(filename):
 @app.route('/', methods=['GET', 'POST'])
 @app.route('/index', methods=['GET', 'POST'])
 def indexView():
+    print "running index view"
+    
+    print "session is", session
+    print "session current object is", session._get_current_object()
+    
     #http://runnable.com/UiPcaBXaxGNYAAAL/how-to-upload-a-uploaded_file-to-the-server-in-flask-for-python
     if request.method == 'POST': #true if the button "upload" is clicked
         # Get the name of the uploaded uploaded_file
@@ -127,7 +130,15 @@ def indexView():
         # Check if the uploaded_file is one of the allowed types/extensions
         if uploaded_file and allowed_file(uploaded_file.filename):
             # Make the filename safe, remove unsupported chars
-            filename = secure_filename(uploaded_file.filename)
+#             filename = secure_filename(uploaded_file.filename)
+            #on second thought, let's not trust the user and secure_filename to give us something safe
+            
+            #let's make up something
+            print "generating filename"
+            filename = str(uuid.uuid4())
+            print "filename generated was: ", filename
+            
+
             # Move the uploaded_file from  the temporal folder to
             # the upload folder we setup
             uploaded_file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
@@ -198,6 +209,7 @@ def example_file_view():
 @app.route('/bpprtest.html', methods=['GET', 'POST'])
 def bpprtest():
     print "running bpprtest method"
+    
 
 
 #     @after_this_request
@@ -366,11 +378,17 @@ def internalServerError(internal_exception):
 
 
 
+
+
 if __name__ == '__main__':
     print "upload folder is ", UPLOAD_FOLDER
+    print "a random number is: ", random_number
+    
+    
+    print app.secret_key
     debug_mode = False
     i_am_sure_i_want_to_let_people_execute_arbitrary_code = "no" #"yes" for yes.
-    i_want_an_externally_visible_site = True
+    i_want_an_externally_visible_site = False
     if(debug_mode and "yes"==i_am_sure_i_want_to_let_people_execute_arbitrary_code):
         print "running in debug mode"
         app.run(debug=True)
