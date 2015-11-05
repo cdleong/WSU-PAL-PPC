@@ -11,16 +11,17 @@
     <p>BPPR VALUES CALCULATED: </p>
     {#http://jinja.pocoo.org/docs/dev/templates/#list-of-control-structures#}
     <ul>
-    {% for pond in ponds(request.args.get('filename')) %}
+    {% for i in range (0, ponds()) %}
         <li>
-		Day of Year:{{ pond.get_day_of_year()|e }}, 
-		Lake ID:{{ pond.get_lake_id()|e }}, 
+        Loop index: {{ i|e }},
+		Day of Year: {{ session['pond_day_list'][i] |e }},
+		Lake ID:{{ session['pond_id_list'][i] |e }}, 
 		<ul>
 			<li>
-				BPPR:{{ pond.calculateDailyWholeLakeBenthicPrimaryProductionPerMeterSquared()|e }} (mg C/m^2 littoral area/day)
+				BPPR:{{ session['pond_bppr_list'][i]|e }} (mg C/m^2 littoral area/day)
 			</li>
 			<li>
-				PPPR:{{ pond.calculateDailyWholeLakePhytoplanktonPrimaryProductionPerMeterSquared()|e }} (mg C/m^2 surface area/day)
+				PPPR:{{ session['pond_pppr_list'][i]|e }} (mg C/m^2 surface area/day)
 			</li>
 		</ul>
 		</li>
