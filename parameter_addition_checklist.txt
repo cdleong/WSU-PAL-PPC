@@ -5,10 +5,10 @@
 #say parameter name is "parameter_name"...
 
 #example_data.xls
-	__put in a column for it. Title it "parameter_name"
+	__put in a column (OR COLUMNS, IF PRIMARY KEY) for it. Title it "parameter_name"
 	
 #template.xls	
-	__put in a column for it, IN THE SAME LOCATION AS EXAMPLE_DATA. Title it "parameter_name"
+	__put in a column for it (OR COLUMNS, IF PRIMARY KEY), IN THE SAME LOCATION AS EXAMPLE_DATA. Title it "parameter_name"
 	
 
 #data_reader.py
