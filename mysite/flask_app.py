@@ -2,12 +2,10 @@ import os
 import shutil
 import tempfile
 import traceback
-from flask import Flask, request, url_for, make_response, render_template, redirect, send_from_directory, Response, session
-from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
-from werkzeug.utils import secure_filename
+from flask import Flask, request, url_for, make_response, render_template, redirect, Response, session
+
 
 import StringIO
-import uuid
 
 
 
@@ -18,7 +16,7 @@ from data_reader import DataReader
 import xlwt #excel writing
 import mimetypes
 from werkzeug.datastructures import Headers #used for exporting files?
-from fileinput import filename
+# from fileinput import filename
 
 
 ##############################################################
@@ -29,9 +27,7 @@ from fileinput import filename
 #How to work with file uploads http://flask.pocoo.org/docs/0.10/patterns/fileuploads/
 # This is the path to the upload directory
 
-# UPLOAD_FOLDER = '/tmp/' #this one works on Linux.
-# UPLOAD_FOLDER = 'tmp' #this one works on Windows.
-UPLOAD_FOLDER = tempfile.mkdtemp() #this works on either, and doesn't seem to need Admin rights
+
 ALLOWED_EXTENSIONS = set(['xls', 'xlsx', 'csv'])
 TEMPLATE_FILE = 'template.xls'
 TEMPLATE_FILE_ROUTE = '/'+TEMPLATE_FILE
@@ -42,6 +38,7 @@ INTERNAL_SERVER_ERROR_TEMPLATE_ROUTE = '/'+INTERNAL_SERVER_ERROR_TEMPLATE_FILE
 
 FIRST_DATA_ROW_FOR_EXPORT = 1
 
+
 # Initialize the Flask application
 app = Flask(__name__)
 
@@ -49,7 +46,6 @@ random_number = os.urandom(24)
 app.secret_key = random_number
 
 # These are the extension that we are accepting to be uploaded
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024 #arbitrary 16 megabyte upload limit
 
 
@@ -77,7 +73,9 @@ def getPondList(filename = TEMPLATE_FILE):
     '''
     print "running getPondList method"
     try:
-        reader = DataReader(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+        pond_file = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        print "pond_file type is ", type(pond_file)
+        reader = DataReader(pond_file)
     except Exception as e:
         print "error in getPondList"
         print str(e)
@@ -99,11 +97,16 @@ def my_utility_processor():
         bpprList = get_rounded_BPPR_list(filename)
         return bpprList
 
-    def ponds(filename):
+    def ponds(filename=None):
         print "running ponds method"
-        pondList = getPondList(filename)
-        return pondList
-
+        pondList = []
+        if(filename is not None):
+            pondList = getPondList(filename)
+            
+        else:
+            pondList = session['pond_id_list']
+        print "in ponds method, pondList is ", pondList
+        return len(pondList)
 
     return dict(bppr=bppr, ponds=ponds)
 
@@ -114,6 +117,12 @@ def my_utility_processor():
 def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
+           
+           
+def jsonify_pond(pondList=[]):
+    jsonified_pond_list = []
+    
+    return jsonified_pond_list
 
 @app.route('/', methods=['GET', 'POST'])
 @app.route('/index', methods=['GET', 'POST'])
@@ -127,27 +136,60 @@ def indexView():
     if request.method == 'POST': #true if the button "upload" is clicked
         # Get the name of the uploaded uploaded_file
         uploaded_file = request.files['uploaded_file']
+        
+
+        
+        
+        
+        print type(uploaded_file)
         # Check if the uploaded_file is one of the allowed types/extensions
         if uploaded_file and allowed_file(uploaded_file.filename):
-            # Make the filename safe, remove unsupported chars
-#             filename = secure_filename(uploaded_file.filename)
-            #on second thought, let's not trust the user and secure_filename to give us something safe
             
-            #let's make up something
-            print "generating filename"
-            filename = str(uuid.uuid4())
-            print "filename generated was: ", filename
+            
+            
+            pond_file = request.files['uploaded_file']
+            print "pond_file type: ", type(pond_file)
+            print "pond_file content_length= ", pond_file.content_length, ", content_type= ", pond_file.content_type            
+    #         print "pond_file.read()", pond_file.read()
+    #         print "type(pond_file.read())", type(pond_file.read())
+            try:
+                print "trying to parse and read"
+     
+                   
+                reader = DataReader("sdflkjsdflkj") #I don't plan on using this filename, thanks
+                pondList = reader.readFile(pond_file.read())                     
+            except Exception as e:
+                print "error in getPondList"
+                print str(e)
+                return render_template(INTERNAL_SERVER_ERROR_TEMPLATE_ROUTE, error = str(e))
+            # Check if the file is one of the allowed types/extensions
+        
+            print "in indexView. pondlist is: ", pondList                    
+#             session['pondList'] = pondList #doesn't work. Ponds are not JSON serializable. And it would be huge pain to make them so.
+            pond_id_list = []
+            pond_day_list = []
+            pond_bppr_list = []
+            pond_pppr_list = []
+            for pond in pondList:
+                pond_id_list.append(pond.get_lake_id())
+                pond_day_list.append(pond.get_day_of_year())
+                pond_bppr_list.append(pond.calculateDailyWholeLakeBenthicPrimaryProductionPerMeterSquared())
+                pond_pppr_list.append(pond.calculateDailyWholeLakePhytoplanktonPrimaryProductionPerMeterSquared())
+                
+            print "pond id list", pond_id_list
+            print "pond day list", pond_day_list
+            session['pond_id_list'] = pond_id_list
+            session['pond_day_list'] = pond_day_list
+            session['pond_bppr_list'] = pond_bppr_list
+            session['pond_pppr_list'] = pond_pppr_list
             
 
-            # Move the uploaded_file from  the temporal folder to
-            # the upload folder we setup
-            uploaded_file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            
 
 
 
 
-
-            return redirect(url_for("bpprtest",filename=filename))
+            return redirect(url_for("primary_production"))
 
         else:
             error_message = "Apologies, that file extension is not allowed. Please try one of the allowed extensions."
@@ -160,20 +202,7 @@ def indexView():
 
 
 
-# This route is expecting a parameter containing the name
-# of a uploaded_file. Then it will locate that uploaded_file on the upload
-# directory and show it on the browser, so if the user uploads
-# an image, that image is going to be shown after the upload
-@app.route('/tmp/<filename>', methods=['GET', 'POST'])
-def uploaded_file(filename):
-    print "running uploaded_file"
-    return send_from_directory(app.config['UPLOAD_FOLDER'],
-                              filename)
-#     try:
-#         return send_from_directory(app.config['UPLOAD_FOLDER'],
-#                               filename)
-#     except Exception as e:
-#         return render_template(INTERNAL_SERVER_ERROR_TEMPLATE_ROUTE, error = str(e))
+
 
 ################################################################################################################################
 # used to offer template file
@@ -203,30 +232,14 @@ def example_file_view():
         return render_template(INTERNAL_SERVER_ERROR_TEMPLATE_ROUTE, error = str(e))
 
 ################################################################
-#renders the bpprtest template.
+#renders the primary_production template.
 ################################################################
-@app.route('/bpprtest', methods=['GET', 'POST'])
-@app.route('/bpprtest.html', methods=['GET', 'POST'])
-def bpprtest():
-    print "running bpprtest method"
-    
-
-
-#     @after_this_request
-#     def cleanup(response):
-#         print "******************"
-#         print "cleanup routine stub"
-#         print "******************"
-#
-#         #deletes all the contents of the folder nicely, which makes downloading the data afterwards impossible.
-#         dirPath = UPLOAD_FOLDER
-#         fileList = os.listdir(dirPath)
-#         for fileName in fileList:
-#             os.remove(os.path.join(app.config['UPLOAD_FOLDER'], fileName))
-#         shutil.rmtree(UPLOAD_FOLDER+"/") #should delete contents of upload folder, but deletes the whole folder.
-#         return response
+@app.route('/primary_production', methods=['GET', 'POST'])
+@app.route('/primary_production.html', methods=['GET', 'POST'])
+def primary_production():
+    print "running primary_production method"
     try:
-        return render_template("bpprtest.html")
+        return render_template("primary_production.html")
     except Exception as e:
         print str(e)
         return render_template(INTERNAL_SERVER_ERROR_TEMPLATE_ROUTE, error = str(e))
@@ -258,52 +271,33 @@ def export_view():
     # inserting into Flask response
     ##################################
 
+
+
+    
     #.... code here for adding worksheets and cells
     #Create a new workbook object
     workbook = xlwt.Workbook()
 
     #Add a sheet
     worksheet = workbook.add_sheet('Statistics')
-
-    #################
-    #add values
-    #################
-    #get inputs
-    inputFile = ""
-    try:
-            inputFile = request.args.get('filename')
-    except Exception as e:
-        print str(e)
-        return render_template(INTERNAL_SERVER_ERROR_TEMPLATE_ROUTE, error = str(e))
-
+    
+    #columns to write to
     lake_ID_column = 0
     day_of_year_column = lake_ID_column+1
     bppr_column = day_of_year_column+1
-    pppr_column = bppr_column+1
-
-    pondlist = getPondList(inputFile)
-    lake_id_list = []
-    day_of_year_list = []
-    bpprList = []
-    ppprList = []
-    for pond in pondlist:
-        lake_id = pond.get_lake_id()
-        lake_id_list.append(lake_id)
-        day_of_year = pond.get_day_of_year()
-        day_of_year_list.append(day_of_year)
-        bppr = pond.calculateDailyWholeLakeBenthicPrimaryProductionPerMeterSquared()
-        bpprList.append(bppr)
-        pppr = pond.calculateDailyWholeLakePhytoplanktonPrimaryProductionPerMeterSquared()
-        ppprList.append(pppr)
-
+    pppr_column = bppr_column+1        
+        
+    #get data from session, write to worksheet
+    lake_id_list = session['pond_id_list']
+    day_of_year_list = session['pond_day_list']
+    bpprList = session['pond_bppr_list']
+    ppprList = session['pond_pppr_list']
 
     write_column_to_worksheet(worksheet, lake_ID_column, "Lake ID", lake_id_list)
     write_column_to_worksheet(worksheet, day_of_year_column, "day of year", day_of_year_list)
     write_column_to_worksheet(worksheet, bppr_column, "BPPR", bpprList)
     write_column_to_worksheet(worksheet, pppr_column, "PPPR", ppprList)
 
-
-    # workbook.save('statistics.xls')
 
 
     #This is the magic. The workbook is saved into the StringIO object,
@@ -381,11 +375,11 @@ def internalServerError(internal_exception):
 
 
 if __name__ == '__main__':
-    print "upload folder is ", UPLOAD_FOLDER
+
     print "a random number is: ", random_number
     
     
-    print app.secret_key
+    print "secret key is", app.secret_key
     debug_mode = False
     i_am_sure_i_want_to_let_people_execute_arbitrary_code = "no" #"yes" for yes.
     i_want_an_externally_visible_site = False

@@ -30,36 +30,20 @@ class DataReader(object):
     ##################################
     # Class variables
     ##################################
-#     filename = "template.xlsx" #name of file. Default is "template.xlsx"
-#     filename = "template_example.xlsx" #name of file. Has photo measurements at 0.1 meter intervals
-#     filename = "June_26_light_penetration_testing_data_fixed_surface_area.xlsx" #Attempted to fix water surface area. Only photo data at certain intervals.
-#     filename = "June_26_10cm_testing_data_fixed_surface_area.xlsx"#Attempted to fix water surface area. photo data at 10cm intervals
-#     filename = "relative_depth_template_example.xlsx" #name of file. Only has photo data at light penetration levels [1.0, 0.8,0.5,0.25,0.1,0.01]
-#     filename = "Jul_03_data_template_example.xlsx" #"reasonable" values for everything, including phytoplankton photosynthesis. Benthic measurements use light penetration proportions.
-#     filename = "Jul_08_data_template_example_interim.xlsx" #"reasonable" values for everything, except the benthic data is back to the old pprinputs 10cm intervals by actual depth instead of proportions.
-#     filename = "Jul_08_data_template_example_with_benthic_light_proportions.xlsx" #"reasonable" values for everything, benthic data uses light penetration proportions calculated from the 10 cm individuals
-#     filename = "Aug_03_test_data.xls" #"Same as Jul_08_data_template_example_with_benthic_light_proportions, but added in BIGMU lake.
-#     filename = "Aug_03_test_data_bppr10percent_intervals.xls" #"Same as Aug_03_test_data, but reducing data points to 10-percent intervals.
-#     filename = "Aug_03_test_data_bppr5measurements.xls" #"Same as Aug_03_test_data_bppr10percent_intervals.xls, but with bppr data points at the following light proportions: [1.00,0.5,0.25,0.1,0.01]
-#     filename = "Aug_03_test_data_pppr1995_day152_cryst.xls" #"Same as Aug_03_test_data_bppr5measurements.xls, but altered PPR data to test PPR calculations. test data taken from Phyte_90s.csv. Year=1995, DOY=152. Depth is max depth. Just assuming 1 layer.
-#     filename = "Aug_26_test_data.xls" #"Same as Aug_03_test_data_bppr5measurements.xls, but altered PPR data to test PPR calculations. test data taken from Phyte_90s.csv. Year=1995, DOY=152. Depth is max depth. Just assuming 1 layer.
-#     filename = "Aug_28_test_data.xls" #altering this to use the data from LTER_Plank_PI, which has everything except beta
+
+    # Data    Method    Source
+    # pmax,    copied directly    https://drive.google.com/open?id=1jxqTExiqx5Y3rqf8Q3UBus5Rjr5ETVLCUy08Stey4w4
+    # alpha,    copied directly    https://drive.google.com/open?id=1jxqTExiqx5Y3rqf8Q3UBus5Rjr5ETVLCUy08Stey4w4
+    # beta    copied directly    https://drive.google.com/open?id=1jxqTExiqx5Y3rqf8Q3UBus5Rjr5ETVLCUy08Stey4w4
+    # stratum number    copied directly    https://drive.google.com/open?id=1jxqTExiqx5Y3rqf8Q3UBus5Rjr5ETVLCUy08Stey4w4
+    # stratum depth    calculated from the daily average of pp_epi_nhw_m2/pp_epi_nhw_m3,pp_met_nhw_m2/pp_met_nhw_m3, and pp_hyp_nhw_m2/pp_hyp_nhw_m3 for the epilimnion, metalimnion, and hypolimnion respectively    https://lter.limnology.wisc.edu/dataset/north-temperate-lakes-lter-primary-production-trout-lake-area-1986-2007
+    # light extinction coefficient    copied directly    https://lter.limnology.wisc.edu/dataset/north-temperate-lakes-lter-light-extinction-trout-lake-area-1981-current
+    # pppr        https://lter.limnology.wisc.edu/dataset/north-temperate-lakes-lter-primary-production-trout-lake-area-1986-2007
+#     filename = "example_data.xls" #Removed everything but one lake from Oct 16_test_data.
+    filename = "Sep_17_test_data.xls"
 
 
 
-# Data    Method    Source
-# pmax,    copied directly    https://drive.google.com/open?id=1jxqTExiqx5Y3rqf8Q3UBus5Rjr5ETVLCUy08Stey4w4
-# alpha,    copied directly    https://drive.google.com/open?id=1jxqTExiqx5Y3rqf8Q3UBus5Rjr5ETVLCUy08Stey4w4
-# beta    copied directly    https://drive.google.com/open?id=1jxqTExiqx5Y3rqf8Q3UBus5Rjr5ETVLCUy08Stey4w4
-# stratum number    copied directly    https://drive.google.com/open?id=1jxqTExiqx5Y3rqf8Q3UBus5Rjr5ETVLCUy08Stey4w4
-# stratum depth    calculated from the daily average of pp_epi_nhw_m2/pp_epi_nhw_m3,pp_met_nhw_m2/pp_met_nhw_m3, and pp_hyp_nhw_m2/pp_hyp_nhw_m3 for the epilimnion, metalimnion, and hypolimnion respectively    https://lter.limnology.wisc.edu/dataset/north-temperate-lakes-lter-primary-production-trout-lake-area-1986-2007
-# light extinction coefficient    copied directly    https://lter.limnology.wisc.edu/dataset/north-temperate-lakes-lter-light-extinction-trout-lake-area-1981-current
-# pppr        https://lter.limnology.wisc.edu/dataset/north-temperate-lakes-lter-primary-production-trout-lake-area-1986-2007
-#     filename = "Sep_5_test_data.xlsx" #just used for testing phyto. Data from multiple sources.
-#     filename = "Sep_17_test_data.xls" #just used for testing phyto. Data from multiple sources. Messing with values.
-#     filename = "Oct_12_test_data.xls" #just used for testing phyto. Data from multiple sources. Messing with values. "Testing round 2.0"
-#     filename = "Oct_16_test_data.xls" #just used for testing phyto. Combining Testing 1.0 (Sep 17) with Testing 2.0 (Oct 12)
-    filename = "example_data.xls" #Removed everything but one lake from Oct 16_test_data.
 
 
 
@@ -152,14 +136,15 @@ class DataReader(object):
     def read(self):
         try:
             book = xlrd.open_workbook(self.filename)
+            print "reading in data_reader. filename is: ", self.filename
         except:
             raise Exception("error in read method. xlrd.open_workbook gave an Exception with filename: ", self.filename)
 
         return self.readPondListFromFile(book)
 
+    
 
-
-
+    #TODO: redundant with read()
     def readFile(self,inputfile):
         '''
         READ FILE
@@ -168,6 +153,7 @@ class DataReader(object):
         #http://stackoverflow.com/questions/10458388/how-do-you-read-excel-files-with-xlrd-on-appengine
         try:
             book =  xlrd.open_workbook(file_contents=inputfile)
+            print "Reading in data_reader. inputFile type: ", type(inputfile)
         except IOError:
             raise Exception ("Error in readFile. xlrd.open_workbook(file_contents=inputfile) gave exception with inputfile", inputfile)
 
@@ -280,12 +266,12 @@ class DataReader(object):
         print "reading pond data. num_rows is: ", num_rows
         while curr_row<num_rows:
             row = sheet.row(curr_row)
-            print "current row is: ", curr_row
+#             print "current row is: ", curr_row
 
             #values
             try:
                 row_doy_value = row[self.dayOfYearIndex].value
-                print "row day: ", row_doy_value
+#                 print "row day: ", row_doy_value
                 row_lakeID_value = row[self.lakeIDIndex].value
                 row_kd_value = float(row[self.kd_index].value)
                 row_noonlight_value = float(row[self.noon_surface_light_index].value)
@@ -499,8 +485,8 @@ def main():
         relative_depth_meters = []
 
         
-        if(doy != 165): #TODO: remove this hack used for testing
-           continue #skip to next lake
+#         if(doy != 165): #TODO: remove this hack used for testing
+#            continue #skip to next lake
         use_photoinhibition = False        
 
         print ""
