@@ -84,32 +84,33 @@ class DataReader(object):
     #############
     #TODO: a dict?
     #TODO: some way for the user to specify all this on sheet 0, perhaps?
+    
     #indices common to all sheets
     dayOfYearIndex = 0 #"DOY"
-    lakeIDIndex = 1 #"Lake_ID"
+    lakeIDIndex = dayOfYearIndex+1 #"Lake_ID"
 
     #indices for Pond vars in pond_data worksheet
-    kd_index = 2 #index of light attenuation coefficient kd
-    noon_surface_light_index = 3 #"midday.mean.par"
-    length_of_day_index = 4 #"LOD" in hours
+    kd_index = lakeIDIndex+1 #index of light attenuation coefficient kd
+    noon_surface_light_index = kd_index+1 #"midday.mean.par"
+    length_of_day_index = noon_surface_light_index+1 #"LOD" in hours
     
 
     #indices for vars in benthic_photo_data worksheet
-    benthic_light_penetration_proportion_index = 2 #
-    benthic_pmax_index = 3 #"pmax.z"
-    benthic_ik_index = 4 #"ik_z" light intensity at onset of saturation
+    benthic_light_penetration_proportion_index = lakeIDIndex+1
+    benthic_pmax_index = benthic_light_penetration_proportion_index+1 #"pmax.z"
+    benthic_ik_index = benthic_pmax_index+1 #"ik_z" light intensity at onset of saturation
 
     #indices for vars in phytoplankton_photo_data worksheet
-    phyto_thermal_layer_index =2
-    phyto_depth_index = 3
-    phyto_pmax_index = 4
-    phyto_alpha_index = 5
-    phyto_beta_index = 6
+    phyto_thermal_layer_index =lakeIDIndex+1
+    phyto_depth_index = phyto_thermal_layer_index+1
+    phyto_pmax_index = phyto_depth_index+1
+    phyto_alpha_index = phyto_pmax_index+1
+    phyto_beta_index = phyto_alpha_index+1
 
     #indices for vars in shape_data worksheet
-    shape_ID_index = 0
-    shape_depth_index = 1 #"z" in meters #depth is in several sheets #TODO: different variable?
-    shape_area_index = 2 #"kat_div" in meters squared.
+    shape_ID_index = lakeIDIndex+1
+    shape_depth_index = shape_ID_index+1 #"z" in meters #depth is in several sheets #TODO: different variable?
+    shape_area_index = shape_depth_index+1 #"kat_div" in meters squared.
 
 
     ###############

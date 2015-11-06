@@ -1,3 +1,0 @@
-asdf
-the quick brown fox
-is 42

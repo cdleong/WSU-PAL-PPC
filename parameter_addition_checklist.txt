@@ -1,0 +1,27 @@
+#########################################################################
+#Places that must be updated when adding parameters to pond
+#########################################################################
+
+parameter_name
+
+#pond.py
+__variables section
+__constructor 
+__everywhere that uses the constructor.
+__getter
+__setter
+__validator
+
+
+ 
+
+
+#data_reader.py
+
+
+
+#example_data.xls
+
+
+
+#template.xls
