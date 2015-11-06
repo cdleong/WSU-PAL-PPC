@@ -13,6 +13,7 @@
     <ul>
     {% for i in range (0, ponds()) %}
         <li>
+        Loop index: {{ i|e }},
 		Day of Year: {{ session['pond_day_list'][i] |e }},
 		Lake ID:{{ session['pond_id_list'][i] |e }}, 
 		<ul>

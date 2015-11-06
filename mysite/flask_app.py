@@ -189,7 +189,7 @@ def indexView():
 
 
 
-            return redirect(url_for("bpprtest"))
+            return redirect(url_for("primary_production"))
 
         else:
             error_message = "Apologies, that file extension is not allowed. Please try one of the allowed extensions."
@@ -232,34 +232,14 @@ def example_file_view():
         return render_template(INTERNAL_SERVER_ERROR_TEMPLATE_ROUTE, error = str(e))
 
 ################################################################
-#renders the bpprtest template.
+#renders the primary_production template.
 ################################################################
-@app.route('/bpprtest', methods=['GET', 'POST'])
-@app.route('/bpprtest.html', methods=['GET', 'POST'])
-def bpprtest():
-    print "running bpprtest method"
-     
-    print "request method: ", request.method
-#     print "request.files['uploaded_file']", request.files['uploaded_file']
-#     print "request.files['uploaded_file'].filename", request.files['uploaded_file'].filename
-     
-
-
-#     @after_this_request
-#     def cleanup(response):
-#         print "******************"
-#         print "cleanup routine stub"
-#         print "******************"
-#
-#         #deletes all the contents of the folder nicely, which makes downloading the data afterwards impossible.
-#         dirPath = UPLOAD_FOLDER
-#         fileList = os.listdir(dirPath)
-#         for fileName in fileList:
-#             os.remove(os.path.join(app.config['UPLOAD_FOLDER'], fileName))
-#         shutil.rmtree(UPLOAD_FOLDER+"/") #should delete contents of upload folder, but deletes the whole folder.
-#         return response
+@app.route('/primary_production', methods=['GET', 'POST'])
+@app.route('/primary_production.html', methods=['GET', 'POST'])
+def primary_production():
+    print "running primary_production method"
     try:
-        return render_template("bpprtest.html")
+        return render_template("primary_production.html")
     except Exception as e:
         print str(e)
         return render_template(INTERNAL_SERVER_ERROR_TEMPLATE_ROUTE, error = str(e))
@@ -293,35 +273,8 @@ def export_view():
 
 
 
-    #################
-    #add values
-    #################
-#     #get inputs
-#     inputFile = ""
-#     try:
-#             inputFile = request.args.get('filename')
-#     except Exception as e:
-#         print str(e)
-#         return render_template(INTERNAL_SERVER_ERROR_TEMPLATE_ROUTE, error = str(e))
-# 
-# 
-# 
-#     pondlist = getPondList(inputFile)
-#     lake_id_list = []
-#     day_of_year_list = []
-#     bpprList = []
-#     ppprList = []
-#     for pond in pondlist:
-#         lake_id = pond.get_lake_id()
-#         lake_id_list.append(lake_id)
-#         day_of_year = pond.get_day_of_year()
-#         day_of_year_list.append(day_of_year)
-#         bppr = pond.calculateDailyWholeLakeBenthicPrimaryProductionPerMeterSquared()
-#         bpprList.append(bppr)
-#         pppr = pond.calculateDailyWholeLakePhytoplanktonPrimaryProductionPerMeterSquared()
-#         ppprList.append(pppr)
     
-        #.... code here for adding worksheets and cells
+    #.... code here for adding worksheets and cells
     #Create a new workbook object
     workbook = xlwt.Workbook()
 
@@ -334,6 +287,7 @@ def export_view():
     bppr_column = day_of_year_column+1
     pppr_column = bppr_column+1        
         
+    #get data from session, write to worksheet
     lake_id_list = session['pond_id_list']
     day_of_year_list = session['pond_day_list']
     bpprList = session['pond_bppr_list']
@@ -344,8 +298,6 @@ def export_view():
     write_column_to_worksheet(worksheet, bppr_column, "BPPR", bpprList)
     write_column_to_worksheet(worksheet, pppr_column, "PPPR", ppprList)
 
-
-    # workbook.save('statistics.xls')
 
 
     #This is the magic. The workbook is saved into the StringIO object,
@@ -427,7 +379,7 @@ if __name__ == '__main__':
     print "a random number is: ", random_number
     
     
-    print app.secret_key
+    print "secret key is", app.secret_key
     debug_mode = False
     i_am_sure_i_want_to_let_people_execute_arbitrary_code = "no" #"yes" for yes.
     i_want_an_externally_visible_site = False
