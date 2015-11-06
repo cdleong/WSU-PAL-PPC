@@ -86,7 +86,8 @@ class DataReader(object):
     #TODO: some way for the user to specify all this on sheet 0, perhaps?
     
     #indices common to all sheets
-    dayOfYearIndex = 0 #"DOY"
+    yearIndex = 0
+    dayOfYearIndex = yearIndex+1 #"DOY"
     lakeIDIndex = dayOfYearIndex+1 #"Lake_ID"
 
     #indices for Pond vars in pond_data worksheet
@@ -271,6 +272,7 @@ class DataReader(object):
 
             #values
             try:
+                row_year_value = row[self.yearIndex].value
                 row_doy_value = row[self.dayOfYearIndex].value
 #                 print "row day: ", row_doy_value
                 row_lakeID_value = row[self.lakeIDIndex].value
@@ -284,13 +286,13 @@ class DataReader(object):
 
             #Do we need to make a pond object?
             pond = None
-            pond = next((i for i in pondList if (i.get_lake_id()== row_lakeID_value and i.get_day_of_year()==row_doy_value)),None) #source: http://stackoverflow.com/questions/7125467/find-object-in-list-that-has-attribute-equal-to-some-value-that-meets-any-condi
+            pond = next((i for i in pondList if (i.get_lake_id()== row_lakeID_value and 
+                                                 i.get_day_of_year()==row_doy_value and
+                                                 i.get_year() == row_year_value)),None) #source: http://stackoverflow.com/questions/7125467/find-object-in-list-that-has-attribute-equal-to-some-value-that-meets-any-condi
             if pond is None: #not in list. Must create Pond object
 #                 print "creating pond with lake ID = ", row_lakeID_value, " , and DOY = ", row_doy_value
                 emptyShape = BathymetricPondShape({}) #initialize with empty dict
-                pond = Pond(row_lakeID_value, row_doy_value, row_lod_value, row_noonlight_value, row_kd_value, emptyShape, [], [], self.DEFAULT_TIME_INTERVAL)
-                if(pond.get_day_of_year() == 0):
-                    print "this shouldn't happen. pond day of year is ", 0
+                pond = Pond(row_year_value, row_lakeID_value, row_doy_value, row_lod_value, row_noonlight_value, row_kd_value, emptyShape, [], [], self.DEFAULT_TIME_INTERVAL)
                 pondList.append(pond)
             curr_row+=1
 
@@ -355,6 +357,7 @@ class DataReader(object):
 
 
             #values
+            row_year_value = row[self.yearIndex].value
             row_doy_value = row[self.dayOfYearIndex].value
             row_lakeID_value = row[self.lakeIDIndex].value
             # print "light penetration proportion is", row[self.benthic_light_penetration_proportion_index].value
@@ -365,7 +368,8 @@ class DataReader(object):
             #find the correct pond
             pond = None
             pond = next((i for i in pondList if (i.get_lake_id()== row_lakeID_value and
-                                                 i.get_day_of_year()==row_doy_value)),None) #source: http://stackoverflow.com/questions/7125467/find-object-in-list-that-has-attribute-equal-to-some-value-that-meets-any-condi
+                                                 i.get_day_of_year()==row_doy_value and
+                                                 i.get_year() == row_year_value)),None) #source: http://stackoverflow.com/questions/7125467/find-object-in-list-that-has-attribute-equal-to-some-value-that-meets-any-condi
             if pond is None: #something is terribly wrong
                 raise FormatError("Something went wrong. Benthic Measurement with DOY "+str(row_doy_value) + " and Lake ID " + row_lakeID_value + " does not match to any Pond.")
                 #TODO: handle this better.
@@ -395,6 +399,7 @@ class DataReader(object):
 
 
             #values
+            row_year_value = row[self.yearIndex].value
             row_doy_value = row[self.dayOfYearIndex].value
             row_lakeID_value = row[self.lakeIDIndex].value
             row_thermal_layer_value = row[self.phyto_thermal_layer_index].value
@@ -409,7 +414,8 @@ class DataReader(object):
             #find the correct pond
             pond = None
             pond = next((i for i in pondList if (i.get_lake_id()== row_lakeID_value and
-                                                 i.get_day_of_year()==row_doy_value)),None) #source: http://stackoverflow.com/questions/7125467/find-object-in-list-that-has-attribute-equal-to-some-value-that-meets-any-condi
+                                                 i.get_day_of_year()==row_doy_value and
+                                                 i.get_year() == row_year_value)),None) #source: http://stackoverflow.com/questions/7125467/find-object-in-list-that-has-attribute-equal-to-some-value-that-meets-any-condi
             if pond is None: #something is terribly wrong
                 raise FormatError("Something went wrong. Benthic Measurement with DOY "+str(row_doy_value) + " and Lake ID " + row_lakeID_value + " does not match to any Pond.")
             else:
@@ -467,7 +473,6 @@ def main():
     reader = DataReader(filename)
     pondList = reader.read()
 
-#     p = Pond()
     for p in pondList:
         shape = p.get_pond_shape()
         bppmeasurements_sorted = p.get_benthic_measurements_sorted_by_depth()

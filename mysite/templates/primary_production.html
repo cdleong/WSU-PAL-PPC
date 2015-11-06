@@ -7,19 +7,20 @@
 
     <h1>Primary Production from user data</h1>
 
-    <p>BPPR VALUES CALCULATED: </p>
+    <p>Primary Production Values: </p>
     {#http://jinja.pocoo.org/docs/dev/templates/#list-of-control-structures#}
     <ul>
-    {% for i in range (0, ponds()) %}
+    {% for i in range (0, session['number_of_ponds']) %}
         <li>
+        Year: {{ '%d' % session['pond_year_list'][i]  }},
 		Day of Year: {{ session['pond_day_list'][i] |e }},
 		Lake ID:{{ session['pond_id_list'][i] |e }}, 
 		<ul>
 			<li>
-				BPPR:{{ session['pond_bppr_list'][i]|e }} (mg C/m^2 littoral area/day)
+				BPPR:{{'%0.1f' % session['pond_bppr_list'][i]|float }} (mg C/m^2 littoral area/day)
 			</li>
 			<li>
-				PPPR:{{ session['pond_pppr_list'][i]|e }} (mg C/m^2 surface area/day)
+				PPPR:{{'%0.1f' % session['pond_pppr_list'][i]|float }} (mg C/m^2 surface area/day)
 			</li>
 		</ul>
 		</li>

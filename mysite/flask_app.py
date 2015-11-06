@@ -158,20 +158,27 @@ def indexView():
                 print "error in getPondList"
                 print str(e)
                 return render_template(INTERNAL_SERVER_ERROR_TEMPLATE_ROUTE, error = str(e))
-            # Check if the file is one of the allowed types/extensions
-        
+            
+            number_of_ponds = len(pondList)
+            pond_year_list = []
             pond_id_list = []
             pond_day_list = []
             pond_bppr_list = []
             pond_pppr_list = []
             for pond in pondList:
+                pond_year_list.append(pond.get_year())
                 pond_id_list.append(pond.get_lake_id())
                 pond_day_list.append(pond.get_day_of_year())
                 pond_bppr_list.append(pond.calculateDailyWholeLakeBenthicPrimaryProductionPerMeterSquared())
                 pond_pppr_list.append(pond.calculateDailyWholeLakePhytoplanktonPrimaryProductionPerMeterSquared())
                 
-            print "pond id list", pond_id_list
-            print "pond day list", pond_day_list
+            
+            
+            
+            #add things to session dict, so as to pass them to other views
+            
+            session['number_of_ponds'] = number_of_ponds
+            session['pond_year_list'] = pond_year_list
             session['pond_id_list'] = pond_id_list
             session['pond_day_list'] = pond_day_list
             session['pond_bppr_list'] = pond_bppr_list
@@ -273,17 +280,20 @@ def export_view():
     worksheet = workbook.add_sheet('Statistics')
     
     #columns to write to
-    lake_ID_column = 0
+    year_column = 0
+    lake_ID_column = year_column+1
     day_of_year_column = lake_ID_column+1
     bppr_column = day_of_year_column+1
     pppr_column = bppr_column+1        
         
     #get data from session, write to worksheet
+    year_list = session['pond_year_list']
     lake_id_list = session['pond_id_list']
     day_of_year_list = session['pond_day_list']
     bpprList = session['pond_bppr_list']
     ppprList = session['pond_pppr_list']
 
+    write_column_to_worksheet(worksheet, year_column, "year", year_list)
     write_column_to_worksheet(worksheet, lake_ID_column, "Lake ID", lake_id_list)
     write_column_to_worksheet(worksheet, day_of_year_column, "day of year", day_of_year_list)
     write_column_to_worksheet(worksheet, bppr_column, "BPPR", bpprList)

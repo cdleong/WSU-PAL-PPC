@@ -28,6 +28,9 @@ class Pond(object):
     ###################################
     # CONSTANTS
     ###################################
+    MINIMUM_VALID_YEAR = 1 #If you want to do lakes from year 0 or B.C., you code it.
+    MAXIMUM_VALID_YEAR = 9999 #I'm sorry, people in the year 10000 A.D., and/or time travellers.
+    
     MINIMUM_VALID_DAY = 0  # New Year's Day
     MAXIMUM_VALID_DAY = 366  # New Year's Eve in a leap year.
 
@@ -60,6 +63,7 @@ class Pond(object):
     ###################################
 
     # identifying variables, aka Primary Key
+    year = 1900 
     lake_ID = ""  # invalid lake ID I'm assuming. #TODO: check.
     day_of_year = 0  # day of year 0-366
 
@@ -89,6 +93,7 @@ class Pond(object):
     # CONSTRUCTOR
     ###########################
     def __init__(self,
+                 year = 1900,
                  lake_ID="",
                  day_of_year=0,
                  length_of_day=0.0,
@@ -109,6 +114,7 @@ class Pond(object):
         @param benthic_photosynthesis_measurements: a list of BenthicPhotoSynthesisMeasurements
         @param phytoplankton_photosynthesis_measurements:  a list of PhyttoplanktonPhotoSynthesisMeasurements
         '''
+        self.set_year(year)
         self.set_lake_id(lake_ID)
         self.set_day_of_year(day_of_year)
         self.length_of_day = length_of_day
@@ -118,6 +124,14 @@ class Pond(object):
         self.set_benthic_photosynthesis_measurements(benthic_photosynthesis_measurements)
         self.set_phytoplankton_photosynthesis_measurements(phytoplankton_photosynthesis_measurements)
         self.set_time_interval(time_interval)
+
+
+
+
+
+
+
+
 
 
 
@@ -148,6 +162,11 @@ class Pond(object):
             validated_value = value
         return validated_value
 
+    def validate_year(self, year):
+        '''
+        '''
+        return self.validate_numerical_value(year, Pond.MAXIMUM_VALID_YEAR, Pond.MINIMUM_VALID_YEAR)
+    
     def validate_day_of_year(self, day_of_year=0):
         '''
 
@@ -231,6 +250,10 @@ class Pond(object):
     #######################
     # GETTERS
     #######################
+    def get_year(self):
+        return self.__year
+    
+    
     def get_lake_id(self):
         '''
         Get Lake ID
@@ -330,6 +353,9 @@ class Pond(object):
     #######################
     # SETTERS
     #######################
+    
+    def set_year(self, value):
+        self.__year = value    
 
     def set_lake_id(self, lake_id):
         '''
@@ -432,6 +458,9 @@ class Pond(object):
     #############################
     # DELETERS
     #############################
+    
+    def del_year(self):
+        del self.__year    
 
     def del_lake_id(self):
         del self.__lake_ID
@@ -468,6 +497,8 @@ class Pond(object):
     ########################################
     # Properties
     ########################################    
+    #TODO: write decent docstrings
+    year = property(get_year, set_year, del_year, "year's docstring")
     lake_ID = property(get_lake_id, set_lake_id, del_lake_id, "lake_ID's docstring")
     day_of_year = property(get_day_of_year, set_day_of_year, del_day_of_year, "day_of_year's docstring")
     length_of_day = property(get_length_of_day, set_length_of_day, del_length_of_day, "length_of_day's docstring")
@@ -1163,6 +1194,7 @@ class Pond(object):
             depth_m_of_light_penetration = self.calculate_depth_of_specific_light_percentage(light_penetration_depth)
             depths.append(depth_m_of_light_penetration)
         return depths
+    
 
 
 
