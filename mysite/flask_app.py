@@ -152,16 +152,14 @@ def indexView():
                 print "trying to parse and read"
      
                    
-                reader = DataReader("sdflkjsdflkj") #I don't plan on using this filename, thanks
-                pondList = reader.readFile(pond_file.read())                     
+                reader = DataReader("") #I don't plan on using this filename, thanks
+                pondList = reader.readFile(pond_file.read()) #read method is http://werkzeug.pocoo.org/docs/0.10/datastructures/#werkzeug.datastructures.FileStorage,                 
             except Exception as e:
                 print "error in getPondList"
                 print str(e)
                 return render_template(INTERNAL_SERVER_ERROR_TEMPLATE_ROUTE, error = str(e))
             # Check if the file is one of the allowed types/extensions
         
-            print "in indexView. pondlist is: ", pondList                    
-#             session['pondList'] = pondList #doesn't work. Ponds are not JSON serializable. And it would be huge pain to make them so.
             pond_id_list = []
             pond_day_list = []
             pond_bppr_list = []
@@ -267,9 +265,6 @@ def export_view():
     # inserting into Flask response
     ##################################
 
-
-
-    
     #.... code here for adding worksheets and cells
     #Create a new workbook object
     workbook = xlwt.Workbook()

@@ -2,26 +2,51 @@
 #Places that must be updated when adding parameters to pond
 #########################################################################
 
-parameter_name
+#say parameter name is "parameter_name"...
+
+#example_data.xls
+	__put in a column for it. Title it "parameter_name"
+	
+#template.xls	
+	__put in a column for it, IN THE SAME LOCATION AS EXAMPLE_DATA. Title it "parameter_name"
+	
+
+#data_reader.py
+	__ data index (position in spreadsheet, BASED ON THE FILES ABOVE):  parameter_name_index = parameter_that_is_one_column_left_of_parameter_name_index+1, or parameter_name_index =0  		
+	__ "make pond objects" section/shape data section/Benthic data section/Phytoplankton data section (whichever is relevant):
+			row_parameter_name_value = row[self.parameter_name_index].value 
+			#IF IT IS PART OF THE PRIMARY KEY, double-check to make sure all "are they the same pond?" checks are updated!
+			pond = next((i for i in pondList if (i.get_parameter_name()== row_parameter_name_value and i.get_day_of_year()==row_doy_value)),None) 	
+	 
+	
 
 #pond.py
-__variables section
-__constructor 
-__everywhere that uses the constructor.
-__getter
-__setter
-__validator
+	__variables section: parameter_name = "", or parameter_name=[], or parameter_name={} or parameter_name=0.0, etc.
+	__constants section, for max/min values: PARAMETER_NAME_MAX_VALUE = 5, PARAMETER_NAME_MIN_VALUE= 3.1415926...
+	__getter*
+	__setter*
+	__validator (if numerical value)
+	__constructor:     def __init__(self,...,parameter_name = ""):
+						self.set_parameter_name(parameter_name)
+	__everywhere that uses the constructor.	
 
-
+*Once you've made the variable, pyDev can add all these automatically using the "add properties" option in the context menu.
  
 
 
-#data_reader.py
+#flask_app.py
+	__index_view: add it to the session dict, like so: session['pond_parameter_name_list'] = pond_parameter_name_list
+	__export_view: 
+		add a column index for it: parameter_name_column = some_other_parameter_column+1
+		get it out of the session dict: parameter_name_list = session['pond_parameter_name_list']
+		write it to worksheet: write_column_to_worksheet(worksheet, parameter_name_column, "parameter_name", parameter_name_list)
+
+#primary_production.html
+	__print it out, from session dict: session['parameter_name'][i]
 
 
 
-#example_data.xls
 
 
 
-#template.xls
+

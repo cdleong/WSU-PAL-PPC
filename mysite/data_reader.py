@@ -108,7 +108,7 @@ class DataReader(object):
     phyto_beta_index = phyto_alpha_index+1
 
     #indices for vars in shape_data worksheet
-    shape_ID_index = lakeIDIndex+1
+    shape_ID_index = 0
     shape_depth_index = shape_ID_index+1 #"z" in meters #depth is in several sheets #TODO: different variable?
     shape_area_index = shape_depth_index+1 #"kat_div" in meters squared.
 
@@ -314,7 +314,7 @@ class DataReader(object):
         print "reading shape data. num_rows is: ", num_rows
         while curr_row<num_rows:
             row = sheet.row(curr_row)
-
+            
 
 
             #values

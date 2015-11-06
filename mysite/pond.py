@@ -392,7 +392,6 @@ class Pond(object):
         Validates the value
         '''
         if(isinstance(pond_shape_object, PondShape)):
-            print "setting pond shape for pond ", self.get_lake_id(), " day ", self.get_day_of_year()
             self.pond_shape_object = pond_shape_object
         else:
             raise Exception("cannot set pond shape. Invalid type")
@@ -1180,104 +1179,7 @@ def main():
     TESTING TIME!!!
 
     '''
-    print "hello world"
-    m0 = BenthicPhotosynthesisMeasurement(0.0, 14.75637037, 404.943)
-    m1 = BenthicPhotosynthesisMeasurement(1.0, 25.96292587, 307.6793317)
-    m2 = BenthicPhotosynthesisMeasurement(2.0, 57.98165587, 238.6559726)
-    m3 = BenthicPhotosynthesisMeasurement(3.0, 47.35232783, 189.673406)
-    m4 = BenthicPhotosynthesisMeasurement(4.0, 36.7229998, 154.9128285)
-    m5 = BenthicPhotosynthesisMeasurement(5.0, 33.63753108, 130.2449143)
-    m6 = BenthicPhotosynthesisMeasurement(6.0, 26.8494999, 112.7392791)
-    m7 = BenthicPhotosynthesisMeasurement(7.0, 20.06146872, 100.3163696)
-    m8 = BenthicPhotosynthesisMeasurement(8.0, 16.976, 91.50042668)
-    m9 = BenthicPhotosynthesisMeasurement(9.0, 15.45920354, 85.24417497)
-    m10 = BenthicPhotosynthesisMeasurement(10.0, 11.7585159, 80.80441327)
-    m11 = BenthicPhotosynthesisMeasurement(11.0, 7.148489714, 77.6537274)
-    m12 = BenthicPhotosynthesisMeasurement(12.0, 2.903677594, 75.41783679)
-    m13 = BenthicPhotosynthesisMeasurement(13.0, 0.2986321643, 73.83113249)
-
-
-    measurement_list = [m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13]
-    areas = {0:100, 5:100, 10:100, 13.3:100, 13.4:0.1}
-
-    p_m1 = PhytoPlanktonPhotosynthesisMeasurement(1, 5, 4.113867544, 0.05, 0.01)  # US sparkling lake
-    p_m2 = PhytoPlanktonPhotosynthesisMeasurement(2, 10, 2.636765965, 0.0412667109, 0)
-    p_m3 = PhytoPlanktonPhotosynthesisMeasurement(3, 15, 4.959339837, 0.1646230769, 0)
-    p_measurement_list = {p_m1, p_m2, p_m3}
-
-    pond_shape_instance = BathymetricPondShape(areas)
-
-
-    p = Pond("lake_ID", 360, 12.0, 1440.0, 0.3429805354, pond_shape_instance, measurement_list, p_measurement_list)
-
-    depth_of_one_percent_light = p.calculate_depth_of_specific_light_percentage(.01)
-
-    print "depth of 1% light is ", depth_of_one_percent_light
-    proportional_light = p.calculate_light_proportion_at_depth(depth_of_one_percent_light)
-    print "%light of depth ", depth_of_one_percent_light, " is ", proportional_light
-
-
-
-    max_depth = p.get_max_depth()
-    print "max depth is ", max_depth
-
-    current_depth = 0
-    depth_interval_meters = 0.5
-    while(current_depth < max_depth):
-        print "current depth is ", current_depth
-        print "benthic pmax at this depth is: ", p.get_benthic_pmax_at_depth(current_depth)
-        print "benthic ik at this depth is: ", p.get_benthic_ik_at_depth(current_depth)
-        current_depth += depth_interval_meters
-
-    littoral_area = p.calculate_total_littoral_area()
-    print "littoral area is (should be ~40): ", littoral_area
-
-    depth = 5
-    depth_interval = depth
-    sediment_area = p.pond_shape_object.get_sediment_surface_area_at_depth(depth, depth_interval)
-
-
-    print "sediment area at depth ", depth, " with interval = ", depth_interval, " is ", sediment_area
-
-    f_area1 = p.pond_shape_object.get_fractional_sediment_area_at_depth(depth, littoral_area, depth_interval)
-
-    print "f_area, same parameters. Should be 25/40 = 0.625: ", f_area1
-
-
-    depth = 13.4
-    depth_interval = 13.4 - 5
-    sediment_area = p.pond_shape_object.get_sediment_surface_area_at_depth(depth, depth_interval)
-
-
-    print "sediment area at depth ", depth, " with interval = ", depth_interval, " is ", sediment_area
-    f_area2 = p.pond_shape_object.get_fractional_sediment_area_at_depth(depth, littoral_area, depth_interval)
-
-    print "f_area, same parameters. Should be 15/40 = 0.375: ", f_area2
-
-    print "f_area1+f_area2: ", f_area1 + f_area2
-
-
-
-
-
-    print "whatever man. I just wanna know what phyto productivity I get when I=100, Pmax = 4, alpha = 0.01, and beta = 0.001. I'm expecting 0.8629511552"
-    print "phyto productivity  is ", p.calculate_phytoplankton_primary_productivity(100, 5)
-
-    print "phyto pmax at 0 is ", p.get_phyto_pmax_at_depth(0)
-    print "phyto pmax at 10 is ", p.get_phyto_pmax_at_depth(10)
-    print "phyto pmax at 15 is ", p.get_phyto_pmax_at_depth(15)
-
-    print "phyto productivity at 0 is ", p.calculate_phytoplankton_primary_productivity(100, 0)
-    print "phyto productivity at 10 is ", p.calculate_phytoplankton_primary_productivity(100, 5)
-    print "phyto productivity at 15 is ", p.calculate_phytoplankton_primary_productivity(100, 15)
-
-    print "z1% is ", p.calculate_photic_zone_lower_bound()
-    print "volume of photic zone is ", p.calculate_total_photic_volume()
-
-    print "pppr is", p.calculateDailyWholeLakePhytoplanktonPrimaryProductionPerMeterSquared(0.1)
-
-    total_seasonal_benthic_production = p.calculate_total_seasonal_benthic_primary_production()
-    print "total seasonal BPP is ", total_seasonal_benthic_production
+    print "Hello, world. You should never see this. I deleted all the test code that was here anyway."
 
 
 
