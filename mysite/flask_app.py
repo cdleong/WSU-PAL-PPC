@@ -1,8 +1,7 @@
 import os
-import shutil
-import tempfile
+
 import traceback
-from flask import Flask, request, url_for, make_response, render_template, redirect, Response, session
+from flask import Flask, request, url_for, render_template, redirect, Response, session
 
 
 import StringIO
@@ -148,10 +147,7 @@ def indexView():
             
             
             pond_file = request.files['uploaded_file']
-            print "pond_file type: ", type(pond_file)
-            print "pond_file content_length= ", pond_file.content_length, ", content_type= ", pond_file.content_type            
-    #         print "pond_file.read()", pond_file.read()
-    #         print "type(pond_file.read())", type(pond_file.read())
+
             try:
                 print "trying to parse and read"
      
