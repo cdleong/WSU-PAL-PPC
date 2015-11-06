@@ -2,13 +2,11 @@ import os
 import shutil
 import tempfile
 import traceback
-from flask import Flask, request, url_for, make_response, render_template, redirect, send_from_directory, Response, session
-from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
-from werkzeug.utils import secure_filename
+from flask import Flask, request, url_for, make_response, render_template, redirect, Response, session
+
 
 import StringIO
-import uuid
-import json
+
 
 
 
@@ -18,8 +16,7 @@ from data_reader import DataReader
 import xlwt #excel writing
 import mimetypes
 from werkzeug.datastructures import Headers #used for exporting files?
-from fileinput import filename
-from flask.json import tojson_filter
+# from fileinput import filename
 
 
 ##############################################################
@@ -30,9 +27,7 @@ from flask.json import tojson_filter
 #How to work with file uploads http://flask.pocoo.org/docs/0.10/patterns/fileuploads/
 # This is the path to the upload directory
 
-# UPLOAD_FOLDER = '/tmp/' #this one works on Linux.
-# UPLOAD_FOLDER = 'tmp' #this one works on Windows.
-UPLOAD_FOLDER = tempfile.mkdtemp() #this works on either, and doesn't seem to need Admin rights
+
 ALLOWED_EXTENSIONS = set(['xls', 'xlsx', 'csv'])
 TEMPLATE_FILE = 'template.xls'
 TEMPLATE_FILE_ROUTE = '/'+TEMPLATE_FILE
@@ -51,7 +46,6 @@ random_number = os.urandom(24)
 app.secret_key = random_number
 
 # These are the extension that we are accepting to be uploaded
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024 #arbitrary 16 megabyte upload limit
 
 
@@ -189,38 +183,13 @@ def indexView():
             session['pond_bppr_list'] = pond_bppr_list
             session['pond_pppr_list'] = pond_pppr_list
             
-            #BELOW THIS LINE, CODE INVOLVING SAVING THE DATA TO A FILE JUST TO PASS IT BETWEEN VIEWS
-            
-            
-            # Make the filename safe, remove unsupported chars
-#             filename = secure_filename(uploaded_file.filename)
-            #on second thought, let's not trust the user and secure_filename to give us something safe
-            
-#             #let's make up something
-#             print "generating filename"
-#             filename = str(uuid.uuid4())
-#             print "filename generated was: ", filename
-            
-            
-            
-#             
-#             thing = session['user_uploaded_pond_file'].filename
-#             print "type of session['user_uploaded_pond_file'].filename", type(thing)             
-#             otherthing = session['user_uploaded_pond_file']
-#             print "type of session['user_uploaded_pond_file']", type(otherthing)
 
-            
-            
-
-            # Move the uploaded_file from  the temporal folder to
-            # the upload folder we setup
-#             uploaded_file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
             
 
 
 
 
-            return redirect(url_for("bpprtest",filename=filename))
+            return redirect(url_for("bpprtest"))
 
         else:
             error_message = "Apologies, that file extension is not allowed. Please try one of the allowed extensions."
@@ -454,7 +423,7 @@ def internalServerError(internal_exception):
 
 
 if __name__ == '__main__':
-    print "upload folder is ", UPLOAD_FOLDER
+
     print "a random number is: ", random_number
     
     
