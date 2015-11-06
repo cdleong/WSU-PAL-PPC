@@ -92,7 +92,7 @@ class DataReader(object):
     kd_index = 2 #index of light attenuation coefficient kd
     noon_surface_light_index = 3 #"midday.mean.par"
     length_of_day_index = 4 #"LOD" in hours
-    latitude_index = 5 #latitude in decimal degrees.
+    
 
     #indices for vars in benthic_photo_data worksheet
     benthic_light_penetration_proportion_index = 2 #
@@ -275,8 +275,6 @@ class DataReader(object):
                 row_lakeID_value = row[self.lakeIDIndex].value
                 row_kd_value = float(row[self.kd_index].value)
                 row_noonlight_value = float(row[self.noon_surface_light_index].value)
-    #             row_latitude_value = float(row[self.latitude_index].value)
-                row_latitude_value = 3.14 #TODO: get rid of latitude entirely
                 row_lod_value = float(row[self.length_of_day_index].value)
             except:
                 print "Error: couldn't read values properly."
@@ -289,7 +287,7 @@ class DataReader(object):
             if pond is None: #not in list. Must create Pond object
 #                 print "creating pond with lake ID = ", row_lakeID_value, " , and DOY = ", row_doy_value
                 emptyShape = BathymetricPondShape({}) #initialize with empty dict
-                pond = Pond(row_lakeID_value, row_doy_value, row_lod_value, row_noonlight_value, row_kd_value, emptyShape, [], [], row_latitude_value, self.DEFAULT_TIME_INTERVAL)
+                pond = Pond(row_lakeID_value, row_doy_value, row_lod_value, row_noonlight_value, row_kd_value, emptyShape, [], [], self.DEFAULT_TIME_INTERVAL)
                 if(pond.get_day_of_year() == 0):
                     print "this shouldn't happen. pond day of year is ", 0
                 pondList.append(pond)

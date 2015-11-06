@@ -78,8 +78,6 @@ class Pond(object):
     # phytoplankton photosynthesis data list #TODO: everything to do with this
     phytoplankton_photosynthesis_measurements = []
 
-    # latitude, for seasonal calculations. #TODO: Calculate based on Sudhakhar et al http://www.journal-ijeee.com/content/4/1/21
-    latitude = 0.0
 
     # default intervals for calculations is quarter-hours
     time_interval = 0.25
@@ -99,7 +97,6 @@ class Pond(object):
                  pond_shape_object=PondShape(),
                  benthic_photosynthesis_measurements=[],
                  phytoplankton_photosynthesis_measurements=[],
-                 lattitude=0.0,
                  time_interval=0.25):
         '''
         CONSTRUCTOR
@@ -120,7 +117,6 @@ class Pond(object):
         self.set_pond_shape(pond_shape_object)
         self.set_benthic_photosynthesis_measurements(benthic_photosynthesis_measurements)
         self.set_phytoplankton_photosynthesis_measurements(phytoplankton_photosynthesis_measurements)
-        self.set_latitude(lattitude)
         self.set_time_interval(time_interval)
 
 
@@ -324,12 +320,6 @@ class Pond(object):
 
 
 
-    def get_latitude(self):
-        '''
-        Get Latitude
-        '''
-        return self.__latitude
-
     def get_time_interval(self):
         '''
         Get Time Interval
@@ -388,12 +378,7 @@ class Pond(object):
         validated_light_attenuation_coefficient = self.validate_light_attenuation_coefficient(light_attenuation_coefficient)
         self.__light_attenuation_coefficient = validated_light_attenuation_coefficient
 
-    def set_latitude(self, latitude):
-        '''
-        Set Latitude
-        @param latitude:
-        '''
-        self.__latitude = latitude
+
 
     def set_time_interval(self, value):
         '''
@@ -476,8 +461,6 @@ class Pond(object):
     def del_phytoplankton_photosynthesis_measurements(self):
         del self.__phytoplankton_photosynthesis_measurements
 
-    def del_latitude(self):
-        del self.__latitude
 
     def del_time_interval(self):
         del self.__time_interval
@@ -491,7 +474,6 @@ class Pond(object):
     light_attenuation_coefficient = property(get_light_attenuation_coefficient, set_light_attenuation_coefficient, del_light_attenuation_coefficient, "light_attenuation_coefficient's docstring")
     benthic_photosynthesis_measurements = property(get_benthic_photosynthesis_measurements, set_benthic_photosynthesis_measurements, del_benthic_photosynthesis_measurements, "benthic_photosynthesis_measurements's docstring")
     phytoplankton_photosynthesis_measurements = property(get_phytoplankton_photosynthesis_measurements, set_phytoplankton_photosynthesis_measurements, del_phytoplankton_photosynthesis_measurements, "phytoplankton_photosynthesis_measurements's docstring")
-    latitude = property(get_latitude, set_latitude, del_latitude, "latitude's docstring")
     time_interval = property(get_time_interval, set_time_interval, del_time_interval, "time_interval's docstring")
 
 
