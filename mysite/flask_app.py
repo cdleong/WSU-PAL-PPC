@@ -49,65 +49,12 @@ app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024 #arbitrary 16 megabyte uploa
 
 
 
-def get_rounded_BPPR_list(filename=TEMPLATE_FILE):
-    '''
-    returns list of double values, rounded to two decimal places
-    '''
-    print "running get_rounded_BPPR_list"
-    # Check if the file is one of the allowed types/extensions
-    pondList = getPondList(filename)
-    pond = pondList[0]
-    bpprList =[]
-    doyList =[]
-    for pond in pondList:
-        bppr = pond.calculateDailyWholeLakeBenthicPrimaryProductionPerMeterSquared() #uses quarter-hours by default
-        bpprFloat = float("{0:.2f}".format(bppr)) #round to two decimal places
-        bpprList.append(bpprFloat)
-        doy =pond.get_day_of_year()
-        doyList.append(doy)
-    return bpprList
-
-def getPondList(filename = TEMPLATE_FILE):
-    '''
-    '''
-    print "running getPondList method"
-    try:
-        pond_file = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-        print "pond_file type is ", type(pond_file)
-        reader = DataReader(pond_file)
-    except Exception as e:
-        print "error in getPondList"
-        print str(e)
-        return render_template(INTERNAL_SERVER_ERROR_TEMPLATE_ROUTE, error = str(e))
-    # Check if the file is one of the allowed types/extensions
-    pondList = reader.read()
-    return pondList
 
 
 
-#used for making it possible to get numbers from python, and put them in HTML
-#Got this from http://blog.bouni.de/blog/2013/04/24/call-functions-out-of-jinjs2-templates/
-@app.context_processor
-def my_utility_processor():
 
-    #returns a list of floats.
-    def bppr(filename):
-        print "running bppr method"
-        bpprList = get_rounded_BPPR_list(filename)
-        return bpprList
 
-    def ponds(filename=None):
-        print "running ponds method"
-        pondList = []
-        if(filename is not None):
-            pondList = getPondList(filename)
-            
-        else:
-            pondList = session['pond_id_list']
-        print "in ponds method, pondList is ", pondList
-        return len(pondList)
 
-    return dict(bppr=bppr, ponds=ponds)
 
 
 
@@ -118,18 +65,13 @@ def allowed_file(filename):
            filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
            
            
-def jsonify_pond(pondList=[]):
-    jsonified_pond_list = []
-    
-    return jsonified_pond_list
 
 @app.route('/', methods=['GET', 'POST'])
 @app.route('/index', methods=['GET', 'POST'])
 def indexView():
-    print "running index view"
-    
-    print "session is", session
-    print "session current object is", session._get_current_object()
+    '''
+    Renders the template for the index.
+    '''
     
     #http://runnable.com/UiPcaBXaxGNYAAAL/how-to-upload-a-uploaded_file-to-the-server-in-flask-for-python
     if request.method == 'POST': #true if the button "upload" is clicked
@@ -148,10 +90,7 @@ def indexView():
             
             pond_file = request.files['uploaded_file']
 
-            try:
-                print "trying to parse and read"
-     
-                   
+            try:                   
                 reader = DataReader("") #I don't plan on using this filename, thanks
                 pondList = reader.readFile(pond_file.read()) #read method is http://werkzeug.pocoo.org/docs/0.10/datastructures/#werkzeug.datastructures.FileStorage,                 
             except Exception as e:
@@ -201,17 +140,12 @@ def indexView():
 
 
 
-
-
-
-
-################################################################################################################################
-# used to offer template file
-#http://stackoverflow.com/questions/20646822/how-to-serve-static-files-in-flask
-################################################################################################################################
 @app.route(TEMPLATE_FILE_ROUTE, methods=['GET', 'POST'])
 def template():
-    print "running template method"
+    '''
+    Used to offer template data file
+    #http://stackoverflow.com/questions/20646822/how-to-serve-static-files-in-flask    
+    '''
     try:
         return app.send_static_file(TEMPLATE_FILE)
     except Exception as e:
@@ -219,13 +153,13 @@ def template():
         return render_template(INTERNAL_SERVER_ERROR_TEMPLATE_ROUTE, error = str(e))
 
 
-################################################################################################################################
-# used to offer template file
-#http://stackoverflow.com/questions/20646822/how-to-serve-static-files-in-flask
-################################################################################################################################
+
 @app.route(EXAMPLE_FILE_ROUTE, methods=['GET', 'POST'])
 def example_file_view():
-    print "running example_file_view method"
+    '''
+    Used to offer example data file
+    #http://stackoverflow.com/questions/20646822/how-to-serve-static-files-in-flask
+    '''
     try:
         return app.send_static_file(EXAMPLE_FILE)
     except Exception as e:
@@ -238,7 +172,9 @@ def example_file_view():
 @app.route('/primary_production', methods=['GET', 'POST'])
 @app.route('/primary_production.html', methods=['GET', 'POST'])
 def primary_production():
-    print "running primary_production method"
+    '''
+    Renders the primary_production template, which shows calculated values and a button to download them.
+    '''
     try:
         return render_template("primary_production.html")
     except Exception as e:
@@ -248,17 +184,13 @@ def primary_production():
 
 
 
-
-
-
-################################################################################################################################
-#code to make an excel file for download.
-#modified from...
-#http://snipplr.com/view/69344/create-excel-file-with-xlwt-and-insert-in-flask-response-valid-for-jqueryfiledownload/
-################################################################################################################################
 @app.route('/export')
 def export_view():
-    print "running export_view method"
+    '''
+    Code to make an excel file for download.
+    Modified from...
+    http://snipplr.com/view/69344/create-excel-file-with-xlwt-and-insert-in-flask-response-valid-for-jqueryfiledownload/    
+    '''
     #########################
     # Code for creating Flask
     # response
@@ -344,6 +276,10 @@ def export_view():
 def write_column_to_worksheet(worksheet,column_number=0, column_header = "", values_list=[]):
     '''
     Prepends a column header and puts the data in values_list into worksheet at the specified column
+    @param worksheet: An xlrd worksheet to write to.
+    @param column_number: Column number to write to.
+    @param column_header: Header to put at the top of the column.
+    @param values_list: list of values to put in the column.
     '''
     print "writing column to worksheet"
     values_list.insert(0, column_header) #stick the column header at the front.
@@ -359,14 +295,24 @@ def write_column_to_worksheet(worksheet,column_number=0, column_header = "", val
 
 @app.errorhandler(413)
 def request_entity_too_large(error):
+    '''
+    Error handler view. Should display when files that are too large are uploaded.
+    '''
     return 'File Too Large'
 
 @app.errorhandler(404)
 def pageNotFound(error):
+    
     return "Page not found"
 
 @app.errorhandler(500)
 def internalServerError(internal_exception):
+    '''
+    Prints internal program exceptions so they are visible by the user. Stopgap measure for usability.
+    
+    '''
+    
+    #TODO: more and better errors, so that when specific parts of the data are wrong, users can figure it out.
     traceback.print_exc()
     print str(internal_exception)
     return render_template(INTERNAL_SERVER_ERROR_TEMPLATE_ROUTE, error = str(internal_exception))

@@ -40,7 +40,7 @@ class DataReader(object):
     # light extinction coefficient    copied directly    https://lter.limnology.wisc.edu/dataset/north-temperate-lakes-lter-light-extinction-trout-lake-area-1981-current
     # pppr        https://lter.limnology.wisc.edu/dataset/north-temperate-lakes-lter-primary-production-trout-lake-area-1986-2007
 #     filename = "example_data.xls" #Removed everything but one lake from Oct 16_test_data.
-    filename = "Sep_17_test_data.xls"
+    filename = "Sep_17_test_data.xls" #used for testing
 
 
 
@@ -142,7 +142,7 @@ class DataReader(object):
         except:
             raise Exception("error in read method. xlrd.open_workbook gave an Exception with filename: ", self.filename)
 
-        return self.readPondListFromFile(book)
+        return self.read_pond_list_from_workbook(book)
 
     
 
@@ -160,7 +160,7 @@ class DataReader(object):
             raise Exception ("Error in readFile. xlrd.open_workbook(file_contents=inputfile) gave exception with inputfile", inputfile)
 
 
-        return self.readPondListFromFile(book)
+        return self.read_pond_list_from_workbook(book)
 
 
     #reads all the pond data from the excel file.
@@ -173,14 +173,14 @@ class DataReader(object):
 
 
 
-    def readPondListFromFile(self,book):
+    def read_pond_list_from_workbook(self,book):
         '''
-        READ POND LIST FROM FILE
-        If you change the name of this, you have to update the name in all the HTML templates, etc.
+        READ POND LIST FROM WORKBOOK
+        
         Opens the xlrd workbook and returns a list of Pond objects.
         @param book: an xlrd Workbook
-        @return:
-        @rtype:
+        @return: list of Pond objects, storing the information in the workbook.
+        @rtype: list
         '''
 
         ##############
@@ -228,26 +228,6 @@ class DataReader(object):
         shape_data_sheet_num_rows = shape_data_sheet.nrows
 
 
-
-        curr_row = self.DEFAULT_COLUMN_HEADINGS_ROW
-#         columnnames = pond_data_workSheet.row(curr_row)
-#         print "the column names in sheet \"" + pond_data_workSheet.name +  "\" are "
-#         print columnnames
-
-        curr_row = self.DEFAULT_COLUMN_HEADINGS_ROW
-#         columnnames = benthic_photo_data_workSheet.row(curr_row)
-#         print "the column names in sheet \"" + benthic_photo_data_workSheet.name +  "\" are "
-#         print columnnames
-
-        curr_row = self.DEFAULT_COLUMN_HEADINGS_ROW
-#         columnnames = phytoplankton_photo_data_sheet.row(curr_row)
-#         print "the column names in sheet \"" + phytoplankton_photo_data_sheet.name +  "\" are "
-#         print columnnames
-
-        curr_row = self.DEFAULT_COLUMN_HEADINGS_ROW
-#         columnnames = shape_data_sheet.row(curr_row)
-#         print "the column names in sheet \"" + shape_data_sheet.name +  "\" are "
-#         print columnnames
 
 
         #################################################
@@ -435,7 +415,7 @@ class DataReader(object):
 
         return pondList
 
-    #END OF readPondListFromFile METHOD
+    #END OF read_pond_list_from_workbook METHOD
 
 
 
@@ -447,8 +427,10 @@ class DataReader(object):
     def write(self, filename="output.xls"):
         '''
         Write to file
+        @param filename: the name of the output file. 
         '''
-
+        
+        #TODO:return whether it was successful.
         #Create a new workbook object
         workbook = xlwt.Workbook()
 
@@ -475,18 +457,18 @@ def main():
 
     for p in pondList:
         shape = p.get_pond_shape()
-        bppmeasurements_sorted = p.get_benthic_measurements_sorted_by_depth()
-        bppmeasurements = p.get_benthic_photosynthesis_measurements()
+#         bppmeasurements_sorted = p.get_benthic_measurements_sorted_by_depth()
+#         bppmeasurements = p.get_benthic_photosynthesis_measurements()
 
 
 
         pid = p.get_lake_id()
         doy = p.get_day_of_year()
-        lod = p.get_length_of_day()
-        kd = p.get_light_attenuation_coefficient()
-        noon_light = p.get_noon_surface_light()
-        relative_depths = [1.0, 0.8,0.5,0.25,0.1,0.01]
-        relative_depth_meters = []
+#         lod = p.get_length_of_day()
+#         kd = p.get_light_attenuation_coefficient()
+#         noon_light = p.get_noon_surface_light()
+#         relative_depths = [1.0, 0.8,0.5,0.25,0.1,0.01]
+#         relative_depth_meters = []
 
         
 #         if(doy != 165): #TODO: remove this hack used for testing

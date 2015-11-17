@@ -604,7 +604,7 @@ class Pond(object):
 
 
 
-            area = self.get_pond_shape().get_sediment_surface_area_at_depth(current_depth, current_depth_interval)
+            area = self.get_pond_shape().get_sediment_area_at_depth(current_depth, current_depth_interval)
 
             try:
                 ik_z = self.get_benthic_ik_at_depth(current_depth)

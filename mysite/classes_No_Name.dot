@@ -1,0 +1,5 @@
+digraph "classes_No_Name" {
+charset="utf-8"
+rankdir=BT
+"0" [label="{BathymetricPondShape|DEFAULT_DEPTH_INTERVAL_FOR_CALCULATIONS : float\lwater_surface_areas : dict\lwater_surface_areas : dict\l|addBathymetryLayer()\ladd_bathymetry()\lget_dict()\lget_fractional_sediment_area_at_depth()\lget_max_depth()\lget_mean_depth()\lget_sediment_area_above_depth()\lget_sediment_surface_area_at_depth()\lget_volume()\lget_volume_above_depth()\lget_volume_at_depth()\lget_water_surface_area_at_depth()\lupdate_shape()\lvalidate_depth()\lvalidate_depth_interval()\l}", shape="record"];
+}

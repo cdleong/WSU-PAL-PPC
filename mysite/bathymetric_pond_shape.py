@@ -70,7 +70,10 @@ class BathymetricPondShape(PondShape):
 
     def update_shape(self, other_pond_shape):
         '''
-        Adds all depth/area pairs from other_pond_shape to this one.        
+        Adds all depth/area pairs from other_pond_shape to this one. 
+        
+        Does not check or validate anything. Currently expects another perfectly-constructed BathymetricPondShape.
+        @param  other_pond_shape:    another pond_shape object.    
         '''
         #TODO: validate other data.
         #TODO: handle exceptions/problems.
@@ -89,7 +92,7 @@ class BathymetricPondShape(PondShape):
         '''
         max_depth =0.0
         keys = self.water_surface_areas.keys()        
-        has_areas = bool(self.water_surface_areas)
+        has_areas = bool(self.water_surface_areas) #evaluates to false if empty.
         
         if(False == has_areas):
             raise Exception("No shape data exists. max depth is 0")
@@ -101,6 +104,9 @@ class BathymetricPondShape(PondShape):
     def get_mean_depth(self, depth_interval=DEFAULT_DEPTH_INTERVAL_FOR_CALCULATIONS):
         '''
         Get Mean Depth
+        
+        Calculates the mean depth.
+        @param depth_interval: depth interval for calculations, in meters.
         @return: average depth, in meters, for the whole pond.
         @rtype: float
         '''
@@ -115,7 +121,7 @@ class BathymetricPondShape(PondShape):
         current_depth = validated_depth_interval  # no point starting at 0, since that's just gonna be zero anyway.
         weighted_total = 0.0 #initialize to float
         while current_depth <= max_depth:
-            area_at_depth = self.get_sediment_surface_area_at_depth(current_depth) # there are this many square meters at this depth
+            area_at_depth = self.get_sediment_area_at_depth(current_depth) # there are this many square meters at this depth
             weighted_total+=area_at_depth*current_depth
             current_depth += validated_depth_interval
 
@@ -133,9 +139,10 @@ class BathymetricPondShape(PondShape):
         Uses http://docs.scipy.org/doc/scipy/reference/tutorial/interpolate.html
         For area/depth combinations not given.
         @param depth: depth in meters to calculate at. depth should between 0 and max_depth. It'll be set to one of those if not so.
+        @return: the surface area of the water at  the specified depth, in m^2.
         @rtype: float
         '''
-        #TODO: errors if given stuff outside proper range.
+        #TODO: check and see if this still gives errors outside proper range        
         
         validated_depth = self.validate_depth(depth)
         
@@ -164,18 +171,18 @@ class BathymetricPondShape(PondShape):
 
 
 
-    def get_sediment_surface_area_at_depth(self, depth=0.0, depth_interval=None):
+    def get_sediment_area_at_depth(self, depth=0.0, depth_interval=None):
         '''
-        Get Sediment Surface Area at Specified Depth
+        Get Sediment Area at Specified Depth
         Essentially, returns an estimate of the area of the section of lake bottom,
         whose bottom edge is at depth and top edge is at (depth-validated_depth_interval)
-        On a perfectly conical lake this would form a truncated inverted cone with a hole in the middle.
+        On a perfectly conical lake this would form an inverted funnel shape.
         If given depth = max_depth and validated_depth_interval also = max_depth, should estimate sediment for the whole lake.
         ...which should add up to water surface area at depth 0 by the way
 
         @param depth: depth in meters to calculate at. depth should between 0 and max_depth. It'll be set to one of those if not so.
-        @param depth_interval:
-        @return: sediment area
+        @param depth_interval: depth interval for calculations, in meters.
+        @return: sediment area: the area of the lake sediment in the interval between depth = depth and depth = depth-validated_depth_interval
         @rtype: float
         '''
         if(depth_interval is None):
@@ -209,7 +216,7 @@ class BathymetricPondShape(PondShape):
         #
         # ASCII picture of a lake cross-section:
         #
-        #          "sediment_surface_area"
+        #          "sediment_area"
         #          |
         #  ________|__________
         #  |                  |
@@ -222,14 +229,13 @@ class BathymetricPondShape(PondShape):
         #
         # What we ACTUALLY want is h, but in practice the slope is generally shallow enough in the littoral zone
         # (the zone we are interested in) that this is a good approximation. Source: Dr. Vadeboncoeur
-        sediment_surface_area = upper_water_area - lower_water_area
+        sediment_area = upper_water_area - lower_water_area
 
         # it's _possible_, technically, that the lake gets *wider* as it goes down. Is it?
-        sediment_surface_area = abs(sediment_surface_area)
+        sediment_area = abs(sediment_area)
 
-#         print "calculating sediment surface area, upper_water_area is ", upper_water_area, " lower_water_area is ", lower_water_area
 
-        return sediment_surface_area
+        return sediment_area
 
 
 
@@ -237,9 +243,13 @@ class BathymetricPondShape(PondShape):
     def get_volume_above_depth(self, depth=0.0, depth_interval=DEFAULT_DEPTH_INTERVAL_FOR_CALCULATIONS):
         '''
         Get Volume Above Depth
+        
+        Calculates water volume above specified depth, in meters cubed.  
+        
         O(number of depth intervals*O(get_volume_at_depth()))
         @param depth: depth in meters to calculate at. depth should between 0 and max_depth. It'll be set to one of those if not so.
-        @return: volume in cubic meters
+        @param depth_interval: depth interval for calculations, in meters.
+        @return: volume above specified depth, in m^3
         @rtype: float
 
         '''
@@ -248,8 +258,6 @@ class BathymetricPondShape(PondShape):
         validated_depth_interval = self.validate_depth_interval(depth_interval)
 
         # just find the volume at each interval and add them all up.
-
-
         current_depth = 0.0  # no point starting at 0, since that's just gonna be zero anyway.
         total_volume = 0.0
         while current_depth <= validated_depth:
@@ -263,7 +271,7 @@ class BathymetricPondShape(PondShape):
         '''
         Given a depth, gives the volume of the shape with a lower surface at area and upper surface at area-validated_depth_interval
         @param depth: depth in meters to calculate at. depth should between 0 and max_depth. It'll be set to one of those if not so.
-        @return: volume.
+        @return: volume, in m^3, between depth=depth, and depth = depth-depth_interval.
         @rtype: float
         '''
         ####################################################
@@ -316,9 +324,11 @@ class BathymetricPondShape(PondShape):
 
     def get_sediment_area_above_depth(self, depth=0.0, depth_interval=DEFAULT_DEPTH_INTERVAL_FOR_CALCULATIONS):
         '''
-        Get Sediment Area above depth
+        Get Sediment Area above Depth. 
+        
+        Similar to get_sediment_area_at_depth, except that it calculates the area of the lake bottom sediment from the specified depth, all the way to the surface.
         @param depth: depth in meters to calculate at. depth should between 0 and max_depth. It'll be set to one of those if not so.
-        @return: the area of the sediment above a specific depth.
+        @return: the area of the sediment above a specific depth, in m^2.
         @rtype: float value
         '''
 
@@ -331,7 +341,7 @@ class BathymetricPondShape(PondShape):
 
         current_depth = 0.0
         while current_depth <= validated_depth:
-            current_area = self.get_sediment_surface_area_at_depth(current_depth, validated_depth_interval)
+            current_area = self.get_sediment_area_at_depth(current_depth, validated_depth_interval)
             total_area += current_area
             current_depth += validated_depth_interval
 #             print "Calculating sediment area above depth",validated_depth ,"current depth: ", current_depth, ". sediment area with interval ", validated_depth_interval , " is ", current_area
@@ -356,7 +366,7 @@ class BathymetricPondShape(PondShape):
 
 
         validated_depth = self.validate_depth(depth)
-        sediment_area_at_depth = self.get_sediment_surface_area_at_depth(validated_depth, depth_interval)
+        sediment_area_at_depth = self.get_sediment_area_at_depth(validated_depth, depth_interval)
         fractional_sediment_area = sediment_area_at_depth/total_sediment_area
         return fractional_sediment_area
 
@@ -398,8 +408,8 @@ class BathymetricPondShape(PondShape):
 
     def add_bathymetry(self, otherObject):
         '''
-        Given another Bathymetric Pond Shape, copies all entries in the other's dictionary of depth/area pairs into the dictionary of this one.
-        @param otherObject:
+        Given another BathymetricPondShape object, copies all entries in the other's dictionary of depth/area pairs into the dictionary of this one.
+        @param otherObject: 
         '''
         if(isinstance(otherObject, BathymetricPondShape)):
             thisDict = self.water_surface_areas
@@ -413,44 +423,6 @@ def main():
     '''
     
     print "hello world"
-#     areas = {0:100, 0.25:75,5:50, 10:1}
-    areas = {0:640000, 1:600960,2:565120,3:536960,4:516480,5:492800,6:467840,7:442880,8:421120,9:404480,10:374400,11:345600,12:318720,13:293120,14:268800,15:243200,16:190720,17:130560,18:74240,19:33280,20:0}
-    littoral_area = 5814043.69309
-    shape_instance = BathymetricPondShape(areas)
-    print "max depth is (should be 10): ", shape_instance.get_max_depth()
-    print "depths ", shape_instance.water_surface_areas.keys()
-    print "areas ", shape_instance.water_surface_areas.values()
-
-    max_depth = shape_instance.get_max_depth()
-    half_max_depth = max_depth / 2
-
-#     print "sediment area total above depth ", max_depth, " is ", shape_instance.get_sediment_area_above_depth(max_depth)
-#     print "sediment area total above depth ", half_max_depth, " is ", shape_instance.get_sediment_area_above_depth(half_max_depth)
-#
-#     print "total volume is", shape_instance.get_volume()
-#     print "total volume above depth ", max_depth, " is ", shape_instance.get_volume_above_depth(max_depth)
-#     print "total volume above depth ", half_max_depth, " is ", shape_instance.get_volume_above_depth(half_max_depth)
-#
-#     print "mean depth is ", shape_instance.get_mean_depth()
-
-    #testing volume calculations:
-    vol_depth = 1
-    depth_interval = 1
-    print "volume at depth ",vol_depth," with dz = ", depth_interval, " is ", shape_instance.get_volume_at_depth(vol_depth, depth_interval)
-    print "volume above depth ",vol_depth," with dz = ", depth_interval, " is ", shape_instance.get_volume_above_depth(vol_depth, depth_interval)
-
-
-    depth = 0.0
-    total_fraction = 0.0
-    while (depth<=shape_instance.get_max_depth()):
-#         print "water surface area at depth ", depth, " is ", shape_instance.get_water_surface_area_at_depth(depth)
-#         print "sediment surface area at depth ", depth, " with interval (in meters) of ", 1, " is: ", shape_instance.get_sediment_surface_area_at_depth(depth,1)
-        f_area = shape_instance.get_fractional_sediment_area_at_depth(depth, littoral_area)
-#         print "fractional sediment area is ", f_area
-#         print "current total fraction is ", total_fraction
-        depth+=1
-        total_fraction+=f_area
-#     print "total fraction should add to 1, and is: ", total_fraction
 
 
 

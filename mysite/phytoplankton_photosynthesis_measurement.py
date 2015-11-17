@@ -7,21 +7,21 @@ from photosynthesis_measurement import PhotosynthesisMeasurement
 
 class PhytoPlanktonPhotosynthesisMeasurement(PhotosynthesisMeasurement):
     '''
-    classdocs
+    Holds information and methods relating to P/I curve for pytoplanktonic primary production, for a specific thermal layer.
     '''
     ##########
     #CONSTANTS
     ##########
-    MAX_VALID_THERMAL_LAYER = 3
+    MAX_VALID_THERMAL_LAYER = 3 #assumption: no more than three thermal layers
     MIN_VALID_THERMAL_LAYER = 1
     MAX_VALID_DEPTH = 2000 #lake Baikal, the deepest lake on earth, is only 1642m. Adding a bit on that to be safe. Alternately we could go with Challenger Deep, the deepest part of the ocean, which is about 11000 meters.
-    MIN_VALID_DEPTH = 0
+    MIN_VALID_DEPTH = 0 #If you want to 
     MAX_VALID_PMAX = 5000 #arbitrary value an order of magnitude greater than any I've seen.
     MIN_VALID_PMAX = 0
     MAX_VALID_ALPHA = 100 #arbitrary. Biggest I've ever seen is less than 1.
     MIN_VALID_ALPHA = 0.00001 #arbitrary value greater than zero. Smallest I've seen is ~0.05
     MAX_VALID_BETA = 100 #arbitrary. Biggest I've ever seen is less than 1.
-    MIN_VALID_BETA = 0.0
+    MIN_VALID_BETA = 0.0 #if zero, we use the non-photoinhibition equation
 
     ##################
     #VARIABLES
@@ -43,18 +43,34 @@ class PhytoPlanktonPhotosynthesisMeasurement(PhotosynthesisMeasurement):
 
 
     def get_thermal_layer(self):
+        '''
+        @return: the thermal layer with which these P/I curve parameters are associated. 1=epilimnion, 2=metalimnion, 3=hypolimnion
+        @rtype: int
+        '''
         return self.__thermal_layer
 
 
     def get_phyto_alpha(self):
+        '''
+        @return: P/I curve parameter alpha.
+        @rtype: double
+        '''
         return self.__phyto_alpha
 
 
     def get_phyto_beta(self):
+        '''
+        @return: P/I curve parameter beta.
+        @rtype: double
+        '''
         return self.__phyto_beta
 
 
     def set_thermal_layer(self, value):
+        '''
+        Sets thermal layer associated with which these P/I curve parameters are associated. If given value outside min/max, sets to closest valid value.
+        @param value: thermal layer. Valid values: 1=epilimnion, 2=metalimnion, 3=hypolimnion
+        '''
         max_value = PhytoPlanktonPhotosynthesisMeasurement.MAX_VALID_THERMAL_LAYER
         min_value = PhytoPlanktonPhotosynthesisMeasurement.MIN_VALID_THERMAL_LAYER
         validated_value = self.validate_numerical_value(value, max_value, min_value)
@@ -66,6 +82,10 @@ class PhytoPlanktonPhotosynthesisMeasurement(PhotosynthesisMeasurement):
 
 
     def set_depth(self, value):
+        '''
+        Sets lower bound of thermal layer with which these P/I curve parameters are associated. If given value outside min/max, sets to closest valid value.
+        @param value: the lower bound of the thermal layer, in meters from the surface.
+        '''
         max_value = PhytoPlanktonPhotosynthesisMeasurement.MAX_VALID_DEPTH
         min_value = PhytoPlanktonPhotosynthesisMeasurement.MIN_VALID_DEPTH
         validated_value = self.validate_numerical_value(value, max_value, min_value)
@@ -77,6 +97,10 @@ class PhytoPlanktonPhotosynthesisMeasurement(PhotosynthesisMeasurement):
 
 
     def set_pmax(self, value):
+        '''
+        Sets P/I curve parameter pmax. If given value outside min/max, sets to closest valid value.
+        @param value: pmax  
+        '''
         max_value = PhytoPlanktonPhotosynthesisMeasurement.MAX_VALID_PMAX
         min_value = PhytoPlanktonPhotosynthesisMeasurement.MIN_VALID_PMAX
         validated_value = self.validate_numerical_value(value, max_value, min_value)
@@ -90,7 +114,10 @@ class PhytoPlanktonPhotosynthesisMeasurement(PhotosynthesisMeasurement):
 
 
     def set_phyto_alpha(self, value):
-
+        '''
+        Sets P/I curve parameter alpha. If given value outside min/max, sets to closest valid value.
+        @param value: alpha 
+        '''
         max_value = PhytoPlanktonPhotosynthesisMeasurement.MAX_VALID_ALPHA
         min_value = PhytoPlanktonPhotosynthesisMeasurement.MIN_VALID_ALPHA
         validated_value = self.validate_numerical_value(value, max_value, min_value)
@@ -103,6 +130,10 @@ class PhytoPlanktonPhotosynthesisMeasurement(PhotosynthesisMeasurement):
 
 
     def set_phyto_beta(self, value):
+        '''
+        Sets P/I curve parameter alpha. If given value outside min/max, sets to closest valid value.
+        @param value: beta 
+        '''
         max_value = PhytoPlanktonPhotosynthesisMeasurement.MAX_VALID_BETA
         min_value = PhytoPlanktonPhotosynthesisMeasurement.MIN_VALID_BETA
         validated_value = self.validate_numerical_value(value, max_value, min_value)

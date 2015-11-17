@@ -15,18 +15,31 @@ class PondShape(object):
 
 
     def get_volume(self):
+        '''
+        @return: The volume of the lake, in m^3 
+        @rtype: double
+        '''
         pass    
     
     def get_max_depth(self):
+        '''
+        @return: get maximum depth, in meters
+        @rtype: double
+        '''
         pass
     
     def get_mean_depth(self):
+        '''
+        @return: get mean depth, in meters
+        @rtype: double
+        '''        
         pass
     
     def get_water_surface_area_at_depth(self, depth =0.0):
+        
         pass
     
-    def get_sediment_surface_area_at_depth(self, depth=0.0, depth_interval=0.1):
+    def get_sediment_area_at_depth(self, depth=0.0, depth_interval=0.1):
         pass
     
     def get_volume_above_depth(self, depth=0.0, depth_interval=0.1):
