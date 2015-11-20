@@ -5,6 +5,7 @@ Created on Jun 18, 2015
 '''
 from pond_shape import PondShape
 from scipy.interpolate import interp1d
+from __builtin__ import str
 
 
 class BathymetricPondShape(PondShape):
@@ -33,11 +34,32 @@ class BathymetricPondShape(PondShape):
         Constructor
         @param areas: a python dict containing depth/area pairs.
         '''
-        self.water_surface_areas = areas
+        #make sure all the darn keys are FLOATS, NOT STRINGS
+        fixed_dict = self.convert_dict_keys_to_floats(areas)
+        self.water_surface_areas = fixed_dict
 
 
-
-
+    def convert_dict_keys_to_floats(self, otherdict):
+        #make sure all the darn keys are FLOATS, NOT STRINGS
+        keys = otherdict.keys()
+        keys = [float(i) for i in keys]
+        print "**************************"
+        print "fixed keys ", keys
+        values = otherdict.values()
+        fixed_dict = {}
+        for i in range (0, len(keys)):
+            key = keys[i]
+            value = values[i]
+            fixed_dict[key]=value        
+    
+        return fixed_dict        
+        
+    def fix_dict_keys(self):
+        print "FIXING DICTIONARY KEYS!!!!!!!!!!"
+        fixed_dict = self.convert_dict_keys_to_floats(self.water_surface_areas)
+        self.water_surface_areas.clear()
+        self.water_surface_areas = fixed_dict        
+        
 
     def get_dict(self):
         '''
@@ -61,6 +83,7 @@ class BathymetricPondShape(PondShape):
         @param depth_value: float value, depth_value in meters of area_value measurement.
         @param area_value:  float value, area_value in meters squared at depth_value.
         '''
+        depth_value = float(depth_value)
         if (depth_value < 0.0 or area_value <= 0.0):
             raise Exception("invalid depth_value or area_value. Depth value must NOT be less than zero. Depth Value given: ",depth_value, " Area must NOT be less than, or equal to, zero. area_value given:",area_value)
         else:
@@ -78,7 +101,11 @@ class BathymetricPondShape(PondShape):
         #TODO: validate other data.
         #TODO: handle exceptions/problems.
         otherdict = other_pond_shape.water_surface_areas
-        self.water_surface_areas.update(otherdict)
+        
+        #make sure all the darn keys are FLOATS, NOT STRINGS
+        fixed_dict = self.convert_dict_keys_to_floats(otherdict)
+         
+        self.water_surface_areas.update(fixed_dict)
 
     def get_max_depth(self):
         '''
@@ -92,13 +119,21 @@ class BathymetricPondShape(PondShape):
         '''
         max_depth =0.0
         keys = self.water_surface_areas.keys()        
+        if not all(isinstance(item ,float) for item in keys): #stupid jsonpickle. Messing this up.
+            self.fix_dict_keys()
+            keys = self.water_surface_areas.keys()
+        
+        
         has_areas = bool(self.water_surface_areas) #evaluates to false if empty.
         
         if(False == has_areas):
             raise Exception("No shape data exists. max depth is 0")
         else:
             max_depth = max(keys)
-        return max_depth
+        print "max depth is ", max_depth
+        
+            
+        return float(max_depth)
 
 
     def get_mean_depth(self, depth_interval=DEFAULT_DEPTH_INTERVAL_FOR_CALCULATIONS):
@@ -143,24 +178,67 @@ class BathymetricPondShape(PondShape):
         @rtype: float
         '''
         #TODO: check and see if this still gives errors outside proper range        
-        
+#         print "get water surface area at depth= ", depth
         validated_depth = self.validate_depth(depth)
+        print "validated depth is: ", validated_depth
         
-
+        #make sure the dictionary is fixed.
+#         self.water_surface_areas = self.convert_dict_keys_to_floats(self.water_surface_areas)
+        
+        if(validated_depth in self.water_surface_areas):
+            print "WOW SAVED SOME CPU CYCLES"
+            return self.water_surface_areas[validated_depth]
+        elif(str(validated_depth) in self.water_surface_areas):
+            print "WOW SAVED LIKE A FEW CPU CYCLES"
+            return self.water_surface_areas[str(validated_depth)]
+        
+        
+        
+        
+        
         # get interpolation function
         x = self.water_surface_areas.keys()
-        y = self.water_surface_areas.values()        
+        if not all(isinstance(item ,float) for item in x): #stupid jsonpickle. Messing this up.
+            self.fix_dict_keys()
+            x = self.water_surface_areas.keys()        
+        
+        y = self.water_surface_areas.values()
         if(len(x)<2):
             error_message = "Cannot interpolate to determine water surface area at depth ", depth,", because there are not enough depth/area pairs."
             print error_message
-            raise Exception(str(error_message))
+            raise Exception(str(error_message))        
+    
+        print "x is ", x
+        print "y is", y            
+#         
+#         
+#          
+#         
+ 
+#         
+#         
+#          
+        #make sure they are ordered by depth. interpolation requires it.
+        xy = zip(x, y)
+        xy.sort()
+          
+        x_sorted = []
+        y_sorted = []
+        for x_value, y_value in xy:
+            x_sorted.append(x_value)
+            y_sorted.append(y_value)
+          
+        print "x_sorted=",x_sorted
+        print "y_sorted=",y_sorted                 
+
         
-        f = interp1d(x, y)
+        
+        f = interp1d(x_sorted, y_sorted)
         
         #interpolate
         
         water_surface_area_at_depth = f(validated_depth)
-
+        print "interpolated water_surface_area_at_depth is: ", water_surface_area_at_depth
 
         return water_surface_area_at_depth
 
@@ -185,6 +263,7 @@ class BathymetricPondShape(PondShape):
         @return: sediment area: the area of the lake sediment in the interval between depth = depth and depth = depth-validated_depth_interval
         @rtype: float
         '''
+        
         if(depth_interval is None):
             depth_interval = 1 #1 meter by default
 
@@ -207,9 +286,11 @@ class BathymetricPondShape(PondShape):
             #lower and upper bounds of sediment region are the same. Area is 0
             return 0
 
-
+        print "getting sediment area at depth: ", depth
         upper_water_area = self.get_water_surface_area_at_depth(upper_edge_depth)
+        print "upper water area is: ", upper_water_area
         lower_water_area = self.get_water_surface_area_at_depth(lower_edge_depth)
+        print "lower water area is: ", lower_water_area
 
 
         # The theory is, we get basically the top side of a right cone/donut thing.
@@ -344,8 +425,8 @@ class BathymetricPondShape(PondShape):
             current_area = self.get_sediment_area_at_depth(current_depth, validated_depth_interval)
             total_area += current_area
             current_depth += validated_depth_interval
-#             print "Calculating sediment area above depth",validated_depth ,"current depth: ", current_depth, ". sediment area with interval ", validated_depth_interval , " is ", current_area
-
+            print "Calculating sediment area above depth",validated_depth ,"current depth: ", current_depth, ". sediment area with interval ", validated_depth_interval , " is ", current_area
+        
         return total_area
 
     def get_fractional_sediment_area_at_depth(self, depth=0.0, total_sediment_area=None, depth_interval =DEFAULT_DEPTH_INTERVAL_FOR_CALCULATIONS):
@@ -414,17 +495,30 @@ class BathymetricPondShape(PondShape):
         if(isinstance(otherObject, BathymetricPondShape)):
             thisDict = self.water_surface_areas
             otherdict = otherObject.water_surface_areas
-            thisDict.update(otherdict)
+            fixed_dict = self.convert_dict_keys_to_floats(otherdict)
+            thisDict.update(fixed_dict)
             self.water_surface_areas=thisDict
 
 def main():
     '''
     Used for testing!
     '''
-    
+     
     print "hello world"
-
-
+#     x = [1.0, 4.0, 0.0]
+#     y= [600960.0,516480.0,640000.0]
+#     xy = zip(x, y)
+#     xy.sort()
+#         
+#     x_sorted = []
+#     y_sorted = []
+#     for x, y in xy:
+#         x_sorted.append(x)
+#         y_sorted.append(y)
+#     
+#     print "x_sorted=",x_sorted
+#     print "y_sorted=",y_sorted
+    
 
 
 if __name__ == "__main__":

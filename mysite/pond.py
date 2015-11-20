@@ -255,7 +255,7 @@ class Pond(object):
         return str(self.get_year()+self.get_lake_id()+self.get_day_of_year())
     
     def get_year(self):
-        return self.__year
+        return int(self.__year)
     
     
     def get_lake_id(self):
@@ -584,20 +584,27 @@ class Pond(object):
         @rtype: float
         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         '''
+        print "running calculate_daily_whole_lake_benthic_primary_production_m2, parameters are: depth_interval=", depth_interval,", use_littoral_area=", use_littoral_area
+        print "length of benthic measurements: ", len(self.benthic_photosynthesis_measurements) 
         time_interval = self.get_time_interval()
+        print "time_interval = ", time_interval
         length_of_day = self.get_length_of_day()  # TODO: Fee normalized this around zero. Doesn't seem necessary, but might affect the periodic function.
+        print "length_of_day = ", length_of_day
 
-
-
+        
         benthic_primary_production_answer = 0.0  # mg C per day
         current_depth_interval = 0.0
         previous_depth = 0.0
-        current_depth = 0.0
+        current_depth = 0.0 
+        total_littoral_area=0.0
         total_littoral_area = self.calculate_total_littoral_area()
+        print "total_littoral_area = ", total_littoral_area
         total_surface_area = self.get_pond_shape().get_water_surface_area_at_depth(0.0)
+        print "total_surface_area=", total_surface_area
 
         # for each depth interval #TODO: integration over whole lake?
         while current_depth < self.calculate_photic_zone_lower_bound():
+            print "current depth is: ", current_depth
             bpprz = 0.0  # mg C* m^-2 *day
 
             # depth interval calculation
@@ -639,8 +646,8 @@ class Pond(object):
 
 
             benthic_primary_production_answer += weighted_bpprz
-
-
+            
+        print "benthic primary answer is: ", benthic_primary_production_answer
         return benthic_primary_production_answer
 
 
@@ -1173,7 +1180,9 @@ class Pond(object):
         @return:
         @rtype:
         '''
+        print "calculating total littoral area"
         z1percent = self.calculate_photic_zone_lower_bound()
+        print "z1percent is ", z1percent
         shape_of_pond = self.get_pond_shape()
 
         littoral_area = shape_of_pond.get_sediment_area_above_depth(z1percent, Pond.DEFAULT_DEPTH_INTERVAL_FOR_CALCULATIONS)
@@ -1218,7 +1227,7 @@ class Pond(object):
             validated_depth = min_depth_given
 
 
-        # get interpolation function
+        # get interpolation function #TODO: x, y need to be in order for scipy.interp1d to work I think. Check?
         x = depths_list
         y = values_list
 

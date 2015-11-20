@@ -150,13 +150,14 @@ class DataReader(object):
     def readFile(self,inputfile):
         '''
         READ FILE
-        Given an inputFile object, opens the workbook and calls the function to read the pondList.
+        Given an inputFile object, opens the workbook and calls the function to read the pond_list.
         '''
         #http://stackoverflow.com/questions/10458388/how-do-you-read-excel-files-with-xlrd-on-appengine
         try:
             book =  xlrd.open_workbook(file_contents=inputfile)
             print "Reading in data_reader. inputFile type: ", type(inputfile)
         except IOError:
+            print "Error in readFile"
             raise Exception ("Error in readFile. xlrd.open_workbook(file_contents=inputfile) gave exception with inputfile", inputfile)
 
 
@@ -182,7 +183,7 @@ class DataReader(object):
         @return: list of Pond objects, storing the information in the workbook.
         @rtype: list
         '''
-
+        print "reading pond list from workbook"
         ##############
         #Worksheets
         ##############
@@ -233,7 +234,7 @@ class DataReader(object):
         #################################################
         #make all the objects!
         #################################################
-        pondList = [] #list of pond objects. The same water body on a different day counts as a separate "Pond"
+        pond_list = [] #list of pond objects. The same water body on a different day counts as a separate "Pond"
 
 
 
@@ -266,17 +267,17 @@ class DataReader(object):
 
             #Do we need to make a pond object?
             pond = None
-            pond = next((i for i in pondList if (i.get_lake_id()== row_lakeID_value and 
+            pond = next((i for i in pond_list if (i.get_lake_id()== row_lakeID_value and 
                                                  i.get_day_of_year()==row_doy_value and
                                                  i.get_year() == row_year_value)),None) #source: http://stackoverflow.com/questions/7125467/find-object-in-list-that-has-attribute-equal-to-some-value-that-meets-any-condi
             if pond is None: #not in list. Must create Pond object
 #                 print "creating pond with lake ID = ", row_lakeID_value, " , and DOY = ", row_doy_value
                 emptyShape = BathymetricPondShape({}) #initialize with empty dict
                 pond = Pond(row_year_value, row_lakeID_value, row_doy_value, row_lod_value, row_noonlight_value, row_kd_value, emptyShape, [], [], self.DEFAULT_TIME_INTERVAL)
-                pondList.append(pond)
+                pond_list.append(pond)
             curr_row+=1
 
-#         print "out of while loop. size of pond list is: ", len(pondList)
+        print "Read all pond data. size of pond list is: ", len(pond_list)
 
         #######################################################
         #we made all the ponds. Time to add all the members
@@ -310,10 +311,10 @@ class DataReader(object):
 
             #find the correct pond
             pond = None
-#             pond = next((i for i in pondList if (i.get_lake_id()== row_lakeID_value )),None) #source: http://stackoverflow.com/questions/7125467/find-object-in-list-that-has-attribute-equal-to-some-value-that-meets-any-condi
+#             pond = next((i for i in pond_list if (i.get_lake_id()== row_lakeID_value )),None) #source: http://stackoverflow.com/questions/7125467/find-object-in-list-that-has-attribute-equal-to-some-value-that-meets-any-condi
             #http://stackoverflow.com/questions/14366511/return-the-first-item-in-a-list-matching-a-condition
-#             matchingPonds = filter(next((i for i in pondList if (i.get_lake_id()== row_lakeID_value )),None), pondList)
-            for pond in pondList:
+#             matchingPonds = filter(next((i for i in pond_list if (i.get_lake_id()== row_lakeID_value )),None), pond_list)
+            for pond in pond_list:
                 if(pond.get_lake_id()==row_lakeID_value):
                     pond.update_shape(row_shape)                #add to Pond
             
@@ -347,7 +348,7 @@ class DataReader(object):
 
             #find the correct pond
             pond = None
-            pond = next((i for i in pondList if (i.get_lake_id()== row_lakeID_value and
+            pond = next((i for i in pond_list if (i.get_lake_id()== row_lakeID_value and
                                                  i.get_day_of_year()==row_doy_value and
                                                  i.get_year() == row_year_value)),None) #source: http://stackoverflow.com/questions/7125467/find-object-in-list-that-has-attribute-equal-to-some-value-that-meets-any-condi
             if pond is None: #something is terribly wrong
@@ -393,7 +394,7 @@ class DataReader(object):
 #             print "row beta ", row_beta_value
             #find the correct pond
             pond = None
-            pond = next((i for i in pondList if (i.get_lake_id()== row_lakeID_value and
+            pond = next((i for i in pond_list if (i.get_lake_id()== row_lakeID_value and
                                                  i.get_day_of_year()==row_doy_value and
                                                  i.get_year() == row_year_value)),None) #source: http://stackoverflow.com/questions/7125467/find-object-in-list-that-has-attribute-equal-to-some-value-that-meets-any-condi
             if pond is None: #something is terribly wrong
@@ -407,13 +408,13 @@ class DataReader(object):
 
             curr_row+=1
         print "added phyte data"
-        print "Size of pond list is: ", len(pondList)
+        print "Size of pond list is: ", len(pond_list)
 
 
 
 
 
-        return pondList
+        return pond_list
 
     #END OF read_pond_list_from_workbook METHOD
 
@@ -453,9 +454,9 @@ def main():
     filename = "static/"+DataReader.filename
 
     reader = DataReader(filename)
-    pondList = reader.read()
+    pond_list = reader.read()
 
-    for p in pondList:
+    for p in pond_list:
         shape = p.get_pond_shape()
 #         bppmeasurements_sorted = p.get_benthic_measurements_sorted_by_depth()
 #         bppmeasurements = p.get_benthic_photosynthesis_measurements()

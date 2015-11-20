@@ -42,12 +42,34 @@ app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024 #arbitrary 16 megabyte uploa
 
 
 
+def getPondList():
+    #SALAMANDER
+    pickled_ponds_list = session['pickled_ponds_list']
+    pond_list = []
+    for pickled_pond in pickled_ponds_list:
+        pond = jsonpickle.decode(pickled_pond)
+        pond_list.append(pond)    
+    print "hi"
+    print "pond_list", pond_list
+    return pond_list
+    
 
 
 
 
 
+#used for making it possible to get numbers from python, and put them in HTML
+#Got this from http://blog.bouni.de/blog/2013/04/24/call-functions-out-of-jinjs2-templates/
+@app.context_processor
+def my_utility_processor():
 
+    def ponds():
+        print "running ponds method"
+        pond_list = getPondList()
+        return pond_list
+
+
+    return dict(ponds=ponds)
 
 
 
@@ -179,6 +201,7 @@ def primary_production():
     '''
     Renders the primary_production template, which shows calculated values and a button to download them.
     '''
+    print "primary_production view"
     try:
         return render_template("primary_production.html")
     except Exception as e:
@@ -195,6 +218,7 @@ def export_view():
     Modified from...
     http://snipplr.com/view/69344/create-excel-file-with-xlwt-and-insert-in-flask-response-valid-for-jqueryfiledownload/    
     '''
+    print "export"
     #########################
     # Code for creating Flask
     # response
@@ -240,18 +264,19 @@ def export_view():
     hourly_worksheet = workbook.add_sheet('Hourly Statistics')
     
     #PLATYPUS
+    print "platypus"
     pickled_ponds_list = session['pickled_ponds_list']
     pond_list = []
     for pickled_pond in pickled_ponds_list:
         pond = jsonpickle.decode(pickled_pond)
         pond_list.append(pond)
-    print "******************************************************"
-    print "pickled ponds list: ", pickled_ponds_list
-    print "unpickled ponds list: ", pond_list
-    for pond in pond_list:
-        print "pond id is, ", pond.get_lake_id()
-    print "******************************************************"
-    
+#     print "******************************************************"
+#     print "pickled ponds list: ", pickled_ponds_list
+#     print "unpickled ponds list: ", pond_list
+#     for pond in pond_list:
+#         print "pond id is, ", pond.get_lake_id()
+#     print "******************************************************"
+#     
     #columns to write to
     hour_column = 0
    
