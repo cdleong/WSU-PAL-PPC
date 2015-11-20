@@ -303,7 +303,7 @@ class DataReader(object):
             row_lakeID_value = row[self.shape_ID_index].value
             row_depth_value = float(row[self.shape_depth_index].value)
             row_area_value = float(row[self.shape_area_index].value)
-            print "current row is: ", curr_row, "lake ID is: ", row_lakeID_value            
+#             print "current row is: ", curr_row, "lake ID is: ", row_lakeID_value            
 
             row_dict = {row_depth_value:row_area_value}
             row_shape = BathymetricPondShape(row_dict)
@@ -482,7 +482,7 @@ def main():
         print "**************************************************************************************"
 #         bppr = p.calculateDailyWholeLakeBenthicPrimaryProductionPerMeterSquared(0.1)
 #         bppr_surface_area = p.calculateDailyWholeLakeBenthicPrimaryProductionPerMeterSquared(0.1, False)
-#         pppr = p.calculateDailyWholeLakePhytoplanktonPrimaryProductionPerMeterSquared(0.1)
+#         pppr = p.calculate_daily_whole_lake_phytoplankton_primary_production_m2(0.1)
         
         layer_depths = p.get_thermal_layer_depths()
         if(3==len(layer_depths)):
@@ -520,7 +520,7 @@ def main():
         if(3==len(layer_depths)):
             pp_met = p.calculate_phytoplankton_primary_production_rate_in_interval(epi_lower_bound, met_lower_bound,p.DEFAULT_DEPTH_INTERVAL_FOR_CALCULATIONS, use_photoinhibition)
             pp_hyp = p.calculate_phytoplankton_primary_production_rate_in_interval(met_lower_bound, hyp_lower_bound,p.DEFAULT_DEPTH_INTERVAL_FOR_CALCULATIONS, use_photoinhibition)
-            pp_whole_lake = p.calculateDailyWholeLakePhytoplanktonPrimaryProductionPerMeterSquared(p.DEFAULT_DEPTH_INTERVAL_FOR_CALCULATIONS)
+            pp_whole_lake = p.calculate_daily_whole_lake_phytoplankton_primary_production_m2(p.DEFAULT_DEPTH_INTERVAL_FOR_CALCULATIONS)
         print "pp_epi is ", pp_epi
         print "pp_met is", pp_met
         print "pp_hyp is", pp_hyp

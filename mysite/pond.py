@@ -250,6 +250,10 @@ class Pond(object):
     #######################
     # GETTERS
     #######################
+    def get_key(self):
+        #TODO: better key
+        return str(self.get_year()+self.get_lake_id()+self.get_day_of_year())
+    
     def get_year(self):
         return self.__year
     
@@ -570,7 +574,7 @@ class Pond(object):
     ##############################
     # BENTHIC PRIMARY PRODUCTIVITY
     ##############################
-    def calculateDailyWholeLakeBenthicPrimaryProductionPerMeterSquared(self, depth_interval=DEFAULT_DEPTH_INTERVAL_FOR_CALCULATIONS, use_littoral_area=True):
+    def calculate_daily_whole_lake_benthic_primary_production_m2(self, depth_interval=DEFAULT_DEPTH_INTERVAL_FOR_CALCULATIONS, use_littoral_area=True):
         '''
         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         Almost everything else in this entire project works to make this method work.
@@ -714,7 +718,7 @@ class Pond(object):
     ###########################################################
 
 
-    def calculateDailyWholeLakePhytoplanktonPrimaryProductionPerMeterSquared(self, 
+    def calculate_daily_whole_lake_phytoplankton_primary_production_m2(self, 
                                                                              depth_interval=DEFAULT_DEPTH_INTERVAL_FOR_CALCULATIONS, 
                                                                              use_photoinhibition=None):
         '''
@@ -736,7 +740,7 @@ class Pond(object):
 #         
         layer_depths = self.get_thermal_layer_depths()
         layer_upper_bound = 0.0
-        layer_lower_bound =0.0
+        layer_lower_bound = 0.0
         layer_pp_list = []
         
         for layer_depth in layer_depths:
@@ -753,16 +757,52 @@ class Pond(object):
         pp_lake_daily_total_m2 = sum(layer_pp_list)
         return pp_lake_daily_total_m2  # mgC/m^2/day
 
+    def calculate_hourly_phytoplankton_primary_production_rates_list_over_whole_day_in_thermal_layer(self, 
+                                                                                                     layer = 0, 
+                                                                                                     depth_interval=DEFAULT_DEPTH_INTERVAL_FOR_CALCULATIONS,
+                                                                                                     use_photoinhibition=None,
+                                                                                                     convert_to_m2 = False):
+        
+        MAX_INDEX = self.MAXIMUM_NUMBER_OF_THERMAL_LAYERS-1
+        MIN_INDEX  = 0
+        
+        validated_layer=self.validate_numerical_value(layer, MAX_INDEX, MIN_INDEX) #0=epilimnion, 1=metalimnion, 2 = hypolimnion
+        layer_depths = self.get_thermal_layer_depths()
 
-    def calculate_phytoplankton_primary_production_rate_in_interval(self, 
+        
+        #say layer_depths contains [5.0,7.0,16.0]. 
+        #if validate_layer = 0, We would want layer_upper_bound = 0.0, layer_lower_bound = 5.0 (layer_depths[0])
+        #if validate_layer = 1, We would want layer_upper_bound = 5.0 (layer_depths[0]), layer_lower_bound = 7.0 (layer_depths[1])
+        #if validate_layer = 2, We would want layer_upper_bound = 7.0 (layer_depths[1]), layer_lower_bound = 16.0 (layer_depths[2])
+        
+        layer_upper_bound = 0.0
+        if(validated_layer>0): #I just feel there's a more elegant way to do this.
+            layer_upper_bound=layer_depths[validated_layer-1]
+        layer_lower_bound = layer_depths[validated_layer]
+        pp_list = self.calculate_hourly_phytoplankton_primary_production_rates_list_over_whole_day_in_interval(layer_upper_bound, layer_lower_bound, depth_interval, use_photoinhibition, convert_to_m2)
+        return pp_list
+        
+        
+        
+                  
+          
+         
+        
+        
+        
+        
+        
+        
+
+    def calculate_hourly_phytoplankton_primary_production_rates_list_over_whole_day_in_interval(self, 
                                                                     layer_upper_bound, 
                                                                     layer_lower_bound, 
                                                                     depth_interval=DEFAULT_DEPTH_INTERVAL_FOR_CALCULATIONS, 
-                                                                    use_photoinhibition=None):
-        '''
-        Calculates the daily primary production, in milligrams of carbon per meter cubed per day, in a thermal layer/interval. 
+                                                                    use_photoinhibition=None,
+                                                                    convert_to_m2 = False):
         '''
         
+        '''
         if (use_photoinhibition is None):          
             print "use_photoinhibition not set. Deciding based on beta parameter."
             beta_parameter =self.get_phyto_beta_at_depth(layer_lower_bound)   
@@ -784,12 +824,9 @@ class Pond(object):
         layer_depth_interval = layer_lower_bound - layer_upper_bound  # "deeper" is bigger magnitude, so instead of upper-lower we do lower - upper 
 
 #         print "surface area is", surface_area
-        pp_list = []
-        volume_list = []
-        fraction_list = []
-        depth_list =[]
+        hourly_pp_list = []
         current_time = 0.0  # start of day
-        pp_layer_daily_total_hw_m3 = 0.0
+#         pp_layer_daily_total_hw_m3 = 0.0
         
         while current_time <= length_of_day:
             
@@ -807,37 +844,66 @@ class Pond(object):
                 pp_total_at_depth_z_time_t_hw_m3 = pp_total_at_depth_z_time_t_m3_in_one_time_unit * fractional_volume  # mgC*m^-3, hypsometrically weighted
                 pp_total_in_thermal_layer_at_time_t_hw_m3 += pp_total_at_depth_z_time_t_hw_m3 #mgC*m^-3 #THIS IS WHAT I CHECKED TO TEST AGAINST NTL LTER DATABASE                                
                 depth_m += depth_interval
-                if(current_time>7.95 and current_time<8.05):
-#                     print "time is ", current_time
-                    volume_list.append(interval_volume_m3)
-                    fraction_list.append(fractional_volume)
-                    depth_list.append(depth_m)
                     
                     
             
 
-            if(current_time%0.5==0):
-                pp_list.append(pp_total_in_thermal_layer_at_time_t_hw_m3)
-            pp_layer_daily_total_hw_m3 += pp_total_in_thermal_layer_at_time_t_hw_m3   #Units are still mgC*m^-3               
+            if(current_time%time_interval==0):
+                hourly_pp_list.append(pp_total_in_thermal_layer_at_time_t_hw_m3)
+#             pp_layer_daily_total_hw_m3 += pp_total_in_thermal_layer_at_time_t_hw_m3   #Units are still mgC*m^-3               
             
+
 
             current_time += time_interval
         
+        
+        
+#       
+        if(convert_to_m2):
+            hourly_pp_list = [value*layer_depth_interval for value in hourly_pp_list] #multiply by the depth interval of the layer to convert to m2
+                
+        return hourly_pp_list  # mgC/m^2/day
+        
+
+
+    def calculate_phytoplankton_primary_production_rate_in_interval(self, 
+                                                                    layer_upper_bound, 
+                                                                    layer_lower_bound, 
+                                                                    depth_interval=DEFAULT_DEPTH_INTERVAL_FOR_CALCULATIONS, 
+                                                                    use_photoinhibition=None):
+        '''
+        
+        '''
+        
+        if (use_photoinhibition is None):          
+            print "use_photoinhibition not set. Deciding based on beta parameter."
+            beta_parameter =self.get_phyto_beta_at_depth(layer_lower_bound)   
+            if(0==beta_parameter):
+                use_photoinhibition = False
+                print "beta is zero. Not using photoinhibition."
+            else: 
+                use_photoinhibition = True
+                print "beta not zero. Using photoinhibition"  
+        else:
+            print "use_photoinhibition was passed in from above. The value was: ", use_photoinhibition      
+
+        # TODO: validate interval
+
+          
+        layer_depth_interval = layer_lower_bound - layer_upper_bound  # "deeper" is bigger magnitude, so instead of upper-lower we do lower - upper 
+
+
+        
+        
         #We have "per hour" calculated multiple times per hour. We must correct for this in our summation.
+        time_interval = self.get_time_interval()  # hours        
         time_interval_correction_factor = (self.BASE_TIME_UNIT / time_interval)  # (hr/hr) Account for the fractional time interval. e.g. dividing by 1/0.25 is equiv to dividing by 4
+        ppr_over_time_in_interval_list = self.calculate_hourly_phytoplankton_primary_production_rates_list_over_whole_day_in_interval(layer_upper_bound, layer_lower_bound, depth_interval, use_photoinhibition)
+        pp_layer_daily_total_hw_m3 = sum(ppr_over_time_in_interval_list)
+        
+        
         pp_layer_daily_total_hw_time_corrected_m3 = pp_layer_daily_total_hw_m3/time_interval_correction_factor
         
-        #debugging code
-#         print "**************"
-#         print "upper and lower bounds: ", layer_upper_bound, ",", layer_lower_bound
-#         print "pp_at_time_t list ", pp_list
-#         print "------------"
-#         print "time 8"
-#         print "depth_list", depth_list         
-#         print "volume_list", volume_list
-#         print "fraction_list", fraction_list
-#         print "sum of fraction list: ", sum(fraction_list)
-#         print "**************"
 
         
         #convert to m^-2
@@ -898,6 +964,7 @@ class Pond(object):
 
     def calculate_phytoplankton_primary_productivity(self, izt, depth, use_photoinhibition=True, testing=False):
         '''
+        #TODO: remove the testing field. And this note about it.
         Calculate Phytoplankton Primary Productivity
         @param izt: light at depth z, time t (umol*m^-2*s^-1)
         @param depth: depth (m)

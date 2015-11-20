@@ -15,8 +15,7 @@ from data_reader import DataReader
 import xlwt #excel writing
 import mimetypes
 from werkzeug.datastructures import Headers #used for exporting files?
-# from fileinput import filename
-
+import jsonpickle
 
 ##############################################################
 #IMPORTANT VARIABLES
@@ -108,8 +107,8 @@ def indexView():
                 pond_year_list.append(pond.get_year())
                 pond_id_list.append(pond.get_lake_id())
                 pond_day_list.append(pond.get_day_of_year())
-                pond_bppr_list.append(pond.calculateDailyWholeLakeBenthicPrimaryProductionPerMeterSquared())
-                pond_pppr_list.append(pond.calculateDailyWholeLakePhytoplanktonPrimaryProductionPerMeterSquared())
+                pond_bppr_list.append(pond.calculate_daily_whole_lake_benthic_primary_production_m2())
+                pond_pppr_list.append(pond.calculate_daily_whole_lake_phytoplankton_primary_production_m2())
                 
             
             
@@ -124,6 +123,18 @@ def indexView():
             session['pond_pppr_list'] = pond_pppr_list
             
 
+            
+            ##################################################################
+            #let's try something. AARDVARK <--easy to search for this
+            #(this might be more work than making Pond objects serializable)
+            ##################################################################
+            ##trying http://jsonpickle.github.io/
+            pickled_ponds_list = []
+            for pond in pondList:
+                pickled_pond = jsonpickle.encode(pond)
+                pickled_ponds_list.append(pickled_pond)
+                
+            session['pickled_ponds_list'] = pickled_ponds_list            
             
 
 
@@ -209,7 +220,7 @@ def export_view():
     workbook = xlwt.Workbook()
 
     #Add a sheet
-    worksheet = workbook.add_sheet('Statistics')
+    daily_worksheet = workbook.add_sheet('Daily Statistics')
     
     #columns to write to
     year_column = 0
@@ -218,19 +229,45 @@ def export_view():
     bppr_column = day_of_year_column+1
     pppr_column = bppr_column+1        
         
-    #get data from session, write to worksheet
+    #get data from session, write to daily_worksheet
     year_list = session['pond_year_list']
     lake_id_list = session['pond_id_list']
     day_of_year_list = session['pond_day_list']
     bpprList = session['pond_bppr_list']
     ppprList = session['pond_pppr_list']
 
-    write_column_to_worksheet(worksheet, year_column, "year", year_list)
-    write_column_to_worksheet(worksheet, lake_ID_column, "Lake ID", lake_id_list)
-    write_column_to_worksheet(worksheet, day_of_year_column, "day of year", day_of_year_list)
-    write_column_to_worksheet(worksheet, bppr_column, "BPPR", bpprList)
-    write_column_to_worksheet(worksheet, pppr_column, "PPPR", ppprList)
+    write_column_to_worksheet(daily_worksheet, year_column, "year", year_list)
+    write_column_to_worksheet(daily_worksheet, lake_ID_column, "Lake ID", lake_id_list)
+    write_column_to_worksheet(daily_worksheet, day_of_year_column, "day of year", day_of_year_list)
+    write_column_to_worksheet(daily_worksheet, bppr_column, "BPPR", bpprList)
+    write_column_to_worksheet(daily_worksheet, pppr_column, "PPPR", ppprList)
 
+    
+    #Add another sheet
+    hourly_worksheet = workbook.add_sheet('Hourly Statistics')
+    
+    #PLATYPUS
+    pickled_ponds_list = session['pickled_ponds_list']
+    pond_list = []
+    for pickled_pond in pickled_ponds_list:
+        pond = jsonpickle.decode(pickled_pond)
+        pond_list.append(pond)
+    print "******************************************************"
+    print "pickled ponds list: ", pickled_ponds_list
+    print "unpickled ponds list: ", pond_list
+    for pond in pond_list:
+        print "pond id is, ", pond.get_lake_id()
+    print "******************************************************"
+    
+    #columns to write to
+    hour_column = 0
+   
+        
+    #get data from session, write to daily_worksheet
+    hour_list = [0,0.5,1.0]
+
+
+    write_column_to_worksheet(hourly_worksheet, hour_column, "hour", hour_list)
 
 
     #This is the magic. The workbook is saved into the StringIO object,
