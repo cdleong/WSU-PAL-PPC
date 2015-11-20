@@ -1,0 +1,13 @@
+########################
+# Required Installations
+########################
+Python 2.7
+pip (helps with installing the rest)
+Flask
+Scipy
+	-NumPy
+	-interpolate 
+	-matplotlib
+xlwt
+xlrd 
+jsonpickle

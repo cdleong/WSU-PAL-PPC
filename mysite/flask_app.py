@@ -2,20 +2,13 @@ import os
 
 import traceback
 from flask import Flask, request, url_for, render_template, redirect, Response, session
-
-
 import StringIO
-
-
-
-
 from data_reader import DataReader
+import xlwt #excel writing. used for the excel output.
 
-#used for the excel output.
-import xlwt #excel writing
 import mimetypes
-from werkzeug.datastructures import Headers #used for exporting files?
-import jsonpickle
+from werkzeug.datastructures import Headers #used for exporting files
+import jsonpickle #lets us transfer Pond object between views. 
 
 ##############################################################
 #IMPORTANT VARIABLES
