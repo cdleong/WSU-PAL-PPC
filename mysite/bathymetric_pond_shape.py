@@ -130,7 +130,7 @@ class BathymetricPondShape(PondShape):
             raise Exception("No shape data exists. max depth is 0")
         else:
             max_depth = max(keys)
-        print "max depth is ", max_depth
+#         print "max depth is ", max_depth
         
             
         return float(max_depth)
@@ -180,16 +180,16 @@ class BathymetricPondShape(PondShape):
         #TODO: check and see if this still gives errors outside proper range        
 #         print "get water surface area at depth= ", depth
         validated_depth = self.validate_depth(depth)
-        print "validated depth is: ", validated_depth
+#         print "validated depth is: ", validated_depth
         
         #make sure the dictionary is fixed.
 #         self.water_surface_areas = self.convert_dict_keys_to_floats(self.water_surface_areas)
         
         if(validated_depth in self.water_surface_areas):
-            print "WOW SAVED SOME CPU CYCLES"
+#             print "WOW SAVED SOME CPU CYCLES"
             return self.water_surface_areas[validated_depth]
         elif(str(validated_depth) in self.water_surface_areas):
-            print "WOW SAVED LIKE A FEW CPU CYCLES"
+#             print "WOW SAVED LIKE A FEW CPU CYCLES"
             return self.water_surface_areas[str(validated_depth)]
         
         
@@ -208,8 +208,8 @@ class BathymetricPondShape(PondShape):
             print error_message
             raise Exception(str(error_message))        
     
-        print "x is ", x
-        print "y is", y            
+#         print "x is ", x
+#         print "y is", y            
 #         
 #         
 #          
@@ -228,8 +228,8 @@ class BathymetricPondShape(PondShape):
             x_sorted.append(x_value)
             y_sorted.append(y_value)
           
-        print "x_sorted=",x_sorted
-        print "y_sorted=",y_sorted                 
+#         print "x_sorted=",x_sorted
+#         print "y_sorted=",y_sorted                 
 
         
         
@@ -238,7 +238,7 @@ class BathymetricPondShape(PondShape):
         #interpolate
         
         water_surface_area_at_depth = f(validated_depth)
-        print "interpolated water_surface_area_at_depth is: ", water_surface_area_at_depth
+#         print "interpolated water_surface_area_at_depth is: ", water_surface_area_at_depth
 
         return water_surface_area_at_depth
 

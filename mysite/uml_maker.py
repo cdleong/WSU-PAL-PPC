@@ -6,7 +6,7 @@ Created on Nov 16, 2015
 #based on http://www.graphviz.org/doc/info/output.html#ID
 #also, https://www.logilab.org/blogentry/6883
 
-#To make this work, try 
+#To make this work, run from command line
 
 import pylint
 import os

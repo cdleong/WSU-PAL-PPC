@@ -5,7 +5,7 @@ from flask import Flask, request, url_for, render_template, redirect, Response, 
 import StringIO
 from data_reader import DataReader
 import xlwt #excel writing. used for the excel output.
-
+import sys
 import mimetypes
 from werkzeug.datastructures import Headers #used for exporting files
 import jsonpickle #lets us transfer Pond object between views. 
@@ -47,7 +47,7 @@ def getPondList():
     pickled_ponds_list = session['pickled_ponds_list']
     pond_list = []
     for pickled_pond in pickled_ponds_list:
-        pond = jsonpickle.decode(pickled_pond)
+        pond = jsonpickle.decode(pickled_pond) #BEWARE! THIS TURNS ALL THE KEYS IN BATHYMETRIC POND SHAPE TO STRINGS
         pond_list.append(pond)    
     print "hi"
     print "pond_list", pond_list
@@ -113,29 +113,34 @@ def indexView():
                 return render_template(INTERNAL_SERVER_ERROR_TEMPLATE_ROUTE, error = str(e))
             
             number_of_ponds = len(pondList)
-            pond_year_list = []
-            pond_id_list = []
-            pond_day_list = []
-            pond_bppr_list = []
-            pond_pppr_list = []
-            for pond in pondList:
-                pond_year_list.append(pond.get_year())
-                pond_id_list.append(pond.get_lake_id())
-                pond_day_list.append(pond.get_day_of_year())
-                pond_bppr_list.append(pond.calculate_daily_whole_lake_benthic_primary_production_m2())
-                pond_pppr_list.append(pond.calculate_daily_whole_lake_phytoplankton_primary_production_m2())
-                
-            
-            
-            
-            #add things to session dict, so as to pass them to other views
-            
-            session['number_of_ponds'] = number_of_ponds
-            session['pond_year_list'] = pond_year_list
-            session['pond_id_list'] = pond_id_list
-            session['pond_day_list'] = pond_day_list
-            session['pond_bppr_list'] = pond_bppr_list
-            session['pond_pppr_list'] = pond_pppr_list
+
+
+
+
+# 
+#             pond_year_list = []
+#             pond_id_list = []
+#             pond_day_list = []
+#             pond_bppr_list = []
+#             pond_pppr_list = []
+#             for pond in pondList:
+#                 pond_year_list.append(pond.get_year())
+#                 pond_id_list.append(pond.get_lake_id())
+#                 pond_day_list.append(pond.get_day_of_year())
+#                 pond_bppr_list.append(pond.calculate_daily_whole_lake_benthic_primary_production_m2())
+#                 pond_pppr_list.append(pond.calculate_daily_whole_lake_phytoplankton_primary_production_m2())
+#                 
+#             
+#             
+#             
+#             #add things to session dict, so as to pass them to other views
+#             
+#             session['number_of_ponds'] = number_of_ponds
+#             session['pond_year_list'] = pond_year_list
+#             session['pond_id_list'] = pond_id_list
+#             session['pond_day_list'] = pond_day_list
+#             session['pond_bppr_list'] = pond_bppr_list
+#             session['pond_pppr_list'] = pond_pppr_list
             
 
             
@@ -245,47 +250,100 @@ def export_view():
     day_of_year_column = lake_ID_column+1
     bppr_column = day_of_year_column+1
     pppr_column = bppr_column+1        
-        
+         
     #get data from session, write to daily_worksheet
-    year_list = session['pond_year_list']
-    lake_id_list = session['pond_id_list']
-    day_of_year_list = session['pond_day_list']
-    bpprList = session['pond_bppr_list']
-    ppprList = session['pond_pppr_list']
-
-    write_column_to_worksheet(daily_worksheet, year_column, "year", year_list)
-    write_column_to_worksheet(daily_worksheet, lake_ID_column, "Lake ID", lake_id_list)
-    write_column_to_worksheet(daily_worksheet, day_of_year_column, "day of year", day_of_year_list)
-    write_column_to_worksheet(daily_worksheet, bppr_column, "BPPR", bpprList)
-    write_column_to_worksheet(daily_worksheet, pppr_column, "PPPR", ppprList)
-
-    
-    #Add another sheet
-    hourly_worksheet = workbook.add_sheet('Hourly Statistics')
-    
     #PLATYPUS
     print "platypus"
     pickled_ponds_list = session['pickled_ponds_list']
     pond_list = []
     for pickled_pond in pickled_ponds_list:
-        pond = jsonpickle.decode(pickled_pond)
-        pond_list.append(pond)
-#     print "******************************************************"
-#     print "pickled ponds list: ", pickled_ponds_list
-#     print "unpickled ponds list: ", pond_list
-#     for pond in pond_list:
-#         print "pond id is, ", pond.get_lake_id()
-#     print "******************************************************"
-#     
-    #columns to write to
-    hour_column = 0
+        pond = jsonpickle.decode(pickled_pond) #BEWARE! THIS TURNS ALL THE KEYS IN BATHYMETRIC POND SHAPE TO STRINGS
+        pond_list.append(pond)    
+#     year_list = session['pond_year_list']
+#     lake_id_list = session['pond_id_list']
+#     day_of_year_list = session['pond_day_list']
+#     bpprList = session['pond_bppr_list']
+#     ppprList = session['pond_pppr_list']
+    
+    year_list = []
+    lake_id_list = []
+    day_of_year_list = []
+    bpprList =[]
+    ppprList = []
+    
+    for pond in pond_list:
+        year = pond.get_year()
+        lake_id = pond.get_lake_id()
+        day_of_year = pond.get_day_of_year()
+        bppr = pond.calculate_daily_whole_lake_benthic_primary_production_m2()
+        pppr = pond.calculate_daily_whole_lake_phytoplankton_primary_production_m2()
+        
+        year_list.append(year)
+        lake_id_list.append(lake_id)
+        day_of_year_list.append(day_of_year)
+        bpprList.append(bppr)
+        ppprList.append(pppr)
+    
+ 
+    write_column_to_worksheet(daily_worksheet, year_column, "year", year_list)
+    write_column_to_worksheet(daily_worksheet, lake_ID_column, "Lake ID", lake_id_list)
+    write_column_to_worksheet(daily_worksheet, day_of_year_column, "day of year", day_of_year_list)
+    write_column_to_worksheet(daily_worksheet, bppr_column, "bppr_m2", bpprList)
+    write_column_to_worksheet(daily_worksheet, pppr_column, "pppr_m2", ppprList)
+
+    
+    #Add another sheet
+    hourly_worksheet = workbook.add_sheet('Hourly Statistics')
+    
+    
+    
+    #columns
+    year_column = 0
+    lake_ID_column = year_column+1
+    day_of_year_column = lake_ID_column+1    
+    layer_column = day_of_year_column+1
+    hour_column = layer_column+1
+    hourly_ppr_rates_column = hour_column+1
    
         
-    #get data from session, write to daily_worksheet
-    hour_list = [0,0.5,1.0]
-
-
+    #lists
+    year_list = []
+    lake_id_list = []
+    day_of_year_list = []    
+    layer_list = []
+    hour_list = []
+    hourly_ppr_rates_list = []
+    counter = 0
+    for pond in pond_list:
+        year = pond.get_year()
+        lake_id = pond.get_lake_id()
+        day_of_year = pond.get_day_of_year()        
+        for layer in range (0, len(pond.get_thermal_layer_depths())):              
+            hourly_ppr_in_this_layer_list = []                      
+            hourly_ppr_in_this_layer_list = pond.calculate_hourly_phytoplankton_primary_production_rates_list_over_whole_day_in_thermal_layer(layer)
+            hour = 0.0
+            time_interval = pond.get_time_interval()
+            for hourly_ppr in hourly_ppr_in_this_layer_list:
+                year_list.append(year)
+                lake_id_list.append(lake_id)
+                day_of_year_list.append(day_of_year)
+                layer_list.append(layer)
+                hour_list.append(hour)
+                hourly_ppr_rates_list.append(hourly_ppr)
+                hour+=time_interval
+                counter+=1
+                if(counter>10000):
+                    raise Exception("too big! The ouput is too big!!!")
+                    sys.exit()
+                    exit()
+                    
+    #write to columns
+    write_column_to_worksheet(hourly_worksheet, year_column, "year", year_list)
+    write_column_to_worksheet(hourly_worksheet, lake_ID_column, "lake", lake_id_list)
+    write_column_to_worksheet(hourly_worksheet, day_of_year_column, "day", day_of_year_list)
+    write_column_to_worksheet(hourly_worksheet, layer_column, "layer", layer_list)
     write_column_to_worksheet(hourly_worksheet, hour_column, "hour", hour_list)
+    write_column_to_worksheet(hourly_worksheet, hourly_ppr_rates_column, "ppr_m3", hourly_ppr_rates_list)
 
 
     #This is the magic. The workbook is saved into the StringIO object,

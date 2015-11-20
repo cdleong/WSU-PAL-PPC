@@ -787,6 +787,7 @@ class Pond(object):
             layer_upper_bound=layer_depths[validated_layer-1]
         layer_lower_bound = layer_depths[validated_layer]
         pp_list = self.calculate_hourly_phytoplankton_primary_production_rates_list_over_whole_day_in_interval(layer_upper_bound, layer_lower_bound, depth_interval, use_photoinhibition, convert_to_m2)
+        print "length of pp_list is ", len(pp_list)
         return pp_list
         
         
@@ -869,6 +870,7 @@ class Pond(object):
         if(convert_to_m2):
             hourly_pp_list = [value*layer_depth_interval for value in hourly_pp_list] #multiply by the depth interval of the layer to convert to m2
                 
+        print "length of pp_list is atm: ", len(hourly_pp_list)
         return hourly_pp_list  # mgC/m^2/day
         
 
