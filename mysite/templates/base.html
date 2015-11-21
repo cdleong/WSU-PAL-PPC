@@ -12,10 +12,10 @@
 <!--
     function toggle_visibility(id) {
        var e = document.getElementById(id);
-       if(e.style.visibility == 'hidden')
-          e.style.visibility = 'visible';
+       if(e.style.display == 'block')
+          e.style.display = 'none';
        else
-          e.style.visibility = 'hidden';
+          e.style.display = 'block';
     }
 //-->
 </script>
@@ -28,7 +28,7 @@
 
 	<input type="button" value="Toggle Pond Picture" onclick="toggle_visibility('pond_picture');"/>		
 	<p></p>
-    <img id="pond_picture" src="{{ url_for('static', filename = 'pond.JPG') }}" alt="WSU pond" style="width:1024;height:768;visibility:hidden;">
+    <img id="pond_picture" src="{{ url_for('static', filename = 'pond.JPG') }}" alt="WSU pond" style="width:1024;height:768;display:none;">
     <!--<p>WSU Nutter Center Pond</p>-->
   </body>
 </html>

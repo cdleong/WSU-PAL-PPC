@@ -25,7 +25,7 @@
 				<ul>
 				{% for layer in pond.get_thermal_layer_depths() %}
 					<li> Thermal Layer {{loop.index}} <input type="button" value="hourly graph:" onclick="toggle_visibility('{{pond.get_key()}}{{loop.index}}');"/>
-					<img id="{{pond.get_key()}}{{loop.index}}" src="{{ url_for('static', filename = 'pond.JPG') }}" alt="WSU pond" style="width:256;height:192;visibility:hidden;">
+					<img id="{{pond.get_key()}}{{loop.index}}" src="{{ url_for('static', filename = 'pond.JPG') }}" alt="WSU pond" style="width:256;height:192;display:none;">
 				{% endfor %}
 				</ul>
 			</li>			
