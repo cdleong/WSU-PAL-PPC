@@ -1,7 +1,7 @@
 import os
 
 import traceback
-from flask import Flask, request, url_for, render_template, redirect, Response, session
+from flask import Flask, request, url_for, render_template, redirect, Response, session, make_response
 import StringIO
 from data_reader import DataReader
 import xlwt #excel writing. used for the excel output.
@@ -9,6 +9,10 @@ import sys
 import mimetypes
 from werkzeug.datastructures import Headers #used for exporting files
 import jsonpickle #lets us transfer Pond object between views. 
+
+#for graphing
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 
 ##############################################################
 #IMPORTANT VARIABLES
@@ -41,6 +45,10 @@ app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024 #arbitrary 16 megabyte uploa
 
 
 
+#SESSION VARS
+# SESSION_TOGGLE_POND_PIC_VAR = 'pond_pic_visible'
+
+
 
 def getPondList():
     #SALAMANDER
@@ -68,7 +76,13 @@ def my_utility_processor():
         pond_list = getPondList()
         return pond_list
 
-
+#     def toggle_pond_pic():
+#         pond_pic_visible = session['pond_pic_visible']        
+#         if("visible"==pond_pic_visible):
+#             session['pond_pic_visible'] = 'hidden'
+#         else:
+#             session['pond_pic_visible'] = 'visible'
+            
     return dict(ponds=ponds)
 
 
@@ -86,6 +100,10 @@ def indexView():
     '''
     Renders the template for the index.
     '''
+#     if 'pond_pic_visible' not in session:
+#         session['pond_pic_visible']='visible'
+        
+    
     
     #http://runnable.com/UiPcaBXaxGNYAAAL/how-to-upload-a-uploaded_file-to-the-server-in-flask-for-python
     if request.method == 'POST': #true if the button "upload" is clicked
@@ -215,6 +233,33 @@ def primary_production():
 
 
 
+@app.route('/graph')
+def graph():
+    '''
+    #TODO: comments
+    '''
+    
+    #get arguments.
+    graph_type = request.args.get('graph_type')
+    
+    
+    #make the figure
+    fig = plt.figure() 
+    
+    
+    #make the graph.
+    
+    
+    #package up the image and send it back. 
+    #figure to canvas. canvas with StringIO to png. png passed to make_response.
+    canvas = FigureCanvas(fig)
+    output = StringIO.StringIO()
+    canvas.print_png(output)
+    response = make_response(output.getvalue())
+    response.mimetype = 'image/png'
+    return response    
+
+
 
 @app.route('/export')
 def export_view():
@@ -253,7 +298,6 @@ def export_view():
          
     #get data from session, write to daily_worksheet
     #PLATYPUS
-    print "platypus"
     pickled_ponds_list = session['pickled_ponds_list']
     pond_list = []
     for pickled_pond in pickled_ponds_list:

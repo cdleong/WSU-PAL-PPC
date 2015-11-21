@@ -252,7 +252,7 @@ class Pond(object):
     #######################
     def get_key(self):
         #TODO: better key
-        return str(self.get_year()+self.get_lake_id()+self.get_day_of_year())
+        return str(self.get_year())+str(self.get_lake_id())+str(self.get_day_of_year())
     
     def get_year(self):
         return int(self.__year)
