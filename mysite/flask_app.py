@@ -480,7 +480,7 @@ def pickle_pond_list(pond_list = []):
     session[PICKLED_POND_LIST_KEY] = pickled_ponds_list             
 
 
-def graph(x_vals=[],y_vals=[],x_label = "x label", y_label="y label", graph_title = "graph_title"):
+def graph(x_vals=[],y_vals=[],x_label = "x label", y_label="y label", graph_title = "graph_title", graph_line_width=3):
     print "hello world"
     
 #         #get arguments.
@@ -512,7 +512,7 @@ def graph(x_vals=[],y_vals=[],x_label = "x label", y_label="y label", graph_titl
     f_subplot.set_title(graph_title)
     
     #plot
-    f_subplot.plot(x_vals, y_vals)
+    f_subplot.plot(x_vals, y_vals, linewidth = graph_line_width)
     
     
     #package up the image and send it back. All of this replaces the ".show()" step.
