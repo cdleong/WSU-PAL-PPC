@@ -224,7 +224,7 @@ def hourly_ppr_in_layer_graph(pond_key="", layer_index = 0):
         graph_title = "PPPR, ", pond.get_lake_id(), " layer ", layer_index+1
         return graph(x_values,y_values,x_label, y_label,graph_title)        
     except:
-        print "error message TODO"
+        print "Unexpected error:", sys.exc_info()[0]
         #return error graphic
         #TODO: an error graphic
         return app.send_static_file('graph_error.png')
@@ -451,7 +451,7 @@ def write_column_to_worksheet(worksheet,column_number=0, column_header = "", val
 def retrieve_pond(pond_key = ""):
     
     #pickled pond list from session
-    print "hello world retrieve pond", pond_key
+    print "retrieve pond", pond_key
     pond_list = unpickle_pond_list()
     pond = next(pond for pond in pond_list if pond.get_key()==pond_key)
     print "found pond"
@@ -481,7 +481,7 @@ def pickle_pond_list(pond_list = []):
 
 
 def graph(x_vals=[],y_vals=[],x_label = "x label", y_label="y label", graph_title = "graph_title", graph_line_width=3):
-    print "hello world"
+    print "graphing"
     
 #         #get arguments.
 #     graph_type = request.args.get('graph_type')
