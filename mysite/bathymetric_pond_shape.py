@@ -35,27 +35,11 @@ class BathymetricPondShape(PondShape):
         @param areas: a python dict containing depth/area pairs.
         '''
         #make sure all the darn keys are FLOATS, NOT STRINGS
-        fixed_dict = self.convert_dict_keys_to_floats(areas)
-        self.water_surface_areas = fixed_dict
+#         fixed_dict = self.convert_dict_keys_to_floats(areas)
+        self.water_surface_areas = areas
 
 
-    def convert_dict_keys_to_floats(self, otherdict):
-        #make sure all the darn keys are FLOATS, NOT STRINGS
-        keys = otherdict.keys()
-        keys = [float(i) for i in keys]
-        values = otherdict.values()
-        fixed_dict = {}
-        for i in range (0, len(keys)):
-            key = keys[i]
-            value = values[i]
-            fixed_dict[key]=value        
-    
-        return fixed_dict        
-        
-    def fix_dict_keys(self):
-        fixed_dict = self.convert_dict_keys_to_floats(self.water_surface_areas)
-        self.water_surface_areas.clear()
-        self.water_surface_areas = fixed_dict        
+  
         
 
     def get_dict(self):
@@ -98,11 +82,8 @@ class BathymetricPondShape(PondShape):
         #TODO: validate other data.
         #TODO: handle exceptions/problems.
         otherdict = other_pond_shape.water_surface_areas
-        
-        #make sure all the darn keys are FLOATS, NOT STRINGS
-        fixed_dict = self.convert_dict_keys_to_floats(otherdict)
          
-        self.water_surface_areas.update(fixed_dict)
+        self.water_surface_areas.update(otherdict)
 
     def get_max_depth(self):
         '''
@@ -116,9 +97,7 @@ class BathymetricPondShape(PondShape):
         '''
         max_depth =0.0
         keys = self.water_surface_areas.keys()        
-        if not all(isinstance(item ,float) for item in keys): #stupid jsonpickle. Messing this up.
-            self.fix_dict_keys()
-            keys = self.water_surface_areas.keys()
+
         
         
         has_areas = bool(self.water_surface_areas) #evaluates to false if empty.
@@ -179,25 +158,16 @@ class BathymetricPondShape(PondShape):
         validated_depth = self.validate_depth(depth)
 
         
-        #make sure the dictionary is fixed.
-#         self.water_surface_areas = self.convert_dict_keys_to_floats(self.water_surface_areas)
         
         if(validated_depth in self.water_surface_areas):
             return self.water_surface_areas[validated_depth]
-        elif(str(validated_depth) in self.water_surface_areas):
-
-            return self.water_surface_areas[str(validated_depth)]
         
         
         
         
         
         # get interpolation function
-        x = self.water_surface_areas.keys()
-        if not all(isinstance(item ,float) for item in x): #stupid jsonpickle. Messing this up.
-            self.fix_dict_keys()
-            x = self.water_surface_areas.keys()        
-        
+        x = self.water_surface_areas.keys()                
         y = self.water_surface_areas.values()
         if(len(x)<2):
             error_message = "Cannot interpolate to determine water surface area at depth ", depth,", because there are not enough depth/area pairs."
@@ -480,8 +450,7 @@ class BathymetricPondShape(PondShape):
         if(isinstance(otherObject, BathymetricPondShape)):
             thisDict = self.water_surface_areas
             otherdict = otherObject.water_surface_areas
-            fixed_dict = self.convert_dict_keys_to_floats(otherdict)
-            thisDict.update(fixed_dict)
+            thisDict.update(otherdict)
             self.water_surface_areas=thisDict
 
 def main():

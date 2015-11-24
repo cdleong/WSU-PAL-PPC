@@ -465,7 +465,7 @@ def unpickle_pond_list():
     pickled_ponds_list = session[PICKLED_POND_LIST_KEY]
     pond_list = []
     for pickled_pond in pickled_ponds_list:
-        pond = jsonpickle.decode(pickled_pond) #BEWARE! THIS TURNS ALL THE KEYS IN BATHYMETRIC POND SHAPE TO STRINGS
+        pond = jsonpickle.decode(pickled_pond, keys=True) #BEWARE! THIS TURNS ALL THE KEYS IN BATHYMETRIC POND SHAPE TO STRINGS
         pond_list.append(pond)      
         
     return pond_list
@@ -473,7 +473,7 @@ def unpickle_pond_list():
 def pickle_pond_list(pond_list = []):
     pickled_ponds_list = []
     for pond in pond_list:
-        pickled_pond = jsonpickle.encode(pond)
+        pickled_pond = jsonpickle.encode(pond,keys=True) #make it NOT SET THE KEYS TO STRINGS
         
         pickled_ponds_list.append(pickled_pond)
         

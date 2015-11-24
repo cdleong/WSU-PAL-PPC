@@ -1108,6 +1108,7 @@ class Pond(object):
         @return: lower bound of the photic zone, in meters.
         @rtype: float
         '''
+#         print "calculating photic zone lower bound"
         lower_bound = self.calculate_depth_of_specific_light_percentage(self.PHOTIC_ZONE_LIGHT_PENETRATION_LEVEL_LOWER_BOUND)
         max_depth = self.get_max_depth()
         if(lower_bound > max_depth):
