@@ -43,8 +43,6 @@ class BathymetricPondShape(PondShape):
         #make sure all the darn keys are FLOATS, NOT STRINGS
         keys = otherdict.keys()
         keys = [float(i) for i in keys]
-        print "**************************"
-        print "fixed keys ", keys
         values = otherdict.values()
         fixed_dict = {}
         for i in range (0, len(keys)):
@@ -55,7 +53,6 @@ class BathymetricPondShape(PondShape):
         return fixed_dict        
         
     def fix_dict_keys(self):
-        print "FIXING DICTIONARY KEYS!!!!!!!!!!"
         fixed_dict = self.convert_dict_keys_to_floats(self.water_surface_areas)
         self.water_surface_areas.clear()
         self.water_surface_areas = fixed_dict        
@@ -130,7 +127,7 @@ class BathymetricPondShape(PondShape):
             raise Exception("No shape data exists. max depth is 0")
         else:
             max_depth = max(keys)
-#         print "max depth is ", max_depth
+
         
             
         return float(max_depth)
@@ -178,18 +175,17 @@ class BathymetricPondShape(PondShape):
         @rtype: float
         '''
         #TODO: check and see if this still gives errors outside proper range        
-#         print "get water surface area at depth= ", depth
+
         validated_depth = self.validate_depth(depth)
-#         print "validated depth is: ", validated_depth
+
         
         #make sure the dictionary is fixed.
 #         self.water_surface_areas = self.convert_dict_keys_to_floats(self.water_surface_areas)
         
         if(validated_depth in self.water_surface_areas):
-#             print "WOW SAVED SOME CPU CYCLES"
             return self.water_surface_areas[validated_depth]
         elif(str(validated_depth) in self.water_surface_areas):
-#             print "WOW SAVED LIKE A FEW CPU CYCLES"
+
             return self.water_surface_areas[str(validated_depth)]
         
         
@@ -208,16 +204,7 @@ class BathymetricPondShape(PondShape):
             print error_message
             raise Exception(str(error_message))        
     
-#         print "x is ", x
-#         print "y is", y            
-#         
-#         
-#          
-#         
- 
-#         
-#         
-#          
+      
         #make sure they are ordered by depth. interpolation requires it.
         xy = zip(x, y)
         xy.sort()
@@ -228,8 +215,7 @@ class BathymetricPondShape(PondShape):
             x_sorted.append(x_value)
             y_sorted.append(y_value)
           
-#         print "x_sorted=",x_sorted
-#         print "y_sorted=",y_sorted                 
+         
 
         
         
@@ -238,7 +224,6 @@ class BathymetricPondShape(PondShape):
         #interpolate
         
         water_surface_area_at_depth = f(validated_depth)
-#         print "interpolated water_surface_area_at_depth is: ", water_surface_area_at_depth
 
         return water_surface_area_at_depth
 
@@ -286,11 +271,11 @@ class BathymetricPondShape(PondShape):
             #lower and upper bounds of sediment region are the same. Area is 0
             return 0
 
-        print "getting sediment area at depth: ", depth
+
         upper_water_area = self.get_water_surface_area_at_depth(upper_edge_depth)
-        print "upper water area is: ", upper_water_area
+
         lower_water_area = self.get_water_surface_area_at_depth(lower_edge_depth)
-        print "lower water area is: ", lower_water_area
+
 
 
         # The theory is, we get basically the top side of a right cone/donut thing.
@@ -425,7 +410,7 @@ class BathymetricPondShape(PondShape):
             current_area = self.get_sediment_area_at_depth(current_depth, validated_depth_interval)
             total_area += current_area
             current_depth += validated_depth_interval
-            print "Calculating sediment area above depth",validated_depth ,"current depth: ", current_depth, ". sediment area with interval ", validated_depth_interval , " is ", current_area
+
         
         return total_area
 

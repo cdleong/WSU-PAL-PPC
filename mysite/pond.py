@@ -252,7 +252,10 @@ class Pond(object):
     #######################
     def get_key(self):
         #TODO: better key
-        return str(self.get_year())+str(self.get_lake_id())+str(self.get_day_of_year())
+        string1 = str(self.get_year())
+        string2 = str(self.get_lake_id())
+        string3 = str(self.get_day_of_year())
+        return str(string1+string2+string3) #TODO:thisisridiculous
     
     def get_year(self):
         return int(self.__year)
@@ -352,6 +355,26 @@ class Pond(object):
         Get Time Interval
         '''
         return self.__time_interval
+    
+    def get_list_of_times(self):
+        '''
+        Gets a list of the times of day used for calculations. 
+        
+        Example: if the day length was 2 hours, and the time interval was 0.25 (quarter-hours), this would return
+        [0.0,0.25,0.5,0.75,1.0,1.25,1.5,1.75,2.0] 
+        '''
+        start_time = 0.0
+        end_time = self.get_length_of_day()
+        time_interval = self.get_time_interval()
+        time_list = []
+        time =start_time
+        while time<=end_time:
+            time_list.append(time)
+            time+=time_interval
+            
+            
+        return time_list
+        
 
 
     #######################
@@ -604,7 +627,7 @@ class Pond(object):
 
         # for each depth interval #TODO: integration over whole lake?
         while current_depth < self.calculate_photic_zone_lower_bound():
-            print "current depth is: ", current_depth
+#             print "current depth is: ", current_depth
             bpprz = 0.0  # mg C* m^-2 *day
 
             # depth interval calculation

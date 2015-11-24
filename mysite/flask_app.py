@@ -13,6 +13,7 @@ import jsonpickle #lets us transfer Pond object between views.
 #for graphing
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
+import numpy as np
 
 ##############################################################
 #IMPORTANT VARIABLES
@@ -34,6 +35,10 @@ INTERNAL_SERVER_ERROR_TEMPLATE_ROUTE = '/'+INTERNAL_SERVER_ERROR_TEMPLATE_FILE
 FIRST_DATA_ROW_FOR_EXPORT = 1
 
 
+#SESSION KEYS
+PICKLED_POND_LIST_KEY = 'pickled_pond_list'
+
+
 # Initialize the Flask application
 app = Flask(__name__)
 
@@ -45,20 +50,13 @@ app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024 #arbitrary 16 megabyte uploa
 
 
 
-#SESSION VARS
-# SESSION_TOGGLE_POND_PIC_VAR = 'pond_pic_visible'
+
 
 
 
 def getPondList():
     #SALAMANDER
-    pickled_ponds_list = session['pickled_ponds_list']
-    pond_list = []
-    for pickled_pond in pickled_ponds_list:
-        pond = jsonpickle.decode(pickled_pond) #BEWARE! THIS TURNS ALL THE KEYS IN BATHYMETRIC POND SHAPE TO STRINGS
-        pond_list.append(pond)    
-    print "hi"
-    print "pond_list", pond_list
+    pond_list = unpickle_pond_list()
     return pond_list
     
 
@@ -76,21 +74,12 @@ def my_utility_processor():
         pond_list = getPondList()
         return pond_list
 
-#     def toggle_pond_pic():
-#         pond_pic_visible = session['pond_pic_visible']        
-#         if("visible"==pond_pic_visible):
-#             session['pond_pic_visible'] = 'hidden'
-#         else:
-#             session['pond_pic_visible'] = 'visible'
             
     return dict(ponds=ponds)
 
 
 
-# For a given file, return whether it's an allowed type or not
-def allowed_file(filename):
-    return '.' in filename and \
-           filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
+
            
            
 
@@ -124,41 +113,17 @@ def indexView():
 
             try:                   
                 reader = DataReader("") #I don't plan on using this filename, thanks
-                pondList = reader.readFile(pond_file.read()) #read method is http://werkzeug.pocoo.org/docs/0.10/datastructures/#werkzeug.datastructures.FileStorage,                 
+                pond_list = reader.readFile(pond_file.read()) #read method is http://werkzeug.pocoo.org/docs/0.10/datastructures/#werkzeug.datastructures.FileStorage,                 
             except Exception as e:
                 print "error in getPondList"
                 print str(e)
                 return render_template(INTERNAL_SERVER_ERROR_TEMPLATE_ROUTE, error = str(e))
             
-            number_of_ponds = len(pondList)
 
 
 
 
-# 
-#             pond_year_list = []
-#             pond_id_list = []
-#             pond_day_list = []
-#             pond_bppr_list = []
-#             pond_pppr_list = []
-#             for pond in pondList:
-#                 pond_year_list.append(pond.get_year())
-#                 pond_id_list.append(pond.get_lake_id())
-#                 pond_day_list.append(pond.get_day_of_year())
-#                 pond_bppr_list.append(pond.calculate_daily_whole_lake_benthic_primary_production_m2())
-#                 pond_pppr_list.append(pond.calculate_daily_whole_lake_phytoplankton_primary_production_m2())
-#                 
-#             
-#             
-#             
-#             #add things to session dict, so as to pass them to other views
-#             
-#             session['number_of_ponds'] = number_of_ponds
-#             session['pond_year_list'] = pond_year_list
-#             session['pond_id_list'] = pond_id_list
-#             session['pond_day_list'] = pond_day_list
-#             session['pond_bppr_list'] = pond_bppr_list
-#             session['pond_pppr_list'] = pond_pppr_list
+
             
 
             
@@ -167,12 +132,7 @@ def indexView():
             #(this might be more work than making Pond objects serializable)
             ##################################################################
             ##trying http://jsonpickle.github.io/
-            pickled_ponds_list = []
-            for pond in pondList:
-                pickled_pond = jsonpickle.encode(pond)
-                pickled_ponds_list.append(pickled_pond)
-                
-            session['pickled_ponds_list'] = pickled_ponds_list            
+            pickle_pond_list(pond_list)         
             
 
 
@@ -232,32 +192,48 @@ def primary_production():
         return render_template(INTERNAL_SERVER_ERROR_TEMPLATE_ROUTE, error = str(e))
 
 
-
-@app.route('/graph')
-def graph():
+#c.f. flask quickstart "variable rules"
+# @app.route('/graph/<pond_key>/<int:layer>')
+# @app.route('/graph')
+@app.route('/graph/<pond_key>/<int:layer_index>')
+def hourly_ppr_in_layer_graph(pond_key="", layer_index = 0):
     '''
     #TODO: comments
     '''
+    #get the correct pond from the list in the session dict
     
-    #get arguments.
-    graph_type = request.args.get('graph_type')
+    print "***************"
+    print "pond_key is ", pond_key
+    print "layer_index is ", layer_index
+    
+    try:
+        pond = retrieve_pond(pond_key)
+        times  = pond.get_list_of_times()
+        ppr_values = pond.calculate_hourly_phytoplankton_primary_production_rates_list_over_whole_day_in_thermal_layer(layer_index)
+        x_values = times
+        y_values = ppr_values
+#         print "x values: ", x_values
+#         print "x length: ", len(x_values)
+#         print "y values: ", y_values
+#         print "y length: ", len(y_values)
+        
+        
+        
+        x_label = "hour"
+        y_label  = "PPPR (mgC*m^-3)"
+        graph_title = "PPPR, ", pond.get_lake_id(), " layer ", layer_index+1
+        return graph(x_values,y_values,x_label, y_label,graph_title)        
+    except:
+        print "error message TODO"
+        #return error graphic
+        #TODO: an error graphic
+        return app.send_static_file('graph_error.png')
+    
+
     
     
-    #make the figure
-    fig = plt.figure() 
-    
-    
-    #make the graph.
-    
-    
-    #package up the image and send it back. 
-    #figure to canvas. canvas with StringIO to png. png passed to make_response.
-    canvas = FigureCanvas(fig)
-    output = StringIO.StringIO()
-    canvas.print_png(output)
-    response = make_response(output.getvalue())
-    response.mimetype = 'image/png'
-    return response    
+
+  
 
 
 
@@ -298,16 +274,8 @@ def export_view():
          
     #get data from session, write to daily_worksheet
     #PLATYPUS
-    pickled_ponds_list = session['pickled_ponds_list']
-    pond_list = []
-    for pickled_pond in pickled_ponds_list:
-        pond = jsonpickle.decode(pickled_pond) #BEWARE! THIS TURNS ALL THE KEYS IN BATHYMETRIC POND SHAPE TO STRINGS
-        pond_list.append(pond)    
-#     year_list = session['pond_year_list']
-#     lake_id_list = session['pond_id_list']
-#     day_of_year_list = session['pond_day_list']
-#     bpprList = session['pond_bppr_list']
-#     ppprList = session['pond_pppr_list']
+    pond_list  = unpickle_pond_list()
+
     
     year_list = []
     lake_id_list = []
@@ -430,24 +398,7 @@ def export_view():
     #################################
     return response
 
-def write_column_to_worksheet(worksheet,column_number=0, column_header = "", values_list=[]):
-    '''
-    Prepends a column header and puts the data in values_list into worksheet at the specified column
-    @param worksheet: An xlrd worksheet to write to.
-    @param column_number: Column number to write to.
-    @param column_header: Header to put at the top of the column.
-    @param values_list: list of values to put in the column.
-    '''
-    print "writing column to worksheet"
-    values_list.insert(0, column_header) #stick the column header at the front.
-    numRows = len(values_list)
 
-
-    for i in range(0, numRows):
-        row = i
-        column = column_number
-        value=values_list[row]
-        worksheet.write(row,column,value)
 
 
 @app.errorhandler(413)
@@ -475,8 +426,108 @@ def internalServerError(internal_exception):
     return render_template(INTERNAL_SERVER_ERROR_TEMPLATE_ROUTE, error = str(internal_exception))
 
 
+#HELPER METHODS
+def write_column_to_worksheet(worksheet,column_number=0, column_header = "", values_list=[]):
+    '''
+    Prepends a column header and puts the data in values_list into worksheet at the specified column
+    @param worksheet: An xlrd worksheet to write to.
+    @param column_number: Column number to write to.
+    @param column_header: Header to put at the top of the column.
+    @param values_list: list of values to put in the column.
+    '''
+    print "writing column to worksheet"
+    values_list.insert(0, column_header) #stick the column header at the front.
+    numRows = len(values_list)
 
 
+    for i in range(0, numRows):
+        row = i
+        column = column_number
+        value=values_list[row]
+        worksheet.write(row,column,value)
+
+
+
+def retrieve_pond(pond_key = ""):
+    
+    #pickled pond list from session
+    print "hello world retrieve pond", pond_key
+    pond_list = unpickle_pond_list()
+    pond = next(pond for pond in pond_list if pond.get_key()==pond_key)
+    print "found pond"
+    return pond
+    
+        
+      
+
+def unpickle_pond_list():    
+    
+    pickled_ponds_list = session[PICKLED_POND_LIST_KEY]
+    pond_list = []
+    for pickled_pond in pickled_ponds_list:
+        pond = jsonpickle.decode(pickled_pond) #BEWARE! THIS TURNS ALL THE KEYS IN BATHYMETRIC POND SHAPE TO STRINGS
+        pond_list.append(pond)      
+        
+    return pond_list
+    
+def pickle_pond_list(pond_list = []):
+    pickled_ponds_list = []
+    for pond in pond_list:
+        pickled_pond = jsonpickle.encode(pond)
+        
+        pickled_ponds_list.append(pickled_pond)
+        
+    session[PICKLED_POND_LIST_KEY] = pickled_ponds_list             
+
+
+def graph(x_vals=[],y_vals=[],x_label = "x label", y_label="y label", graph_title = "graph_title"):
+    print "hello world"
+    
+#         #get arguments.
+#     graph_type = request.args.get('graph_type')
+    
+    
+    #make the figure
+    fig = plt.figure() 
+#     fig = plt.Figure()
+    
+    
+    #make the graph.
+    f_subplot = fig.add_subplot(1, 1, 1) #http://stackoverflow.com/questions/3584805/in-matplotlib-what-does-111-means-in-fig-add-subplot111
+    
+     #setup y_vals-f_subplot
+    if(len(x_vals)<2):
+        x_vals=np.arange(0.0, 8.0, 0.01)
+     
+     #Setup x_vals-f_subplot
+#     y_vals=[]
+    if(len(y_vals)<2):
+        y_vals = np.sin(2*np.pi*x_vals)
+    
+    
+    #set labels and graph_title
+    #fancy number formatting from http://stackoverflow.com/questions/21226868/superscript-in-python-plots
+    f_subplot.set_xlabel(x_label)
+    f_subplot.set_ylabel(y_label)
+    f_subplot.set_title(graph_title)
+    
+    #plot
+    f_subplot.plot(x_vals, y_vals)
+    
+    
+    #package up the image and send it back. All of this replaces the ".show()" step.
+    #figure to canvas. canvas with StringIO to png. png passed to make_response.
+    canvas = FigureCanvas(fig)
+    output = StringIO.StringIO()
+    canvas.print_png(output)
+    response = make_response(output.getvalue())
+    response.mimetype = 'image/png'
+    return response  
+    
+# For a given file, return whether it's an allowed type or not
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
 
 if __name__ == '__main__':
 
