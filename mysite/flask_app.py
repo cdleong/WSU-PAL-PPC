@@ -537,7 +537,7 @@ if __name__ == '__main__':
     print "secret key is", app.secret_key
     debug_mode = False
     i_am_sure_i_want_to_let_people_execute_arbitrary_code = "no" #"yes" for yes.
-    i_want_an_externally_visible_site = False
+    i_want_an_externally_visible_site = True
     if(debug_mode and "yes"==i_am_sure_i_want_to_let_people_execute_arbitrary_code):
         print "running in debug mode"
         app.run(debug=True)
