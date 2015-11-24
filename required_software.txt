@@ -11,3 +11,6 @@ Scipy
 xlwt
 xlrd 
 jsonpickle
+
+#for deployment
+gunicorn #http://gunicorn.org/#quickstart
