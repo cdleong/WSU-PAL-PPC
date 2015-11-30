@@ -459,19 +459,7 @@ def main():
     '''
      
     print "hello world"
-#     x = [1.0, 4.0, 0.0]
-#     y= [600960.0,516480.0,640000.0]
-#     xy = zip(x, y)
-#     xy.sort()
-#         
-#     x_sorted = []
-#     y_sorted = []
-#     for x, y in xy:
-#         x_sorted.append(x)
-#         y_sorted.append(y)
-#     
-#     print "x_sorted=",x_sorted
-#     print "y_sorted=",y_sorted
+
     
 
 

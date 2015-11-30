@@ -138,7 +138,6 @@ class DataReader(object):
     def read(self):
         try:
             book = xlrd.open_workbook(self.filename)
-            print "reading in data_reader. filename is: ", self.filename
         except:
             raise Exception("error in read method. xlrd.open_workbook gave an Exception with filename: ", self.filename)
 
@@ -155,9 +154,7 @@ class DataReader(object):
         #http://stackoverflow.com/questions/10458388/how-do-you-read-excel-files-with-xlrd-on-appengine
         try:
             book =  xlrd.open_workbook(file_contents=inputfile)
-            print "Reading in data_reader. inputFile type: ", type(inputfile)
         except IOError:
-            print "Error in readFile"
             raise Exception ("Error in readFile. xlrd.open_workbook(file_contents=inputfile) gave exception with inputfile", inputfile)
 
 
@@ -183,17 +180,13 @@ class DataReader(object):
         @return: list of Pond objects, storing the information in the workbook.
         @rtype: list
         '''
-        print "reading pond list from workbook"
         ##############
         #Worksheets
         ##############
         nsheets = book.nsheets
-#         print "The number of worksheets is", book.nsheets
 
 
         sheet_names = book.sheet_names()
-#         print "Worksheet name(s):"
-#         print sheet_names
 
         pond_data_workSheet = xlrd.book
         benthic_photo_data_workSheet= xlrd.book
@@ -246,22 +239,21 @@ class DataReader(object):
         sheet = pond_data_workSheet
         num_rows  = pond_data_workSheet_num_rows #TODO: read until blank space encountered might be better. 
         curr_row = self.DEFAULT_FIRST_DATA_ROW #start at 1. row 0 is column headings
-        print "reading pond data. num_rows is: ", num_rows
         while curr_row<num_rows:
             row = sheet.row(curr_row)
-#             print "current row is: ", curr_row
 
             #values
             try:
                 row_year_value = row[self.yearIndex].value
                 row_doy_value = row[self.dayOfYearIndex].value
-#                 print "row day: ", row_doy_value
                 row_lakeID_value = row[self.lakeIDIndex].value
                 row_kd_value = float(row[self.kd_index].value)
                 row_noonlight_value = float(row[self.noon_surface_light_index].value)
                 row_lod_value = float(row[self.length_of_day_index].value)
-            except:
+            except Exception as e:
+                print str(e)
                 print "Error: couldn't read values properly."
+            
 
 
 
@@ -271,13 +263,12 @@ class DataReader(object):
                                                  i.get_day_of_year()==row_doy_value and
                                                  i.get_year() == row_year_value)),None) #source: http://stackoverflow.com/questions/7125467/find-object-in-list-that-has-attribute-equal-to-some-value-that-meets-any-condi
             if pond is None: #not in list. Must create Pond object
-#                 print "creating pond with lake ID = ", row_lakeID_value, " , and DOY = ", row_doy_value
                 emptyShape = BathymetricPondShape({}) #initialize with empty dict
                 pond = Pond(row_year_value, row_lakeID_value, row_doy_value, row_lod_value, row_noonlight_value, row_kd_value, emptyShape, [], [], self.DEFAULT_TIME_INTERVAL)
                 pond_list.append(pond)
             curr_row+=1
 
-        print "Read all pond data. size of pond list is: ", len(pond_list)
+
 
         #######################################################
         #we made all the ponds. Time to add all the members
@@ -294,7 +285,6 @@ class DataReader(object):
         sheet = shape_data_sheet
         num_rows = shape_data_sheet_num_rows
         curr_row = self.DEFAULT_FIRST_DATA_ROW #start at 1. row 0 is column headings
-        print "reading shape data. num_rows is: ", num_rows
         while curr_row<num_rows:
             row = sheet.row(curr_row)
             
@@ -303,8 +293,7 @@ class DataReader(object):
             #values
             row_lakeID_value = row[self.shape_ID_index].value
             row_depth_value = float(row[self.shape_depth_index].value)
-            row_area_value = float(row[self.shape_area_index].value)
-#             print "current row is: ", curr_row, "lake ID is: ", row_lakeID_value            
+            row_area_value = float(row[self.shape_area_index].value)    
 
             row_dict = {row_depth_value:row_area_value}
             row_shape = BathymetricPondShape(row_dict)
@@ -321,7 +310,7 @@ class DataReader(object):
             #increment while loop to next row
             curr_row+=1
 
-        print "added shape data"
+
 
 
 
@@ -341,7 +330,6 @@ class DataReader(object):
             row_year_value = row[self.yearIndex].value
             row_doy_value = row[self.dayOfYearIndex].value
             row_lakeID_value = row[self.lakeIDIndex].value
-            # print "light penetration proportion is", row[self.benthic_light_penetration_proportion_index].value
             row_light_penetration_proportion_value = float(row[self.benthic_light_penetration_proportion_index].value)
             row_pmax_value = float(row[self.benthic_pmax_index].value)
             row_ik_value = float(row[self.benthic_ik_index].value)
@@ -357,17 +345,15 @@ class DataReader(object):
             else:
                 #create PhotoSynthesisMeasurement object using values specific to that benthic_measurement/row
                 row_depth_value = pond.calculate_depth_of_specific_light_percentage(row_light_penetration_proportion_value) #convert from light proportions to depth in meters.
-#                 row_depth_value = row_light_penetration_proportion_value #Read the depths directly. TODO: delete this. Used for testing only.
 
 
-#                 print "proportion is ", row_light_penetration_proportion_value, " depth is ", row_depth_value
                 benthic_measurement = BenthicPhotosynthesisMeasurement(row_depth_value, row_pmax_value, row_ik_value)
                 pond.add_benthic_measurement_if_photic(benthic_measurement)
                 #add to Pond
 
             curr_row+=1
         #end of while loop
-        print "added benthic data"
+
         
         ###############
         #Phyto data
@@ -389,9 +375,7 @@ class DataReader(object):
             row_alpha_value = row[self.phyto_alpha_index].value
             row_beta_value = row[self.phyto_beta_index].value
 
-#             print "row pmax value ", row_phyto_pmax_value
-#             print "row alpha ", row_alpha_value
-#             print "row beta ", row_beta_value
+
             #find the correct pond
             pond = None
             pond = next((i for i in pond_list if (i.get_lake_id()== row_lakeID_value and
@@ -407,8 +391,7 @@ class DataReader(object):
                 #add to Pond
 
             curr_row+=1
-        print "added phyte data"
-        print "Size of pond list is: ", len(pond_list)
+
 
 
 
@@ -450,118 +433,6 @@ let us test things
 '''
 def main():
     print "hello world"
-#     filename = "static/template.xlsx"
-    filename = "static/"+DataReader.filename
-
-    reader = DataReader(filename)
-    pond_list = reader.read()
-
-    for p in pond_list:
-        shape = p.get_pond_shape()
-#         bppmeasurements_sorted = p.get_benthic_measurements_sorted_by_depth()
-#         bppmeasurements = p.get_benthic_photosynthesis_measurements()
-
-
-
-        pid = p.get_lake_id()
-        doy = p.get_day_of_year()
-#         lod = p.get_length_of_day()
-#         kd = p.get_light_attenuation_coefficient()
-#         noon_light = p.get_noon_surface_light()
-#         relative_depths = [1.0, 0.8,0.5,0.25,0.1,0.01]
-#         relative_depth_meters = []
-
-        
-#         if(doy != 165): #TODO: remove this hack used for testing
-#            continue #skip to next lake
-        use_photoinhibition = False        
-
-        print ""
-        print ""
-        print ""
-
-        print "**************************************************************************************"
-#         bppr = p.calculateDailyWholeLakeBenthicPrimaryProductionPerMeterSquared(0.1)
-#         bppr_surface_area = p.calculateDailyWholeLakeBenthicPrimaryProductionPerMeterSquared(0.1, False)
-#         pppr = p.calculate_daily_whole_lake_phytoplankton_primary_production_m2(0.1)
-        
-        layer_depths = p.get_thermal_layer_depths()
-        if(3==len(layer_depths)):
-            epi_lower_bound = layer_depths[0]
-            met_lower_bound = layer_depths[1]
-            hyp_lower_bound = layer_depths[2]
-        elif(1==len(layer_depths)):
-            epi_lower_bound = layer_depths[0]
-
-        print "lake ID: ", pid, " DOY: ", doy
-#         print "bppr is ", str(bppr), " mg C per square meter of littoral area"
-#         print "bppr is ", str(bppr_surface_area),  " mg C per square meter of lake surface area"
-#         print "pppr is ", str(pppr)
-        littoral_area = p.calculate_total_littoral_area()+0.0
-        surface_area = p.get_pond_shape().get_water_surface_area_at_depth(0)
-        print "the percentage of 1% light is ", p.calculate_depth_of_specific_light_percentage(0.01)
-        print "the total littoral zone is: ", littoral_area
-        print "the surface area is: ",  surface_area
-        print "max depth is: ", shape.get_max_depth()
-        print "thermal layer depths are: ", layer_depths
-        print "epilimnion lower bound is ", epi_lower_bound
-        
-        
-        pp_epi=0.0
-        pp_met=0.0
-        pp_hyp=0.0
-        pp_whole_lake = 0.0
-        
-        
-        print "epi lower bound: ", epi_lower_bound
-        print "met lower bound: ", met_lower_bound
-        print "hyp lower bound: ", hyp_lower_bound
-        
-        pp_epi = p.calculate_phytoplankton_primary_production_rate_in_interval(0, epi_lower_bound,p.DEFAULT_DEPTH_INTERVAL_FOR_CALCULATIONS, use_photoinhibition)
-        if(3==len(layer_depths)):
-            pp_met = p.calculate_phytoplankton_primary_production_rate_in_interval(epi_lower_bound, met_lower_bound,p.DEFAULT_DEPTH_INTERVAL_FOR_CALCULATIONS, use_photoinhibition)
-            pp_hyp = p.calculate_phytoplankton_primary_production_rate_in_interval(met_lower_bound, hyp_lower_bound,p.DEFAULT_DEPTH_INTERVAL_FOR_CALCULATIONS, use_photoinhibition)
-            pp_whole_lake = p.calculate_daily_whole_lake_phytoplankton_primary_production_m2(p.DEFAULT_DEPTH_INTERVAL_FOR_CALCULATIONS)
-        print "pp_epi is ", pp_epi
-        print "pp_met is", pp_met
-        print "pp_hyp is", pp_hyp
-        
-        print "sum is ", pp_epi+pp_met+pp_hyp
-        
-        print "whole-lake is: ", pp_whole_lake
-            
-        
-
-
-
-
-#         tbpp = p.calculate_total_seasonal_benthic_primary_production()
-#         print "total seasonal benthic primary production (mgC) would be ",tbpp
-#         print "in kilograms of carbon, that would be ",tbpp/1000
-#         print "in tons of carbon, that would be", tbpp/(1000*1000)
-#         print "in terms of milligrams of carbon per meter squared of littoral area that would be", tbpp/p.calculate_total_littoral_area()
-#
-#
-#         tppp = p.calculate_total_seasonal_phytoplankton_primary_production()
-#         print "total seasonal benthic primary production (mgC) would be ",tppp
-#         print "in kilograms of carbon, that would be ",tppp/1000
-#         print "in tons of carbon, that would be", tppp/(1000*1000)
-#         print "in terms of milligrams of carbon per meter squared of littoral area that would be", tppp/p.calculate_total_littoral_area()
-
-
-
-
-
-
-
-
-
-        print ""
-        print ""
-        print ""
-        print "**************************************************************************************"
-
-    print "done with all the ponds"
     sys.exit()
     
     

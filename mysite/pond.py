@@ -552,7 +552,7 @@ class Pond(object):
         if(measurement.get_depth() <= z1Percent):
             self.add_benthic_measurement(measurement)
         else:
-            print "measurement not within photic zone"
+            raise Exception("measurement not within photic zone")
 
 
     def add_phytoplankton_measurement(self, measurement=PhytoPlanktonPhotosynthesisMeasurement):
@@ -565,7 +565,8 @@ class Pond(object):
                     try:
                         self.phytoplankton_photosynthesis_measurements.insert(index, measurement)
                     except TypeError:
-                        print "index is ", index, " and measurement is ", measurement, " for pond ", self.get_lake_id(), " day ", self.get_day_of_year()
+                        error = "TypeError: index is ", index, " and measurement is ", measurement, " for pond ", self.get_lake_id(), " day ", self.get_day_of_year()
+                        raise Exception(error)
 
 
             self.phytoplankton_photosynthesis_measurements.append(measurement)
@@ -607,12 +608,9 @@ class Pond(object):
         @rtype: float
         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         '''
-        print "running calculate_daily_whole_lake_benthic_primary_production_m2, parameters are: depth_interval=", depth_interval,", use_littoral_area=", use_littoral_area
-        print "length of benthic measurements: ", len(self.benthic_photosynthesis_measurements) 
+
         time_interval = self.get_time_interval()
-        print "time_interval = ", time_interval
         length_of_day = self.get_length_of_day()  # TODO: Fee normalized this around zero. Doesn't seem necessary, but might affect the periodic function.
-        print "length_of_day = ", length_of_day
 
         
         benthic_primary_production_answer = 0.0  # mg C per day
@@ -621,13 +619,10 @@ class Pond(object):
         current_depth = 0.0 
         total_littoral_area=0.0
         total_littoral_area = self.calculate_total_littoral_area()
-        print "total_littoral_area = ", total_littoral_area
         total_surface_area = self.get_pond_shape().get_water_surface_area_at_depth(0.0)
-        print "total_surface_area=", total_surface_area
 
         # for each depth interval #TODO: integration over whole lake?
         while current_depth < self.calculate_photic_zone_lower_bound():
-#             print "current depth is: ", current_depth
             bpprz = 0.0  # mg C* m^-2 *day
 
             # depth interval calculation
@@ -644,7 +639,7 @@ class Pond(object):
                 ik_z = self.get_benthic_ik_at_depth(current_depth)
                 benthic_pmax_z = self.get_benthic_pmax_at_depth(current_depth)
             except: 
-                raise
+                raise 
             
             if(True == use_littoral_area):
                 f_area = area / total_littoral_area  # TODO: these add up to 1.0, right?
@@ -670,7 +665,6 @@ class Pond(object):
 
             benthic_primary_production_answer += weighted_bpprz
             
-        print "benthic primary answer is: ", benthic_primary_production_answer
         return benthic_primary_production_answer
 
 
@@ -763,11 +757,7 @@ class Pond(object):
         '''
 
         
-#         layer_upper_bound = 0
-#         layer_lower_bound = self.calculate_photic_zone_lower_bound()
-#         print "lower bound is: ", layer_lower_bound
-#         pppr_m2 = self.calculate_phytoplankton_primary_production_rate_in_interval(layer_upper_bound, layer_lower_bound, depth_interval)
-#         
+
         layer_depths = self.get_thermal_layer_depths()
         layer_upper_bound = 0.0
         layer_lower_bound = 0.0
@@ -779,7 +769,6 @@ class Pond(object):
                 
             
             layer_pp_daily_m2 = self.calculate_phytoplankton_primary_production_rate_in_interval(layer_upper_bound, layer_lower_bound, depth_interval, use_photoinhibition)
-            print "upper bound is ", layer_upper_bound, " lower bound is ", layer_lower_bound, "with layer_pp_daily_m2 = ", layer_pp_daily_m2
             layer_pp_list.append(layer_pp_daily_m2)                          
             layer_upper_bound = layer_lower_bound #set the new upper bound for the next round of calculations using the current lower bound.
             
@@ -810,7 +799,6 @@ class Pond(object):
             layer_upper_bound=layer_depths[validated_layer-1]
         layer_lower_bound = layer_depths[validated_layer]
         pp_list = self.calculate_hourly_phytoplankton_primary_production_rates_list_over_whole_day_in_interval(layer_upper_bound, layer_lower_bound, depth_interval, use_photoinhibition, convert_to_m2)
-        print "length of pp_list is ", len(pp_list)
         return pp_list
         
         
@@ -835,16 +823,12 @@ class Pond(object):
         
         '''
         if (use_photoinhibition is None):          
-            print "use_photoinhibition not set. Deciding based on beta parameter."
             beta_parameter =self.get_phyto_beta_at_depth(layer_lower_bound)   
             if(0==beta_parameter):
                 use_photoinhibition = False
-                print "beta is zero. Not using photoinhibition."
             else: 
                 use_photoinhibition = True
-                print "beta not zero. Using photoinhibition"  
-        else:
-            print "use_photoinhibition was passed in from above. The value was: ", use_photoinhibition      
+      
 
         # TODO: validate interval
         time_interval = self.get_time_interval()  # hours
@@ -854,7 +838,6 @@ class Pond(object):
         total_volume = self.get_pond_shape().get_volume_above_depth(max_depth, depth_interval)
         layer_depth_interval = layer_lower_bound - layer_upper_bound  # "deeper" is bigger magnitude, so instead of upper-lower we do lower - upper 
 
-#         print "surface area is", surface_area
         hourly_pp_list = []
         current_time = 0.0  # start of day
 #         pp_layer_daily_total_hw_m3 = 0.0
@@ -893,7 +876,6 @@ class Pond(object):
         if(convert_to_m2):
             hourly_pp_list = [value*layer_depth_interval for value in hourly_pp_list] #multiply by the depth interval of the layer to convert to m2
                 
-        print "length of pp_list is atm: ", len(hourly_pp_list)
         return hourly_pp_list  # mgC/m^2/day
         
 
@@ -908,16 +890,12 @@ class Pond(object):
         '''
         
         if (use_photoinhibition is None):          
-            print "use_photoinhibition not set. Deciding based on beta parameter."
             beta_parameter =self.get_phyto_beta_at_depth(layer_lower_bound)   
             if(0==beta_parameter):
                 use_photoinhibition = False
-                print "beta is zero. Not using photoinhibition."
             else: 
                 use_photoinhibition = True
-                print "beta not zero. Using photoinhibition"  
-        else:
-            print "use_photoinhibition was passed in from above. The value was: ", use_photoinhibition      
+
 
         # TODO: validate interval
 
@@ -959,7 +937,6 @@ class Pond(object):
         measurement = self.get_phytoplankton_photosynthesis_measurement_at_depth(validated_depth)
         if(measurement is not None):
             pmax = measurement.get_pmax()
-        # print "pmax at depth ", depth, " is ", pmax
         return pmax
 
     def get_phyto_alpha_at_depth(self, depth):
@@ -994,7 +971,7 @@ class Pond(object):
 
 
 
-    def calculate_phytoplankton_primary_productivity(self, izt, depth, use_photoinhibition=True, testing=False):
+    def calculate_phytoplankton_primary_productivity(self, izt, depth, use_photoinhibition=True):
         '''
         #TODO: remove the testing field. And this note about it.
         Calculate Phytoplankton Primary Productivity
@@ -1012,7 +989,6 @@ class Pond(object):
             phyto_alpha = self.get_phyto_alpha_at_depth(depth)  # (mg*m^-3*hr^-1)/(umol*m^-2*s^-1)
             phyto_beta = self.get_phyto_beta_at_depth(depth)  # (mg*m^-3*hr^-1)/(umol*m^-2*s^-1)
 
-            # print "pmax at depth ", depth, " is ", phyto_pmax
             if(use_photoinhibition):
                 # P-I CURVE EQUATION WITH PHOTOINHIBITION  P = Pmax*(1-exp(-alpha*I/Pmax))*exp(-beta*I/Pmax)
                 # P-I curve equation derived from Jassby/Platt, and specifically from http://web.pdx.edu/~rueterj/courses/esr473/notes/pvsi.htm
@@ -1020,14 +996,7 @@ class Pond(object):
                 interim_value = 1 - mat.exp(-phyto_alpha * izt / phyto_pmax)  # [(mg*m^-3*hr^-1)/(umol*m^-2*s^-1) * (umol*m^-2*s^-1) = (mg*m^-3*hr^-1)
                 other_interim_value = mat.exp(-phyto_beta * izt / phyto_pmax)  # (mg*m^-3*hr^-1), same as above
                 ppr_z = phyto_pmax * interim_value * other_interim_value  # (mg*m^-3*hr^-1)
-                if(testing):
-                    print "izt is ", izt
-                    print "alpha is ", phyto_alpha
-                    print "beta is ", phyto_beta
-                    print "pmax is ", phyto_pmax
-                    print "bob is ", interim_value
-                    print "sally is ", other_interim_value
-                    print "bob*pmax*sally is ppr, which is", ppr_z
+
                 
             else: 
                 # P-I CURVE EQUATION WITH NO PHOTOINHIBITION. P = Pmax* tanh(alpha*I/Pmax)
@@ -1108,7 +1077,6 @@ class Pond(object):
         @return: lower bound of the photic zone, in meters.
         @rtype: float
         '''
-#         print "calculating photic zone lower bound"
         lower_bound = self.calculate_depth_of_specific_light_percentage(self.PHOTIC_ZONE_LIGHT_PENETRATION_LEVEL_LOWER_BOUND)
         max_depth = self.get_max_depth()
         if(lower_bound > max_depth):
@@ -1206,9 +1174,7 @@ class Pond(object):
         @return:
         @rtype:
         '''
-        print "calculating total littoral area"
         z1percent = self.calculate_photic_zone_lower_bound()
-        print "z1percent is ", z1percent
         shape_of_pond = self.get_pond_shape()
 
         littoral_area = shape_of_pond.get_sediment_area_above_depth(z1percent, Pond.DEFAULT_DEPTH_INTERVAL_FOR_CALCULATIONS)
@@ -1246,10 +1212,8 @@ class Pond(object):
         min_depth_given = min(depths_list)
 
         if(validated_depth > max_depth_given):
-#             print "depth is",validated_depth, "cannot interpolate outside the range of measurements given. setting to max depth = ", max_depth_given
             validated_depth = max_depth_given
         elif(min_depth_given < min_depth_given):
-#             print "depth is",validated_depth, "cannot interpolate outside the range of measurements given. setting to min depth = ", min_depth_given
             validated_depth = min_depth_given
 
 

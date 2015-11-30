@@ -215,61 +215,6 @@ class PhytoPlanktonPhotosynthesisMeasurement(PhotosynthesisMeasurement):
 
 def main():
     print "hello world"
-    print "let's test if the class works as intended."
-    bob = PhytoPlanktonPhotosynthesisMeasurement(1, 5, 4.11, 0.05,0.01)
-
-    print "thermal layer is ", bob.get_thermal_layer()
-    print "depth is ", bob.get_depth()
-    print "pmax is ", bob.get_pmax()
-    print "alpha is ", bob.get_phyto_alpha()
-    print "beta is ", bob.get_phyto_beta()
-
-#     print "attempting to set everything to negative values"
-    #These should all give error/exception.
-#     bob.set_depth(-1)
-#     bob.set_phyto_alpha(-1)
-#     bob.set_phyto_beta(-1)
-#     bob.set_pmax(-1)
-#     bob.set_thermal_layer(-1)
-
-#     print "attempting to set everything to HUGE values"
-    #These should all give error/exception.
-#     usa_billion = 1000000000 #10^9, as opposed to a british billion, which is, I believe, 10^12
-#     bob.set_depth(usa_billion)
-#     bob.set_phyto_alpha(usa_billion)
-#     bob.set_phyto_beta(usa_billion)
-#     bob.set_pmax(usa_billion)
-#     bob.set_thermal_layer(usa_billion)
-
-    print "attempting to set everything to minimum values"
-    #These should all work.
-    bob.set_depth(PhytoPlanktonPhotosynthesisMeasurement.MIN_VALID_DEPTH)
-    bob.set_phyto_alpha(PhytoPlanktonPhotosynthesisMeasurement.MIN_VALID_ALPHA)
-    bob.set_phyto_beta(PhytoPlanktonPhotosynthesisMeasurement.MIN_VALID_BETA)
-    bob.set_pmax(PhytoPlanktonPhotosynthesisMeasurement.MIN_VALID_PMAX)
-    bob.set_thermal_layer(PhytoPlanktonPhotosynthesisMeasurement.MIN_VALID_THERMAL_LAYER)
-
-
-    print "thermal layer is ", bob.get_thermal_layer()
-    print "depth is ", bob.get_depth()
-    print "pmax is ", bob.get_pmax()
-    print "alpha is ", bob.get_phyto_alpha()
-    print "beta is ", bob.get_phyto_beta()
-
-    print "attempting to set everything to maximum values"
-    #These should all work.
-    bob.set_depth(PhytoPlanktonPhotosynthesisMeasurement.MAX_VALID_DEPTH)
-    bob.set_phyto_alpha(PhytoPlanktonPhotosynthesisMeasurement.MAX_VALID_ALPHA)
-    bob.set_phyto_beta(PhytoPlanktonPhotosynthesisMeasurement.MAX_VALID_BETA)
-    bob.set_pmax(PhytoPlanktonPhotosynthesisMeasurement.MAX_VALID_PMAX)
-    bob.set_thermal_layer(PhytoPlanktonPhotosynthesisMeasurement.MAX_VALID_THERMAL_LAYER)
-
-
-    print "thermal layer is ", bob.get_thermal_layer()
-    print "depth is ", bob.get_depth()
-    print "pmax is ", bob.get_pmax()
-    print "alpha is ", bob.get_phyto_alpha()
-    print "beta is ", bob.get_phyto_beta()
 
 
 

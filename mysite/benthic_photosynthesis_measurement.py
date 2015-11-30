@@ -70,10 +70,7 @@ class BenthicPhotosynthesisMeasurement(PhotosynthesisMeasurement):
 
 def main():
     print "hello world"
-    bpm = BenthicPhotosynthesisMeasurement(0.01, 15.0, 404.943)
-    print "depth is", bpm.get_depth()
-    print "benthic pmax is ", bpm.get_pmax()
-    print "ik is ", bpm.get_ik()
+
 
 
 
