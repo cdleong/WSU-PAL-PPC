@@ -106,7 +106,6 @@ def indexView():
         
         
         
-        print type(uploaded_file)
         # Check if the uploaded_file is one of the allowed types/extensions
         if uploaded_file and allowed_file(uploaded_file.filename):
             
@@ -456,7 +455,10 @@ def retrieve_pond(pond_key = ""):
     #pickled pond list from session
     print "retrieve pond", pond_key
     pond_list = unpickle_pond_list()
-    pond = next(pond for pond in pond_list if pond.get_key()==pond_key)
+    try:
+        pond = next(pond for pond in pond_list if pond.get_key()==pond_key)
+    except: 
+        raise Exception("Could not find pond")    
     print "found pond"
     return pond
     
