@@ -11,6 +11,9 @@ from werkzeug.datastructures import Headers #used for exporting files
 import jsonpickle #lets us transfer Pond object between views. 
 
 #for graphing
+#we need to import matplotlib and set which renderer to use before we use pyplot. This allows it to work without a GUI installed on the OS.
+import matplotlib as mpl 
+mpl.use('Agg') 
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 import numpy as np
