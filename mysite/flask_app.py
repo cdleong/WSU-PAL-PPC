@@ -75,7 +75,6 @@ def my_utility_processor():
     def ponds():
         print "running ponds method"
         pond_list = getPondList()
-        print "length of pond list: ", len(pond_list)
         return pond_list
 
             
