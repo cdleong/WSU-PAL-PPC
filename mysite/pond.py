@@ -105,11 +105,11 @@ class Pond(object):
                  time_interval=0.25):
         '''
         CONSTRUCTOR
-        @param lake_ID:
-        @param day_of_year:
-        @param length_of_day:
-        @param noon_surface_light:
-        @param light_attenuation_coefficient:
+        @param lake_ID: string
+        @param day_of_year: integer day of year
+        @param length_of_day: float number of hours
+        @param noon_surface_light: float 
+        @param light_attenuation_coefficient: float
         @param pond_shape_object: a PondShape object
         @param benthic_photosynthesis_measurements: a list of BenthicPhotoSynthesisMeasurements
         @param phytoplankton_photosynthesis_measurements:  a list of PhyttoplanktonPhotoSynthesisMeasurements
@@ -129,15 +129,6 @@ class Pond(object):
 
 
 
-
-
-
-
-
-
-
-
-
     ###################
     # VALIDATORS
     ###################
@@ -150,7 +141,7 @@ class Pond(object):
         @param value: numerical value of some sort to be checked.
         @param max_value: numerical value. Max valid value.
         @param min_value: numerical value. Min valid value.
-        @return: a valid value in the range (min_value,max_value), inclusive
+        @return: a valid value in the range (max_value,min_value), inclusive
         @rtype: numerical value
         '''
         validated_value = 0
@@ -164,6 +155,10 @@ class Pond(object):
 
     def validate_year(self, year):
         '''
+        Checks if year is set to reasonable value. If not, returns minimum or maximum possible reasonable value (whichever is closest)
+        @param year:
+        @return: A valid value in the range (Pond.MAXIMUM_VALID_YEAR, Pond.MINIMUM_VALID_YEAR), inclusive
+        @rtype: int  
         '''
         return self.validate_numerical_value(year, Pond.MAXIMUM_VALID_YEAR, Pond.MINIMUM_VALID_YEAR)
     
@@ -171,22 +166,23 @@ class Pond(object):
         '''
 
         @param day_of_year: the day of year the measurement was made.
-        @return: a valid value in the range (Pond.MINIMUM_VALID_DAY,Pond.MAXIMUM_VALID_DAY), inclusive
+        @return: a valid value in the range (Pond.MAXMUM_VALID_DAY,Pond.MINIMUM_VALID_DAY), inclusive
         @rtype: int
         '''
         return self.validate_numerical_value(day_of_year, Pond.MAXIMUM_VALID_DAY, Pond.MINIMUM_VALID_DAY)
 
     def validate_length_of_day(self, length_of_day=0.0):
         '''
-
+        Checks if length_of_day is set to reasonable value. If not, returns minimum or maximum possible reasonable value (whichever is closest)
         @param length_of_day:
-        @return: a valid value in the range (Pond.MINIMUM_LENGTH_OF_DAY,Pond.MAXIMUM_LENGTH_OF_DAY), inclusive
+        @return: a valid value in the range (Pond.MAXIMUM_LENGTH_OF_DAY,Pond.MAXIMUM_LENGTH_OF_DAY), inclusive
         @rtype:  float
         '''
         return self.validate_numerical_value(length_of_day, Pond.MAXIMUM_LENGTH_OF_DAY, Pond.MINIMUM_LENGTH_OF_DAY)
 
     def validate_proportional_value(self, proportional_value):
         '''
+        Checks if a proportional value is actually within a reasonable range. If not, returns minimum or maximum possible reasonable value (whichever is closest)
         @param proportional_value:
         @return: a value in the range (0.0, 1.0) inclusive
         @rtype: float
@@ -196,8 +192,9 @@ class Pond(object):
 
     def validate_depth(self, depth=0.0):
         '''
+        Checks if depth is set to reasonable value. If not, returns minimum or maximum possible reasonable value (whichever is closest)
         @param depth:
-        @return:
+        @return: a depth in the range (0.0 (the surface), and the max depth of the lake) inclusive 
         @rtype: float
         '''
         pond_shape_object = self.get_pond_shape()
@@ -206,22 +203,31 @@ class Pond(object):
 
     def validate_noon_surface_light(self, noon_surface_light=0.0):
         '''
+        Checks if noon_surface_light is set to plausible value. If not, returns minimum or maximum possible reasonable value (whichever is closest)
         @param noon_surface_light:
-        @return:
+        @return: a value in the range (Pond.MAXIMUM_NOON_SURFACE_LIGHT, Pond.MINIMUM_NOON_SURFACE_LIGHT) inclusive
         @rtype: float
         '''
         validated_noon_surface_light = self.validate_numerical_value(noon_surface_light, Pond.MAXIMUM_NOON_SURFACE_LIGHT, Pond.MINIMUM_NOON_SURFACE_LIGHT)
         return validated_noon_surface_light
 
     def validate_light_attenuation_coefficient(self, light_attenuation_coefficient):
+        '''
+        Checks if light attenuation is set to reasonable value. If not, returns minimum or maximum possible reasonable value (whichever is closest)
+        @param light_attenuation_coefficient: 
+        @return: a value in the range (Pond.MAXIMUM_LIGHT_ATTENUATION_COEFFICIENT, Pond.MINIMUM_LIGHT_ATTENUATION_COEFFICIENT) inclusive
+        @rtype: float
+        '''
         validated_light_attenuation_coefficient = self.validate_numerical_value(light_attenuation_coefficient, Pond.MAXIMUM_LIGHT_ATTENUATION_COEFFICIENT, Pond.MINIMUM_LIGHT_ATTENUATION_COEFFICIENT)
         return validated_light_attenuation_coefficient
 
     def validate_types_of_all_items_in_list(self, items=[], desired_type=object):
         '''
+        Checks if every item in a list is of the correct type of object.
         @param items:
         @param desired_type:
-
+        @return: True if all items in the list are the given type. False otherwise.
+        @rtype: boolean
         '''
         all_valid = False
         if(all(isinstance(item, desired_type) for item in items)):
@@ -232,14 +238,15 @@ class Pond(object):
 
 
     def validate_time(self, time):
-        validated_time = time
+        '''
+        Checks if time is set to reasonable value. If not, returns minimum or maximum possible reasonable value (whichever is closest)
+        Differs from validate_length_of_day in that it checks the value of time against the length of day of this lake.
+        @param light_attenuation_coefficient: 
+        @return: a value in the range (self.get_length_of_day(), Pond.Pond.MINIMUM_LENGTH_OF_DAY) inclusive
+        @rtype: float
+        '''
         length_of_day = self.get_length_of_day()
-        if(time > length_of_day):
-            validated_time = length_of_day
-        elif(time < 0.0):
-            validated_time = 0.0
-
-
+        validated_time = self.validate_numerical_value(time, length_of_day, Pond.MINIMUM_LENGTH_OF_DAY)
         return validated_time
 
 
@@ -251,20 +258,29 @@ class Pond(object):
     # GETTERS
     #######################
     def get_key(self):
-        #TODO: better key
+        '''
+        Get Key
+        Used for convenient identification of ponds. So long as none of them has the same year, ID, and day, it works.
+        @return: year + lake_id + day
+        @rtype: string 
+        '''
         string1 = str(self.get_year())
         string2 = str(self.get_lake_id())
         string3 = str(self.get_day_of_year())
         return str(string1+string2+string3) #TODO:thisisridiculous
     
     def get_year(self):
+        '''
+        Get Year
+        @return: year
+        @rtype: int
+        '''
         return int(self.__year)
     
     
     def get_lake_id(self):
         '''
         Get Lake ID
-        Getter method.
         @return: the ID of the lake.
         @rtype: string
         '''
@@ -274,7 +290,6 @@ class Pond(object):
     def get_day_of_year(self):
         '''
         Get Day of Year
-        Getter method.
         @return: the day of on which measurements occurred.
         @rtype: float
         '''
@@ -285,7 +300,6 @@ class Pond(object):
     def get_length_of_day(self):
         '''
         Get Length Of Day
-        Getter method
         @return: the length of day, in hours, on the day of measurements.
         @rtype: float
         '''
@@ -345,6 +359,8 @@ class Pond(object):
     def get_max_depth(self):
         '''
         Get Max Depth
+        Calls get max depth method in PondShape instance.
+        @return: maximum depth of lake
         '''
         return self.get_pond_shape().get_max_depth()
 
@@ -353,6 +369,8 @@ class Pond(object):
     def get_time_interval(self):
         '''
         Get Time Interval
+        Get the time interval used for calculations. 
+        @rtype: float
         '''
         return self.__time_interval
     
@@ -361,7 +379,8 @@ class Pond(object):
         Gets a list of the times of day used for calculations. 
         
         Example: if the day length was 2 hours, and the time interval was 0.25 (quarter-hours), this would return
-        [0.0,0.25,0.5,0.75,1.0,1.25,1.5,1.75,2.0] 
+        [0.0,0.25,0.5,0.75,1.0,1.25,1.5,1.75,2.0]
+        @rtype: list 
         '''
         start_time = 0.0
         end_time = self.get_length_of_day()
@@ -381,8 +400,12 @@ class Pond(object):
     # SETTERS
     #######################
     
-    def set_year(self, value):
-        self.__year = value    
+    def set_year(self, year):
+        '''
+        Set year
+        Validates it first using validate_year
+        '''
+        self.__year = self.validate_year(year)    
 
     def set_lake_id(self, lake_id):
         '''
@@ -433,16 +456,18 @@ class Pond(object):
 
 
 
-    def set_time_interval(self, value):
+    def set_time_interval(self, time_interval):
         '''
         Set Time Interval
+        @param time_interval: fractional hours. For example, 0.5 = half hours, 0.25 = 15 minutes. 
         '''
-        self.__time_interval = value\
+        self.__time_interval = time_interval
 
     def set_pond_shape(self, pond_shape_object):
         '''
         Set Time Interval
         Validates the value
+        @param pond_shape_object: a PondShape object of some type. So long as it extends PondShape, it should work. 
         '''
         if(isinstance(pond_shape_object, PondShape)):
             self.pond_shape_object = pond_shape_object
@@ -454,7 +479,8 @@ class Pond(object):
     def set_benthic_photosynthesis_measurements(self, values=[]):
         '''
         Set Benthic Photosynthesis Measurements
-        Validates the value
+        Given a list of BenthicPhotosynthesisMeasurement objects, replaces the current list with values.
+        Validates the list using validate_types_of_all_items_in_list()
         '''
         all_valid = self.validate_types_of_all_items_in_list(values, BenthicPhotosynthesisMeasurement)
         if(all_valid):
@@ -466,6 +492,9 @@ class Pond(object):
     def set_phytoplankton_photosynthesis_measurements(self, values=[]):
         '''
         Set Phytoplankton Photosynthesis Measurements
+        Given a list of PhytoPlanktonPhotosynthesisMeasurement objects, replaces the current list with values.
+        Validates the list using validate_types_of_all_items_in_list()
+        Also makes sure that there are less than or equal to MAXIMUM_NUMBER_OF_THERMAL_LAYERS measurements.
         '''
         # TODO: use a dict to ensure 3 unique layers.
         all_valid = self.validate_types_of_all_items_in_list(values, PhytoPlanktonPhotosynthesisMeasurement)
@@ -602,8 +631,8 @@ class Pond(object):
         '''
         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         Almost everything else in this entire project works to make this method work.
-        #TODO: allow specification of littoral or surface area
-        #TODO: user-specified depth interval.
+        #TODO: (someday) allow specification of littoral or surface area
+        #TODO: (someday) user-specified depth interval.
         @return: Benthic Primary Production, mg C per meter squared, per day.
         @rtype: float
         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -652,7 +681,7 @@ class Pond(object):
             while t < length_of_day:
                 bpprzt = 0.0
                 izt = self.calculate_light_at_depth_and_time(current_depth, t)
-                bpprzt = self.calculate_benthic_primary_productivity(izt, benthic_pmax_z, ik_z)
+                bpprzt = self.calculate_benthic_primary_production_z_t(izt, benthic_pmax_z, ik_z)
 
                 bpprz += bpprzt
 
@@ -675,8 +704,10 @@ class Pond(object):
     def get_benthic_pmax_at_depth(self, depth=0.0):
         '''
         Get Benthic Pmax At Depth
-        @return:
-        @rtype:
+        Uses interpolation to get the pmax value at the specified depth, if not known. 
+        Validates depth first.
+        @return: value of pmax at specified depth.
+        @rtype: float
         '''
         # if depth is lower than the depth of 1% light, pmax approaches zero.
         if(self.check_if_depth_in_photic_zone(depth) == False):
@@ -696,8 +727,11 @@ class Pond(object):
 
     def get_benthic_ik_at_depth(self, depth=0.0):
         '''
-        @return:
-        @rtype:
+        Get Benthic Ik At Depth
+        Uses interpolation to get the Ik value at the specified depth, if not known. 
+        Validates depth first.
+        @return: value of pmax at specified depth.
+        @rtype: float
         '''
         validated_depth = self.validate_depth(depth)
 
@@ -717,18 +751,18 @@ class Pond(object):
             
         return ik_at_depth
 
-    def calculate_benthic_primary_productivity(self, light_at_time_and_depth, benthic_pmax_z, benthic_ik_z):
+    def calculate_benthic_primary_production_z_t(self, light_at_time_and_depth, benthic_pmax_z_t, benthic_ik_z_t):
         '''
-        Equation for productivity that doesn't include photoinhibition, etc.
-        TODO: Source of this equation? Doesn't match the one from Wikipedia.
-        @return:
+        Benthic primary production rate at a specific depth and time
+        @return: 
+        @rtype: float
         '''
-        bpprzt = benthic_pmax_z * np.tanh(light_at_time_and_depth / benthic_ik_z)
+        bpprzt = benthic_pmax_z_t * np.tanh(light_at_time_and_depth / benthic_ik_z_t)
         return bpprzt
 
     def get_benthic_measurements_sorted_by_depth(self):
         '''
-        Sort
+        Sorted BenthicPhotosynthesisMeasurement list, by depth.
         @return: sorted benthic measurements
         @rtype: list of BenthicPhotosynthesisMeasurement objects.
         '''
@@ -749,8 +783,8 @@ class Pond(object):
         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         Calculate Daily Whole-lake Phytoplankton Primary Production
         Almost everything else in this entire project works to make this method work.
-        #TODO: allow specification of littoral or surface area
-        #TODO: user-specified depth interval.
+        #TODO: (someday) allow specification of littoral or surface area
+        #TODO: (someday) user-specified depth interval.
         @return: Benthic Primary Production, mg C per meter squared, per day.
         @rtype: float
         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -781,7 +815,14 @@ class Pond(object):
                                                                                                      depth_interval=DEFAULT_DEPTH_INTERVAL_FOR_CALCULATIONS,
                                                                                                      use_photoinhibition=None,
                                                                                                      convert_to_m2 = False):
-        
+        '''
+        Used for graphing hourly rates over the course of a day, for a layer.
+        @param layer: thermal layer of pond. 0=epilimnion, 1 = metalimnion, 2 = hypolimnion 
+        @param depth_interval: the depth interval for calculations
+        @param use_photoinhibition: whether or not to use the photoinhibition equation.
+        @param convert_to_m2: whether or not to convert the resulting values to (per meter squared) instead of (per meter cubed) 
+        @return: list of hourly rates, over the course of a day. Length should be (length of day)/(time_interval)
+        '''
         MAX_INDEX = self.MAXIMUM_NUMBER_OF_THERMAL_LAYERS-1
         MIN_INDEX  = 0
         
@@ -814,16 +855,22 @@ class Pond(object):
         
 
     def calculate_hourly_phytoplankton_primary_production_rates_list_over_whole_day_in_interval(self, 
-                                                                    layer_upper_bound, 
-                                                                    layer_lower_bound, 
+                                                                    interval_upper_bound, 
+                                                                    interval_lower_bound, 
                                                                     depth_interval=DEFAULT_DEPTH_INTERVAL_FOR_CALCULATIONS, 
                                                                     use_photoinhibition=None,
                                                                     convert_to_m2 = False):
         '''
-        
+        Used for graphing hourly rates over the course of a day, but over a depth interval instead of a thermal layer.
+        @param interval_upper_bound: depth in meters 
+        @param interval_lower_bound: depth in meters
+        @param depth_interval: the depth interval for calculations
+        @param use_photoinhibition: whether or not to use the photoinhibition equation.
+        @param convert_to_m2: whether or not to convert the resulting values to (per meter squared) instead of (per meter cubed) 
+        @return: list of hourly rates, over the course of a day. Length should be (length of day)/(time_interval)
         '''
         if (use_photoinhibition is None):          
-            beta_parameter =self.get_phyto_beta_at_depth(layer_lower_bound)   
+            beta_parameter =self.get_phyto_beta_at_depth(interval_lower_bound)   
             if(0==beta_parameter):
                 use_photoinhibition = False
             else: 
@@ -836,7 +883,7 @@ class Pond(object):
           
         max_depth = self.get_pond_shape().get_max_depth()
         total_volume = self.get_pond_shape().get_volume_above_depth(max_depth, depth_interval)
-        layer_depth_interval = layer_lower_bound - layer_upper_bound  # "deeper" is bigger magnitude, so instead of upper-lower we do lower - upper 
+        layer_depth_interval = interval_lower_bound - interval_upper_bound  # "deeper" is bigger magnitude, so instead of upper-lower we do lower - upper 
 
         hourly_pp_list = []
         current_time = 0.0  # start of day
@@ -845,10 +892,10 @@ class Pond(object):
         while current_time <= length_of_day:
             
             
-            depth_m = layer_upper_bound #meters from surface.
+            depth_m = interval_upper_bound #meters from surface.
             pp_total_in_thermal_layer_at_time_t_hw_m3 = 0.0 #primary production in layer, mg C/ m^3 / hour, or mgC*m^-3*hr-1
             
-            while depth_m <= layer_lower_bound:
+            while depth_m <= interval_lower_bound:
                 
                 light_at_depth_z_time_t = self.calculate_light_at_depth_and_time(depth_m, current_time)  # umol*m^-2*s^-1
                 interval_volume_m3 = self.get_pond_shape().get_volume_at_depth(depth_m, depth_interval)  # m^3
@@ -881,16 +928,20 @@ class Pond(object):
 
 
     def calculate_phytoplankton_primary_production_rate_in_interval(self, 
-                                                                    layer_upper_bound, 
-                                                                    layer_lower_bound, 
+                                                                    interval_upper_bound, 
+                                                                    interval_lower_bound, 
                                                                     depth_interval=DEFAULT_DEPTH_INTERVAL_FOR_CALCULATIONS, 
                                                                     use_photoinhibition=None):
         '''
-        
+        Allows calculation of daily primary production in any valid depth interval
+        @param interval_upper_bound: depth in meters 
+        @param interval_lower_bound: depth in meters
+        @param depth_interval: the depth interval for calculations
+        @param use_photoinhibition: whether or not to use the photoinhibition equation.                        
         '''
         
         if (use_photoinhibition is None):          
-            beta_parameter =self.get_phyto_beta_at_depth(layer_lower_bound)   
+            beta_parameter =self.get_phyto_beta_at_depth(interval_lower_bound)   
             if(0==beta_parameter):
                 use_photoinhibition = False
             else: 
@@ -900,7 +951,7 @@ class Pond(object):
         # TODO: validate interval
 
           
-        layer_depth_interval = layer_lower_bound - layer_upper_bound  # "deeper" is bigger magnitude, so instead of upper-lower we do lower - upper 
+        layer_depth_interval = interval_lower_bound - interval_upper_bound  # "deeper" is bigger magnitude, so instead of upper-lower we do lower - upper 
 
 
         
@@ -908,7 +959,7 @@ class Pond(object):
         #We have "per hour" calculated multiple times per hour. We must correct for this in our summation.
         time_interval = self.get_time_interval()  # hours        
         time_interval_correction_factor = (self.BASE_TIME_UNIT / time_interval)  # (hr/hr) Account for the fractional time interval. e.g. dividing by 1/0.25 is equiv to dividing by 4
-        ppr_over_time_in_interval_list = self.calculate_hourly_phytoplankton_primary_production_rates_list_over_whole_day_in_interval(layer_upper_bound, layer_lower_bound, depth_interval, use_photoinhibition)
+        ppr_over_time_in_interval_list = self.calculate_hourly_phytoplankton_primary_production_rates_list_over_whole_day_in_interval(interval_upper_bound, interval_lower_bound, depth_interval, use_photoinhibition)
         pp_layer_daily_total_hw_m3 = sum(ppr_over_time_in_interval_list)
         
         
@@ -928,7 +979,7 @@ class Pond(object):
 
     def get_phyto_pmax_at_depth(self, depth):
         '''
-        @param depth:
+        @param depth: meters from surface
         @return:
         @rtype:
         '''
@@ -941,7 +992,7 @@ class Pond(object):
 
     def get_phyto_alpha_at_depth(self, depth):
         '''
-        @param depth:
+        @param depth: meters from surface
         @return:
         @rtype:
         '''
@@ -954,7 +1005,7 @@ class Pond(object):
 
     def get_phyto_beta_at_depth(self, depth):
         '''
-        @param depth:
+        @param depth: meters from surface
         @return:
         @rtype:
         '''
@@ -973,7 +1024,6 @@ class Pond(object):
 
     def calculate_phytoplankton_primary_productivity(self, izt, depth, use_photoinhibition=True):
         '''
-        #TODO: remove the testing field. And this note about it.
         Calculate Phytoplankton Primary Productivity
         @param izt: light at depth z, time t (umol*m^-2*s^-1)
         @param depth: depth (m)
