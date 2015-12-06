@@ -544,10 +544,6 @@ def allowed_file(filename):
 
 if __name__ == '__main__':
 
-    print "a random number is: ", random_number
-    
-    
-    print "secret key is", app.secret_key
     debug_mode = False
     i_am_sure_i_want_to_let_people_execute_arbitrary_code = "no" #"yes" for yes.
     i_want_an_externally_visible_site = True
