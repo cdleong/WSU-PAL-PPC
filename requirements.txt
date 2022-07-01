@@ -38,7 +38,7 @@ numexpr==2.2.2
 numpy==1.8.2
 numpydoc==0.4
 oauth==1.0.1
-openpyxl==1.7.0
+openpyxl==2.4.2
 pandas==0.13.1
 patsy==0.2.1
 pexpect==3.1
